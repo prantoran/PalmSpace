@@ -13,3 +13,13 @@ bazel build -c opt --copt -DMESA_EGL_NO_X11_HEADERS --copt -DEGL_NO_X11 \
 GLOG_logtostderr=1 bazel-bin/PalmSpace/examples/desktop/main \
   --calculator_graph_config_file=mediapipe/graphs/hand_tracking/multi_hand_tracking_mobile.pbtxt --debug=1
 ```
+
+
+** MediaPipe dependencies in WORKSPACE **
+- libyuv
+- org_tensorflow
+  - patches
+- ceres_solver
+  - patches
+- opencv
+  - 
