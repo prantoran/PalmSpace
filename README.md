@@ -22,4 +22,11 @@ GLOG_logtostderr=1 bazel-bin/PalmSpace/examples/desktop/main \
 - ceres_solver
   - patches
 - opencv
-  - 
+
+
+
+Updated build command:
+```
+bazel build -c opt --copt -DMESA_EGL_NO_X11_HEADERS --copt -DEGL_NO_X11 --experimental_repo_remote_exec\
+  desktop:main
+```
