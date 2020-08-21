@@ -6,12 +6,6 @@
 // for external linkage, use extern
 const int index_top = 8;
 
-std::chrono::milliseconds cur_time() {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch());
-}
-
-
 TriggerWait::TriggerWait() {}
 
 TriggerWait::TriggerWait(int _width, int _height, int anchor_choice) {
@@ -41,7 +35,9 @@ TriggerWait::TriggerWait(int _width, int _height, int anchor_choice) {
     // std::cerr <<"TriggerWait constructor _width:" << _width << " _height:" << _height << " width:" << width << " height:" << height << "\n";
 }
 
-void TriggerWait::update(const std::vector<std::vector<std::tuple<double, double, double>>> & points) {
+void TriggerWait::update(
+    const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+    std::vector<double> & extra_params) {
 
     ctime = cur_time();
 
@@ -160,5 +156,3 @@ void TriggerWait::update(const std::vector<std::vector<std::tuple<double, double
 TRIGGER::state TriggerWait::status() {
     return cur_state;
 }
-
-

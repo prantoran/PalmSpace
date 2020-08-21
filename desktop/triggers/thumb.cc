@@ -17,7 +17,9 @@ TriggerThumb::TriggerThumb(int _width, int _height) {
     // std::cerr <<"TriggerThumb constructor _width:" << _width << " _height:" << _height << " width:" << width << " height:" << height << "\n";
 }
 
-void TriggerThumb::update(const std::vector<std::vector<std::tuple<double, double, double>>> & points) {
+void TriggerThumb::update(
+    const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+    std::vector<double> & extra_params) {
 
     
     if (points[0].size() <= index_bottom) {
@@ -63,6 +65,8 @@ void TriggerThumb::update(const std::vector<std::vector<std::tuple<double, doubl
 
     // std::cerr << "distance:" << d << " cur_state:" << cur_state << " width:" << width << " height:" << height << "\n";
 }
+
+
 
 TRIGGER::state TriggerThumb::status() {
     return cur_state;

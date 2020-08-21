@@ -17,7 +17,9 @@ TriggerPinch::TriggerPinch(int _width, int _height) {
     // std::cerr <<"TriggerPinch constructor _width:" << _width << " _height:" << _height << " width:" << width << " height:" << height << "\n";
 }
 
-void TriggerPinch::update(const std::vector<std::vector<std::tuple<double, double, double>>> & points) {
+void TriggerPinch::update(
+    const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+    std::vector<double> & extra_params) {
     
     if (points[1].size() < 9) {
         std::cerr << "trigger_thumb_other=not enough points for free palm\n";
@@ -60,6 +62,7 @@ void TriggerPinch::update(const std::vector<std::vector<std::tuple<double, doubl
 
     std::cerr << "distance:" << d << " cur_state:" << cur_state << " width:" << width << " height:" << height << "\n";
 }
+
 
 TRIGGER::state TriggerPinch::status() {
     return cur_state;

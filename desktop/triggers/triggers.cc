@@ -3,13 +3,21 @@
 #include "triggers.h"
 
 #include <tuple>
+#include <string>
 
 Trigger::~Trigger() {}
 
 
+
 std::string Trigger::state_str() {
-    if (cur_state == TRIGGER::OPEN) return "open";
-    if (cur_state == TRIGGER::RELEASED) return "released";
-    if (cur_state == TRIGGER::PRESSED) return "pressed";
-    return "invalid";
+    std::string ret = "invalid";
+    if (cur_state == TRIGGER::OPEN) ret = "open";
+    if (cur_state == TRIGGER::RELEASED) ret = "released";
+    if (cur_state == TRIGGER::PRESSED) ret = "pressed";
+    return ret;
+}
+
+std::chrono::milliseconds cur_time() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch());
 }

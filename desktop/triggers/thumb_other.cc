@@ -16,7 +16,9 @@ TriggerThumbOther::TriggerThumbOther(int _width, int _height) {
     // std::cerr <<"TriggerThumbOther constructor _width:" << _width << " _height:" << _height << " width:" << width << " height:" << height << "\n";
 }
 
-void TriggerThumbOther::update(const std::vector<std::vector<std::tuple<double, double, double>>> & points) {
+void TriggerThumbOther::update(
+    const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+    std::vector<double> & extra_params) {
 
     if (points[1].size() < 6) {
         std::cerr << "trigger_thumb_other=not enough points for free palm\n";
@@ -59,6 +61,7 @@ void TriggerThumbOther::update(const std::vector<std::vector<std::tuple<double, 
 
     std::cerr << "distance:" << d << " cur_state:" << cur_state << " width:" << width << " height:" << height << "\n";
 }
+
 
 TRIGGER::state TriggerThumbOther::status() {
     return cur_state;

@@ -11,7 +11,8 @@ class Initiator {
     std::string name;
     std::vector<double> extra_params;
     bool show_display;
-
+    bool strict;
+    
     virtual ~Initiator();
 
     // warning: changes the actual arguments

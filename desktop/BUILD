@@ -1,13 +1,10 @@
-licenses(["notice"])  # Apache 2.0
 
-exports_files(
-    ["provisioning_profile.mobileprovision"],
-    visibility = ["//visibility:public"],
-)
+licenses(["notice"])  # Apache 2.0
 
 package(default_visibility = [
     "//visibility:public",
 ])
+
 
 # Linux only.
 # Must have a GPU with EGL support:
@@ -15,50 +12,144 @@ package(default_visibility = [
 # (or similar nvidia/amd equivalent)
 
 
+cc_import(
+    name = "webrtc_static",
+    hdrs = glob(["lib/webrtc/include/*.h", "lib/webrtc/include/**/*.h"]),
+    static_library = "lib/webrtc/lib/x64/Debug/libwebrtc_full.a",
+    # If alwayslink is turned on,
+    # libmylib.a will be forcely linked into any binary that depends on it.
+    # alwayslink = 1,
+)
+
+cc_library(
+    name = "rapidjson",
+    srcs = [],
+    hdrs = glob([
+        "lib/rapidjson/*.h", "lib/rapidjson/**/*.h",
+    ]),
+    copts = ["-Idesktop/lib"],
+)
+
+cc_library(
+    name = "base64",
+    srcs = ["lib/base64.cc"],
+    hdrs = ["lib/base64.h"],
+)
+
+cc_library(
+    name = "crowserver",
+    srcs = [],
+    hdrs = ["lib/crow_all.h"],
+)
+
+cc_library(
+    name = "external_lib",
+    srcs = glob([
+        "lib/*.h",
+        "lib/*.cc",
+        # "lib/webrtc/lib/x64/Debug/libwebrtc_full.a",
+        # "lib/webrtc/lib/x64/Release/libwebrtc_full.a",
+    ]),
+    hdrs = glob([
+        # "lib/webrtc/*.h", "lib/webrtc/**/*.h", "lib/webrtc/**/**/*.h", "lib/webrtc/**/**/**/*.h",
+    ]),
+    copts = ["-Idesktop/lib"],
+    deps = [
+        "rapidjson",
+        "base64",
+        "crowserver",
+    ]
+)
+
 cc_library(
     name = "main_gpu",
-    srcs = [
-        "main.cc", 
-        "handlers/handlers.h", "handlers/multihand_gpu.cc", 
-        "handlers/anchor.cc",
-        "handlers/trigger.cc",
-        "handlers/initiator.cc",
-        "anchors/anchors.h", "anchors/anchors.cc", 
-        "anchors/anchors_dynamic.cc", "anchors/anchors_static.cc", 
-        "triggers/triggers.h", "triggers/triggers.cc",
-        "triggers/thumb.cc", "triggers/thumb_other.cc", 
-        "triggers/pinch.cc", "triggers/wait.cc",
-        "initiators/initiators.h", "initiators/initiators.cc",
-        "initiators/initiators_default.cc",
-        "initiators/initiators_twohand.cc",
-        "initiators/area.cc",
-    ],
-
+    srcs = glob([
+        # "main.cc",
+        "handlers/*.h", "handlers/*.cc",
+        "anchors/*.h", "anchors/*.cc",
+        "triggers/*.h", "triggers/*.cc",
+        "initiators/*.h", "initiators/*.cc",
+    ]),
+    hdrs = glob([
+        # "webrtcserve/observers.h",
+    ]),
+    copts = ["-Idesktop/lib"], #, "-Idesktop/lib/webrtc", "-Idesktop/lib/webrtc/include"],
 
     deps = [
-        "@mediapipe//mediapipe/framework:calculator_framework",
-        "@mediapipe//mediapipe/framework/formats:image_frame",
-        "@mediapipe//mediapipe/framework/formats:image_frame_opencv",
-        "@mediapipe//mediapipe/framework/port:commandlineflags",
-        "@mediapipe//mediapipe/framework/port:file_helpers",
-        "@mediapipe//mediapipe/framework/port:opencv_highgui",
-        "@mediapipe//mediapipe/framework/port:opencv_imgproc",
-        "@mediapipe//mediapipe/framework/port:opencv_video",
-        "@mediapipe//mediapipe/framework/port:parse_text_proto",
-        "@mediapipe//mediapipe/framework/port:status",
-        "@mediapipe//mediapipe/gpu:gl_calculator_helper",
-        "@mediapipe//mediapipe/gpu:gpu_buffer",
-        "@mediapipe//mediapipe/gpu:gpu_shared_data_internal",
-	    "@mediapipe//mediapipe/framework/formats:landmark_cc_proto",
-        "@mediapipe//mediapipe/framework/formats:detection_cc_proto",
-        "@mediapipe//mediapipe/framework/formats:rect_cc_proto",
+        "external_lib",
+        "webrtc_static",
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:image_frame",
+        "//mediapipe/framework/formats:image_frame_opencv",
+        "//mediapipe/framework/port:commandlineflags",
+        "//mediapipe/framework/port:file_helpers",
+        "//mediapipe/framework/port:opencv_highgui",
+        "//mediapipe/framework/port:opencv_imgproc",
+        "//mediapipe/framework/port:opencv_video",
+        "//mediapipe/framework/port:parse_text_proto",
+        "//mediapipe/framework/port:status",
+        "//mediapipe/gpu:gl_calculator_helper",
+        "//mediapipe/gpu:gpu_buffer",
+        "//mediapipe/gpu:gpu_shared_data_internal",
+	    "//mediapipe/framework/formats:landmark_cc_proto",
+        "//mediapipe/framework/formats:detection_cc_proto",
+        "//mediapipe/framework/formats:rect_cc_proto",
+        # "@taxi_code_socialworkout_webrtc_linux//:rtc",
 	],
 )
 
 cc_binary(
 	name = "main",
+    srcs = ["main.cc"],
+    # copts = ["-fno-rtti"],
 	deps = [
         "main_gpu",
-        "@mediapipe//mediapipe/graphs/hand_tracking:multi_hand_mobile_calculators",
-	],
+        "//mediapipe/graphs/hand_tracking:multi_hand_mobile_calculators",
+        # "@taxi_code_socialworkout_webrtc_linux//:rtc",
+    ],
+)
+
+DEFAULT_EMSCRIPTEN_LINKOPTS = [
+    # "-flto",                        # Specify lto (has to be set on for compiler as well)
+    "--bind",                       # Compiles the source code using the Embind bindings to connect C/C++ and JavaScript
+    "--closure 1",                  # Run the closure compiler
+    # "-s MALLOC=emmalloc",           # Switch to using the much smaller implementation
+    "-s ALLOW_MEMORY_GROWTH=1",     # Our example doesn't need memory growth
+    "-s USE_PTHREADS=0",            # Disable pthreads
+    "-s ASSERTIONS=0",              # Turn off assertions
+    "-s EXPORT_ES6=1",              # Export as es6 module, used for rollup
+    "-s MODULARIZE=1",              # Allows us to manually invoke the initializatio of wasm
+    "-s EXPORT_NAME=createModule",  # Not used, but good to specify
+    # "-s USE_ES6_IMPORT_META=0",     # Disable loading from import meta since we use rollup
+    "-s SINGLE_FILE=1"              # Pack all webassembly into base64
+]
+ASMJS_LINKOPTS = [
+    "-s WASM=0",                    # Specify asm.js output
+]
+
+WASM_LINKOPTS = [
+    "-s WASM=1",                    # Specify wasm output
+]
+
+
+cc_binary(
+    name = "main_wasm",
+    srcs = ["bindings/main.cpp"],
+    linkopts = DEFAULT_EMSCRIPTEN_LINKOPTS + WASM_LINKOPTS,
+    deps = [
+        "main_gpu",
+        "//mediapipe/graphs/hand_tracking:multi_hand_mobile_calculators",
+    ],
+)
+
+
+
+cc_binary(
+    name = "main_js",
+    srcs = ["bindings/main.cpp"],
+    linkopts = DEFAULT_EMSCRIPTEN_LINKOPTS + ASMJS_LINKOPTS,
+    deps = [
+        "main_gpu",
+        "//mediapipe/graphs/hand_tracking:multi_hand_mobile_calculators",
+    ],
 )

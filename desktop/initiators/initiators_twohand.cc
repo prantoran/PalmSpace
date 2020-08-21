@@ -19,6 +19,7 @@ InitiatorTwoHand::InitiatorTwoHand() {
     bottomright_y = -1;
 
     pointsConvex.resize(2);
+    strict = false;
 }
 
 
@@ -92,7 +93,7 @@ bool InitiatorTwoHand::inspect(
         show_display = true;
     }
 
-    std::cerr << "done setting show_display\n";
+    std::cerr << "two-hand done setting show_display\n";
 
     return show_display;
 }
@@ -103,14 +104,18 @@ std::vector<double> & InitiatorTwoHand::params(
 
     // params() to be called after inspect() returns true
 
-    extra_params.resize(6, -1);
-     /*
+    extra_params.resize(9, -1);
+    /*
       0: min_ws_ratio wrt width
       1: min_hs_ratio wrt height
       2: palmbase_x
       3: palmbase_y
       4: otherindex_x
       5: otherindex_y
+      6: otherindex_z
+      7: selected_i / row
+      8: selected_j / col
+      9: progress_bar% [0-100]
     */
 
     extra_params[0] = raw_width;
@@ -122,6 +127,7 @@ std::vector<double> & InitiatorTwoHand::params(
     if (points[0].size() > INDEXTOP_IDX) {
         extra_params[4] = std::get<0>(points[0][INDEXTOP_IDX]);
         extra_params[5] = std::get<1>(points[0][INDEXTOP_IDX]);
+        extra_params[5] = std::get<2>(points[0][INDEXTOP_IDX]);
     }
 
     return extra_params;

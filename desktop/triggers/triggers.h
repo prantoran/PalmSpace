@@ -4,15 +4,18 @@
 #include <tuple>
 #include <vector>
 #include <chrono>
+#include <string>
 
 namespace TRIGGER {
-    typedef enum {
+    typedef enum{
         OPEN,
         PRESSED, 
         RELEASED,
         INVALID
     } state;
 }
+
+std::chrono::milliseconds cur_time();
 
 class Trigger {
     public:
@@ -24,7 +27,9 @@ class Trigger {
     virtual ~Trigger();
     
 
-    virtual void update(const std::vector<std::vector<std::tuple<double, double, double>>> & points) = 0;
+    virtual void update(
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        std::vector<double> & extra_params) = 0;
     virtual TRIGGER::state status() = 0;
 };
 
@@ -34,7 +39,9 @@ class TriggerThumb: public Trigger {
     TriggerThumb();
     TriggerThumb(int _width, int _height);
 
-    void update(const std::vector<std::vector<std::tuple<double, double, double>>> & points);
+    void update(
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        std::vector<double> & extra_params);
     TRIGGER::state status();
 };
 
@@ -45,7 +52,9 @@ class TriggerThumbOther: public Trigger {
     TriggerThumbOther();
     TriggerThumbOther(int _width, int _height);
 
-    void update(const std::vector<std::vector<std::tuple<double, double, double>>> & points);
+    void update(
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        std::vector<double> & extra_params);
     TRIGGER::state status();
 };
 
@@ -55,7 +64,9 @@ class TriggerPinch: public Trigger {
     TriggerPinch();
     TriggerPinch(int _width, int _height);
 
-    void update(const std::vector<std::vector<std::tuple<double, double, double>>> & points);
+    void update(
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        std::vector<double> & extra_params);
     TRIGGER::state status();
 };
 
@@ -76,9 +87,63 @@ class TriggerWait: public Trigger {
     TriggerWait();
     TriggerWait(int _width, int _height, int _anchor_choice);
 
-    void update(const std::vector<std::vector<std::tuple<double, double, double>>> & points);
+    void update(
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        std::vector<double> & extra_params);
     TRIGGER::state status();
 };
 
+class TriggerTap: public Trigger {
+    public:
+
+    int cnt;
+    double zvalue, prev_zvalue;
+    int hand_ID, prev_handID, hand_switch_ignore_cnt;
+    
+    TriggerTap();
+    TriggerTap(int _width, int _height);
+
+    void update(
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        std::vector<double> & extra_params);
+    TRIGGER::state status();
+};
+
+class TriggerTapPalm: public Trigger {
+
+    public:
+
+    int cnt;
+    double zvalue, prev_zvalue;
+    int hand_ID, prev_handID, hand_switch_ignore_cnt;
+    
+    double cache[9];
+    int cache_id;
+
+    double st, mid, nd;
+
+    TriggerTapPalm();
+    TriggerTapPalm(int _width, int _height);
+
+    void update(
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        std::vector<double> & extra_params);
+    TRIGGER::state status();
+};
+
+
+class TriggerDwell: public Trigger {
+    std::chrono::milliseconds _timestamp[11][11], ctime, ptime;
+    int selected_i, selected_j, selected_i_prv, selected_j_prv; 
+        
+    public:
+
+    TriggerDwell();
+
+    void update(
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        std::vector<double> & extra_params);
+    TRIGGER::state status();
+};
 
 #endif

@@ -7,28 +7,44 @@
 #include "desktop/triggers/triggers.h"
 #include "desktop/initiators/initiators.h"
 
+// #include "mediapipe/framework/calculator_framework.h"
+
+
+
 #include <tuple>
 #include <vector>
+#include <queue>
 
 class AnchorHandler{
     public:
     
     AnchorDynamic _dynamic;
     AnchorStatic _static;
+    AnchorMidAir _midair;
+
     int _choice;
 
-    cv::Mat transform(
+    void calculate(
         const cv::Mat& input, 
-        double palmbase_x, double palmbase_y, 
-        double area, 
+        double palmbase_x_new, double palmbase_y_new, 
+        double interface_scaling_factor, 
         int pointer_x, int pointer_y,
-        const std::vector<double> & extra_params);
+        std::vector<double> & extra_params); 
+
+    void draw(
+        cv::Mat& input, 
+        double palmbase_x_new, double palmbase_y_new, 
+        double interface_scaling_factor, 
+        int pointer_x, int pointer_y,
+        std::vector<double> & extra_params);
     
     void reset_palmbase();
 
     std::tuple<int, int> selectedIndexes();
-    void setGreen(int i, int j);
+    void highlightSelected();
+    int getDivisions();
     bool static_display();
+    void setDivisions(int _divisions);
 };
 
 class TriggerHandler {
@@ -38,11 +54,16 @@ class TriggerHandler {
     TriggerThumbOther _thumb_other;
     TriggerPinch _pinch;
     TriggerWait _wait;
-    
+    TriggerTap _tap;
+    TriggerTapPalm _tappalm;
+    TriggerDwell _dwell;
     
     int _choice;
 
-    void update(const std::vector<std::vector<std::tuple<double, double, double>>> & points);
+    void update(
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        std::vector<double> & extra_params);
+        
     TRIGGER::state status();
 };
 
@@ -58,20 +79,33 @@ class InitiatorHandler {
         std::vector<std::vector<std::tuple<double, double, double>>> & points);
     std::vector<double> & params(
         const std::vector<std::vector<std::tuple<double, double, double>>> & points);
+    void setStrict(bool _strict);
 };
 
 
-::mediapipe::Status RunMPPGraph(
-    InitiatorHandler& initiator,
-    AnchorHandler& anchor, 
-    TriggerHandler& trigger, 
-    const std::string& calculator_graph_config_file,
-    const std::string& input_video_path,
-    const std::string& output_video_path,
-    const int frame_width,
-    const int frame_height,
-    const int fps,
-    const int debug_mode);
+
+class MediaPipeMultiHandGPU {
+    public:
+    AnchorHandler anchor;
+    TriggerHandler trigger;
+    InitiatorHandler initiator;
+    // int curImageID;
+
+    MediaPipeMultiHandGPU();
+
+    ::mediapipe::Status run(
+        const std::string& calculator_graph_config_file,
+        const std::string& input_video_path,
+        const std::string& output_video_path,
+        const int frame_width,
+        const int frame_height,
+        const int fps,
+        const int debug_mode); //,
+        // const std::string& image_ext,
+        // const unsigned int readDelayMS,
+        // std::vector<std::queue<std::shared_ptr<cv::Mat>>> & inq,
+        // std::vector<std::queue<std::shared_ptr<cv::Mat>>> & outq);
+};
 
 
 
