@@ -97,7 +97,7 @@ class AnchorDynamic: public Anchor {
 class AnchorStatic: public Anchor {
     public:
     AnchorStatic();
-    AnchorStatic(cv::Scalar red, cv::Scalar blue);
+    AnchorStatic(cv::Scalar red, cv::Scalar blue, std::string img_path);
     std::string type();
 
     cv::Mat image_palm, mask;

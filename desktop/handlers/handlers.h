@@ -100,11 +100,33 @@ class MediaPipeMultiHandGPU {
         const int frame_width,
         const int frame_height,
         const int fps,
-        const int debug_mode); //,
-        // const std::string& image_ext,
-        // const unsigned int readDelayMS,
-        // std::vector<std::queue<std::shared_ptr<cv::Mat>>> & inq,
-        // std::vector<std::queue<std::shared_ptr<cv::Mat>>> & outq);
+        const int debug_mode); 
+};
+
+
+class ExtraParameters {
+    public:
+    std::vector<double> extra_params;
+    int psize;
+    /*
+      0: min_ws
+      1: min_hs
+      2: palmbase_x
+      3: palmbase_y
+      4: otherindex_x
+      5: otherindex_y
+      6: otherindex_z
+      7: selected_i / row
+      8: selected_j / col
+      9: progress_bar% [0-100]
+    */
+
+    ExtraParameters();
+
+    void set(int i, double v);
+    void set(const std::vector<double> & p);
+    double at(int i);
+
 };
 
 

@@ -14,8 +14,8 @@ package(default_visibility = [
 
 cc_import(
     name = "webrtc_static",
-    hdrs = glob(["lib/webrtc/include/*.h", "lib/webrtc/include/**/*.h"]),
-    static_library = "lib/webrtc/lib/x64/Debug/libwebrtc_full.a",
+#    hdrs = glob(["lib/webrtc/include/*.h", "lib/webrtc/include/**/*.h"]),
+#    static_library = "lib/webrtc/lib/x64/Debug/libwebrtc_full.a",
     # If alwayslink is turned on,
     # libmylib.a will be forcely linked into any binary that depends on it.
     # alwayslink = 1,

@@ -4,8 +4,7 @@ Open a terminal in the MediaPipe directory which has the `WORKSPACE` file and ex
 
 - build:
 ```
-bazel build -c opt --copt -DMESA_EGL_NO_X11_HEADERS --copt -DEGL_NO_X11 \
-  PalmSpace/examples/desktop:main
+bazel build -c opt --copt -DMESA_EGL_NO_X11_HEADERS --copt -DEGL_NO_X11 PalmSpace/examples/desktop:main
 ```
 
 - run:

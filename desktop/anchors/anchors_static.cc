@@ -7,7 +7,7 @@
 #include <vector>
 
 std::string AnchorStatic::type() {
-    return "anchor-type=dynamic";
+    return "anchor-type=static";
 }
 
 AnchorStatic::AnchorStatic() {
@@ -18,9 +18,11 @@ AnchorStatic::AnchorStatic() {
     palmbase_momentum = 0.9;
     gap = 15;
 
+
     color_red = cv::Scalar(25, 25, 255);
     color_blue = cv::Scalar(255, 25, 25);
     color_green = cv::Scalar(25, 255, 25);
+
 
     selected_i_prv = -1, selected_j_prv = -1;
     selected_i = -1, selected_j = -1;
@@ -30,15 +32,17 @@ AnchorStatic::AnchorStatic() {
     palm_ubx = 0, palm_uby = 0;
 }
 
-AnchorStatic::AnchorStatic(cv::Scalar red, cv::Scalar blue) {
+AnchorStatic::AnchorStatic(cv::Scalar red, cv::Scalar blue, std::string img_path) {
     width = 0;
     height = 0;
     palmbase_momentum = 0.9;
     gap = 5;
+    std::cerr << "static constructor\n";
 
     color_red = red;
     color_blue = blue;
     color_green = cv::Scalar(25, 255, 25);
+    std::cerr << "done colors\n";
 
     selected_i_prv = -1, selected_j_prv = -1;
     selected_i = -1, selected_j = -1;
@@ -47,7 +51,7 @@ AnchorStatic::AnchorStatic(cv::Scalar red, cv::Scalar blue) {
 
     // only take .png as it has alpha channel for transparency
     // image_palm = cv::imread("/home/prantoran/work/src/github.com/google/fresh/mediapipe/desktop/anchors/Hand.png", CV_LOAD_IMAGE_COLOR); // ignores alpha transparency channel
-    image_palm = cv::imread("/home/prantoran/work/src/github.com/google/fresh/mediapipe/desktop/anchors/Hand.png", CV_LOAD_IMAGE_UNCHANGED);
+    image_palm = cv::imread(img_path, CV_LOAD_IMAGE_UNCHANGED);
     // https://docs.opencv.org/3.4/da/d0a/group__imgcodecs__c.html
 
     cv::resize(image_palm, image_palm, cv::Size(300,300));

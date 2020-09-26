@@ -33,10 +33,12 @@ AnchorDynamic::AnchorDynamic(cv::Scalar red, cv::Scalar blue) {
   palmbase_momentum = 0.9;
   gap = 5;
 
+
   color_red = red;
   color_blue = blue;
   color_green = cv::Scalar(25, 255, 25);
 
+  
   selected_i_prv = -1, selected_j_prv = -1;
   selected_i = -1, selected_j = -1;
   static_display = false;
@@ -85,12 +87,9 @@ void AnchorDynamic::calculate(
     if (palmbase_y_prv) {
       palmbase_y = (1-palmbase_momentum)*palmbase_y + palmbase_momentum*palmbase_y_prv;
     }
-        std::cerr <<"using palmbase_x_new:" << palmbase_x_new << " palmbase_y_new:" << palmbase_y_new << "\n";
 
     setupGrid(); // defined in parent anchor class
     
-    // std::cerr << "anchor palmbase_x:" << palmbase_x << " width:" << width << " ws:" << ws << " hs:" << hs << " dx:" << dx << " dy:" << dy << " gap:" << gap <<" divisions:" << divisions <<"\n";
-    // std::cerr  << " (ws - (divisions+1)*gap):" << (ws - (divisions+1)*gap) << " (hs - (divisions+1)*gap):" << (hs - (divisions+1)*gap) << "\n";
 
     setupSelection(pointer_x, pointer_y); // defined in parent anchor class
 
@@ -101,7 +100,6 @@ void AnchorDynamic::calculate(
       extra_params[7] = selected_i;
       extra_params[8] = selected_j;
     } else {
-      std::cerr << "anchors_dynamic extra_params small size, cannot store selected i-j\n";
     }
 
 }
@@ -146,8 +144,6 @@ void AnchorDynamic::draw(
         }
     }
 
-    // std::cerr << "anchors_dynamic message:" << message << "\n";
-    
     drawTextHighlighted(overlay);
     drawTextSelected(overlay);
 
