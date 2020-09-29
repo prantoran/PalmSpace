@@ -6,6 +6,7 @@
 #include "desktop/anchors/anchors.h"
 #include "desktop/triggers/triggers.h"
 #include "desktop/initiators/initiators.h"
+#include "desktop/config/config.h"
 
 // #include "mediapipe/framework/calculator_framework.h"
 
@@ -77,8 +78,9 @@ class InitiatorHandler {
 
     bool inspect(
         std::vector<std::vector<std::tuple<double, double, double>>> & points);
-    std::vector<double> & params(
-        const std::vector<std::vector<std::tuple<double, double, double>>> & points);
+    void params(
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        ExtraParameters & parameters);
     void setStrict(bool _strict);
 };
 
@@ -102,34 +104,5 @@ class MediaPipeMultiHandGPU {
         const int fps,
         const int debug_mode); 
 };
-
-
-class ExtraParameters {
-    public:
-    std::vector<double> extra_params;
-    int psize;
-    /*
-      0: min_ws
-      1: min_hs
-      2: palmbase_x
-      3: palmbase_y
-      4: otherindex_x
-      5: otherindex_y
-      6: otherindex_z
-      7: selected_i / row
-      8: selected_j / col
-      9: progress_bar% [0-100]
-    */
-
-    ExtraParameters();
-
-    void set(int i, double v);
-    void set(const std::vector<double> & p);
-    double at(int i);
-
-};
-
-
-
 
 #endif

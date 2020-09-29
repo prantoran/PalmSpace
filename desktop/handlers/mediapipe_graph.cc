@@ -142,58 +142,17 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
   // for storing key values to be passed among handlers
   auto params = ExtraParameters();
 
+  cv::Mat camera_frame_raw, output_frame_mat;
+
+  std::vector<std::vector<std::tuple<double, double, double>>> points(3); 
+  
+  for (int i = 0; i < 2; i ++) {
+    points[i] = std::vector<std::tuple<double, double, double>> (21);
+  }
+  
+  points[2].push_back(std::make_tuple(-1, -1, 0));
+
   while (grab_frames) {
-    // std::cerr << "grab_frames:" << grab_frames << "\n";
-    // usleep(readDelayMS);
-    // Capture opencv camera or video frame.
-    cv::Mat camera_frame_raw;
-    // std::shared_ptr<cv::Mat> camera_frame_raw;
-
-    // workerID = -1;
-    // for (int i = 0; i < 1; i ++) {
-    //   if (!inq[i].empty()) {
-    //     workerID = i;
-    //     break;
-    //   }
-    // }
-
-
-    // if (workerID == -1) {
-    //   continue;
-    // }
-    // std::cout << "workerID:" << workerID << "\n";
-
-    // if((*inq[workerID].front()).empty()) {
-    //   std::cerr << "inq mat empty\n";
-    // }
-    // std::shared_ptr<cv::Mat> camera_frame_raw = inq[workerID].front();
-    // inq[workerID].pop();
-
-    // if(fromq->empty()) {
-    //   std::cerr << "fromq mat empty\n";
-    // }
-    // if((*fromq).empty()) {
-    //   std::cerr << "fromq mat empty\n";
-    // }
-
-    // expect two pointers, for input and output mat
-
-
-
-    // std::shared_ptr<cv::Mat> output_mat_ref = inq[workerID].front();
-    // inq[workerID].pop();
-
-    // if (camera_frame_raw.empty()) {
-    //   std::cerr << "mediapipe camera_frame_raw is empty\n";
-    // } else {
-    //   std::cout << "mediapipe camera_frame_raw has data\n";
-    // }
-
-    // if (debug_mode) {
-    //   cv::imshow("client", camera_frame_raw);
-    //   cv::waitKey();
-    // }
-
     // if (load_video) {
     //   std::string filepath = input_video_path + "/" + imageName(curImageID, image_ext);
     //   if (!fileExists(filepath)) {
@@ -203,15 +162,6 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
     //   camera_frame_raw = cv::imread(filepath);
     // } else {
     capture >> camera_frame_raw;
-    // }
-
-
-    // for (int i = 0; i < 10; i ++) {
-
-    //   for (int j = 0; j < 10; j ++) {
-    //     std::cerr << camera_frame_raw.at<double>(i, j) << "\t";
-    //   } std::cerr << "\n";
-    // }
     
     // if (camera_frame_raw->empty()) break;  // End of video.
     if (camera_frame_raw.empty()) break;  // End of video.
@@ -311,38 +261,38 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
     // }
 
 
-    std::vector<std::vector<std::tuple<double, double, double>>> points(3); 
     /*
       points[2] used for sending auxiliary information
       points[2][0] = {cx, cy, cz};
     */
-    points[2].push_back(std::make_tuple(cx, cy, 0));
-    
-    std::tuple<double, double, double> cur;
-    
+    points[2][0] = std::make_tuple(cx, cy, 0);
+        
     int hand_index = 0;
 
     for (const auto& hand_landmarks : multi_hand_landmarks) {
       if (hand_index == 2) break; // considering only two hands
+      
+      int j = 0;
+      
       for (const auto& landmark : hand_landmarks.landmark()) {
-        cur = std::make_tuple(landmark.x(), landmark.y(), landmark.z());
-        points[hand_index].push_back(cur);
+        points[hand_index][j] = std::make_tuple(landmark.x(), landmark.y(), landmark.z());
+      
+        ++ j;
       }
+
       ++hand_index;
     }
     
-    params.set(initiator.params(points));
+    initiator.params(points, params);
 
-    palmbase_x = params.at(2);
-    palmbase_y = params.at(3);
+    params.get_palmbase(palmbase_x, palmbase_y);
 
     if (initiator.inspect(points)) {
       show_display = true;
-      params.set(initiator.params(points));
+      initiator.params(points, params);
 
-      palmbase_x = params.at(2);
-      palmbase_y = params.at(3);
-
+      params.get_palmbase(palmbase_x, palmbase_y);
+    
     } else {
       show_display = false;
       anchor.reset_palmbase();
@@ -350,9 +300,8 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
     
     // Convert back to opencv for display or saving.
     // cv::Mat output_frame_mat = mediapipe::formats::MatView(output_frame.get());
-    cv::Mat output_frame_mat = camera_frame;
+    output_frame_mat = camera_frame;
     cv::cvtColor(output_frame_mat, output_frame_mat, cv::COLOR_RGB2BGR);
-    
     
     if (!width) {
         width = output_frame_mat.size().width;
@@ -361,22 +310,22 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
 
     std::cerr << "width:" << width << " height:" << height << "\n";
 
-    if (params.at(4) != -1) {
+    if (params.is_set_indexfinger()) {
         // std::cerr << "drawing finger\n";
         otherindex_x_prv = otherindex_x;
-        otherindex_x = params.at(4);
+        otherindex_y_prv = otherindex_y;
+        
+        params.get_indexfinger(otherindex_x, otherindex_y);
 
         if (otherindex_x_prv == -1) {
           otherindex_x_prv = otherindex_x;
         }
-        otherindex_x = (1-otherindex_momentum)*otherindex_x + otherindex_momentum*otherindex_x_prv;
         
-
-        otherindex_y_prv = otherindex_y;
-        otherindex_y = params.at(5);
         if (otherindex_y_prv == -1) {
           otherindex_y_prv = otherindex_y;
         }
+        
+        otherindex_x = (1-otherindex_momentum)*otherindex_x + otherindex_momentum*otherindex_x_prv;
         otherindex_y = (1-otherindex_momentum)*otherindex_y + otherindex_momentum*otherindex_y_prv;
 
         cx = otherindex_x*width;
@@ -420,7 +369,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
           cx, cy, params.extra_params);
         // std::cerr << "done callin transform\n";
 
-      if (params.get(4) != -1) {
+      if (params.is_set_indexfinger()) {
         cv::circle(
           output_frame_mat,
           cv::Point(cx, cy),

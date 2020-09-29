@@ -69,6 +69,7 @@ cc_library(
         "anchors/*.h", "anchors/*.cc",
         "triggers/*.h", "triggers/*.cc",
         "initiators/*.h", "initiators/*.cc",
+        "config/*.h", "config/*.cc",
     ]),
     hdrs = glob([
         # "webrtcserve/observers.h",
