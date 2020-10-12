@@ -1,27 +1,29 @@
 #include "initiators.h"
 
-
-const double AREA_THRESHOLD = 0.06;
-const double SMALLAREA_THRESHOLD = 0.01;
-const int PALMBASE_IDX = 0;
-const int INDEXTOP_IDX = 8;
-
-
-
-
 InitiatorDefault::InitiatorDefault() {
     name = "Initiator_Default";
     pointsConvex.resize(2);
     strict = false;
 }
 
+InitiatorDefault::~InitiatorDefault() {
+
+  std::cout << "default initiator killed\n";
+}
+
 bool InitiatorDefault::inspect(
         std::vector<std::vector<std::tuple<double, double, double>>> & points) {
     
+    valid[0] = true;
+    valid[1] = true;
+
     for (int i = 0; i < 2; i ++) {
         pointsConvex[i].clear();
         for (auto & u: points[i]) {
             pointsConvex[i].emplace_back(u);
+            if (std::get<0>(u) < 0.1 && std::get<1>(u) < 0.1) {
+              valid[i] = false;
+            }
         }
     }
 
@@ -33,10 +35,13 @@ bool InitiatorDefault::inspect(
       }
     }
 
-    if (areas[0] < areas[1]) {
+    // if (areas[0] < areas[1]) {
+    if (valid[1] && areas[1] > AREA_THRESHOLD && std::get<0>(points[1][17]) < std::get<0>(points[0][17])) {
       std::swap(points[0], points[1]);
       std::swap(areas[0], areas[1]);
+      std::swap(valid[0], valid[1]);
     }
+
 
     show_display = false;
     if (areas[0] > AREA_THRESHOLD) {
@@ -52,7 +57,7 @@ void InitiatorDefault::params(
   ExtraParameters & parameters) {
   
   // params() to be called after inspect() returns true
-  
+
   int n = points.size();
   int m0 = 0, m1 = 0;
   if (n > 0) {
@@ -62,15 +67,23 @@ void InitiatorDefault::params(
     m1 = points[1].size();
   }
   
-  if (n > 0 && m0 > PALMBASE_IDX) {
-    if (std::get<0>(points[0][PALMBASE_IDX]) > 0 && std::get<1>(points[0][PALMBASE_IDX])) {
-      parameters.set_palmbase(points[0][PALMBASE_IDX]);
+  if (n > 0) {
+    if (m0 > PALMBASE_IDX) {
+      if (std::get<0>(points[0][PALMBASE_IDX]) > 0 && std::get<1>(points[0][PALMBASE_IDX]) > 0) {
+        parameters.set_palmbase(points[0][PALMBASE_IDX]);
+      }
+    }
+
+    if (m0 > INDEXBASE_IDX) {
+      if (std::get<0>(points[0][INDEXBASE_IDX]) > 0 && std::get<1>(points[0][INDEXBASE_IDX]) > 0) {
+        parameters.set_indexbase(points[0][INDEXBASE_IDX]);
+      }
     }
   }
 
-  if (n > 1 && m1 > INDEXTOP_IDX && points[1].size() > INDEXTOP_IDX && areas[1] > SMALLAREA_THRESHOLD) {
+
+  if (n > 1 && m1 > INDEXTOP_IDX && valid[1] && 
+    points[1].size() > INDEXTOP_IDX && areas[1] > SMALLAREA_THRESHOLD) {
       parameters.set_indexfinger(points[1][INDEXTOP_IDX]);
-  } else if (!strict && n > 0 && m0 > INDEXTOP_IDX && points[0].size() > INDEXTOP_IDX && areas[0] > SMALLAREA_THRESHOLD) {
-      parameters.set_indexfinger(points[0][INDEXTOP_IDX]);
-  }
+  } 
 }

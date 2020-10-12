@@ -1,6 +1,5 @@
 
 #include "triggers.h"
-#include <iostream>
 
 // internal linkage, not visible outside
 // for external linkage, use extern

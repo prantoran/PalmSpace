@@ -8,6 +8,20 @@
 
 #include "desktop/config/config.h"
 
+
+const int REF_IDX1 = 2; 
+const int REF_IDX2 = 5; 
+const int INDEXTOP_IDX = 8;
+const int PALMBASE_IDX = 0;
+const int INDEXBASE_IDX = 17; // adjusted for left hand
+
+const double MIN_WIDTH = 0.1;
+const double MIN_HEIGHT = 0.1;
+
+const double AREA_THRESHOLD = 0.04;
+const double SMALLAREA_THRESHOLD = 0.008;
+
+
 class Initiator {
     public:
     std::string name;
@@ -17,6 +31,8 @@ class Initiator {
     
     std::vector<std::vector<std::tuple<double, double, double>>> pointsConvex;
     double areas[2];
+
+    bool valid[2];
     
     virtual ~Initiator();
 
@@ -32,6 +48,8 @@ class InitiatorDefault: public Initiator {
     public:
     
     InitiatorDefault();
+    ~InitiatorDefault();
+
     bool inspect(
         std::vector<std::vector<std::tuple<double, double, double>>> & points);
     void params(
@@ -47,6 +65,8 @@ class InitiatorTwoHand: public Initiator {
     public:
     
     InitiatorTwoHand();
+    ~InitiatorTwoHand();
+
     bool inspect(
         std::vector<std::vector<std::tuple<double, double, double>>> & points);
     void params(

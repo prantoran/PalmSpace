@@ -10,12 +10,15 @@ std::string AnchorMidAir::type() {
     return "anchor-type=dynamic";
 }
 
+AnchorMidAir::~AnchorMidAir() {
+    std::cout << "anchor midair killed\n";
+}
+
 AnchorMidAir::AnchorMidAir() {
     name = "static";
 
     width = 0;
     height = 0;
-    palmbase_momentum = 0.9;
     gap = 15;
 
     color_red = cv::Scalar(25, 25, 255);
@@ -31,7 +34,6 @@ AnchorMidAir::AnchorMidAir() {
 AnchorMidAir::AnchorMidAir(cv::Scalar red, cv::Scalar blue) {
     width = 0;
     height = 0;
-    palmbase_momentum = 0.9;
     gap = 5;
 
     color_red = red;
@@ -45,37 +47,29 @@ AnchorMidAir::AnchorMidAir(cv::Scalar red, cv::Scalar blue) {
 
 void AnchorMidAir::calculate(
     const cv::Mat& input, 
-    double palmbase_x_new, double palmbase_y_new, 
-    double interface_scaling_factor, 
+    const std::tuple<double, double, double> & palmbase,
+    const std::tuple<double, double, double> & indexbase, 
+    double scale_ratio, 
     int pointer_x, int pointer_y,
     std::vector<double> & extra_params) {
 
-    // std::cerr <<"initial palmbase_x_new:" << palmbase_x_new << " palmbase_y_new:" << palmbase_y_new << "\n";
 
     if (!width || !height) {
         setConfig(input.size().width, input.size().height);
-        
 
         min_ws = width;
         min_hs = height;
-
-
     }
     
-    if (palmbase_x_new >= 0 && palmbase_y_new >= 0) {
+    if (std::get<0>(palmbase) >= 0 && std::get<1>(palmbase) >= 0) {
         palmbase_x = 0.5; // determines a position of grid
         palmbase_y = 1;   // middle-bottom point
 
         static_display = true;
     }
 
-    // std::cerr << "anchor_midair ws:" << ws << " hs:" << hs << " gap:" << gap << " dx:" << dx << " dy:" << dy << " palmbase_x:" << palmbase_x << " palmbase_y:" << palmbase_y  << "\n";
-    // std::cerr << "anchor_midair palmbase_x:" << palmbase_x << " palmbase_y:" << palmbase_y  << "\n";
-
-    setupGrid(); // defined in parent anchor class
-    
-    // std::cerr << "anchor x0:" << xs[0] << " y0:" << ys[0] << " x1:" << xs[1] << " y1:" << ys[1] << " x2:" << xs[2] << " y2:" << ys[2] << " x3:" << xs[3] << " y3:" << ys[3] << "\n";
-    
+    setupGrid((palmbase_x*width) - (ws/2), (palmbase_y*height) - hs); // defined in parent anchor class
+        
     std::cout << "anchor_midair pointer x:" << pointer_x << " y:" << pointer_y << "\n";
     setupSelection(pointer_x, pointer_y); // defined in parent anchor class
 
@@ -92,8 +86,9 @@ void AnchorMidAir::calculate(
 
 void AnchorMidAir::draw(
     cv::Mat& input, 
-    double palmbase_x_new, double palmbase_y_new, 
-    double interface_scaling_factor, 
+    const std::tuple<double, double, double> & palmbase,
+    const std::tuple<double, double, double> & indexbase, 
+    double scale_ratio, 
     int pointer_x, int pointer_y,
     std::vector<double> & extra_params) {
 
@@ -133,10 +128,4 @@ void AnchorMidAir::draw(
     drawProgressBar(overlay, extra_params[9]);
 
     cv::addWeighted(overlay, alpha, input, 1-alpha, 0, input);
-}
-
-void AnchorMidAir::reset_palmbase() {
-    // static, hence no reset of palmbase x-y or ws-hs
-    //     palmbase_x = 0;
-    // palmbase_y = 0;
 }

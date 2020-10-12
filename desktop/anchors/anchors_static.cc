@@ -6,16 +6,22 @@
 
 #include <vector>
 
+
 std::string AnchorStatic::type() {
     return "anchor-type=static";
 }
+
+
+AnchorStatic::~AnchorStatic() {
+    std::cout << "anchor static killed\n";
+}
+
 
 AnchorStatic::AnchorStatic() {
     name = "static";
 
     width = 0;
     height = 0;
-    palmbase_momentum = 0.9;
     gap = 15;
 
 
@@ -32,17 +38,15 @@ AnchorStatic::AnchorStatic() {
     palm_ubx = 0, palm_uby = 0;
 }
 
+
 AnchorStatic::AnchorStatic(cv::Scalar red, cv::Scalar blue, std::string img_path) {
     width = 0;
     height = 0;
-    palmbase_momentum = 0.9;
     gap = 5;
-    std::cerr << "static constructor\n";
 
     color_red = red;
     color_blue = blue;
     color_green = cv::Scalar(25, 255, 25);
-    std::cerr << "done colors\n";
 
     selected_i_prv = -1, selected_j_prv = -1;
     selected_i = -1, selected_j = -1;
@@ -58,9 +62,7 @@ AnchorStatic::AnchorStatic(cv::Scalar red, cv::Scalar blue, std::string img_path
     
     // https://answers.opencv.org/question/174551/how-to-show-transparent-images/
     std::vector<cv::Mat> rgbLayer;
-    std::cerr << "image_palm channels:" << image_palm.channels() << "\n";
     if(image_palm.channels() < 4) {
-        std::cerr << "image doe not have 4 channels\n";
         return;
     }
 
@@ -77,14 +79,14 @@ AnchorStatic::AnchorStatic(cv::Scalar red, cv::Scalar blue, std::string img_path
     palm_ubx = 0, palm_uby = 0;
 }
 
+
 void AnchorStatic::calculate(
     const cv::Mat& input, 
-    double palmbase_x_new, double palmbase_y_new, 
-    double interface_scaling_factor, 
+    const std::tuple<double, double, double> & palmbase,
+    const std::tuple<double, double, double> & indexbase, 
+    double scale_ratio, 
     int pointer_x, int pointer_y,
     std::vector<double> & extra_params) {
-
-    // std::cerr <<"initial palmbase_x_new:" << palmbase_x_new << " palmbase_y_new:" << palmbase_y_new << "\n";
 
     if (!width || !height) {
         setConfig(input.size().width, input.size().height);
@@ -99,14 +101,12 @@ void AnchorStatic::calculate(
 
     }
 
-    // std::cerr << "anchor ws:" << ws << " hs:" << hs << " gap:" << gap << " dx:" << dx << " dy:" << dy << " palmbase_x:" << palmbase_x << " palmbase_y:" << palmbase_y  << "\n";
-    // std::cerr << "palmbase_x:" << palmbase_x << " palmbase_y:" << palmbase_y  << "\n";
-
-    setupGrid(); // defined in parent anchor class
+    setupGrid((palmbase_x*width) - (ws/2), (palmbase_y*height) - hs); // defined in parent anchor class
     
+    double palmbase_x_new = std::get<0>(palmbase);
+    double palmbase_y_new = std::get<1>(palmbase);
 
     if (palmbase_x_new != -1) { // putting palm when palm coord detected
-        std::cerr <<"using palmbase_x_new:" << palmbase_x_new << " palmbase_y_new:" << palmbase_y_new << "\n";
         palmstart_x = palmbase_x_new*width - 150;
         palmstart_y = palmbase_y_new*height - 300;
 
@@ -129,10 +129,8 @@ void AnchorStatic::calculate(
 
 
     }
-    // std::cerr << "anchor x0:" << xs[0] << " y0:" << ys[0] << " x1:" << xs[1] << " y1:" << ys[1] << " x2:" << xs[2] << " y2:" << ys[2] << " x3:" << xs[3] << " y3:" << ys[3] << "\n";
     double dx = pointer_x-palmstart_x;
     double dy = pointer_y-palmstart_y;
-    std::cerr << "dx:" <<dx << " dy:" << dy << " pointer_x:" << pointer_x << " pointer_y:" << pointer_y << "\n";
     if (dx < 50 || dx > 250 || dy < 50 || dy > 250) {
         // invalidating pointer_x for pointers outside the palm image
         pointer_x = -1;
@@ -155,21 +153,23 @@ void AnchorStatic::calculate(
       extra_params[7] = selected_i;
       extra_params[8] = selected_j;
     } else {
-      std::cerr << "anchors_static extra_params small size, cannot store selected i-j\n";
     }
 
 }
 
+
 void AnchorStatic::draw(
     cv::Mat& input, 
-    double palmbase_x_new, double palmbase_y_new, 
-    double interface_scaling_factor, 
+    const std::tuple<double, double, double> & palmbase,
+    const std::tuple<double, double, double> & indexbase, 
+    double scale_ratio, 
     int pointer_x, int pointer_y,
     std::vector<double> & extra_params) {
-
-
+    
+    double palmbase_x_new = std::get<0>(palmbase);
+    double palmbase_y_new = std::get<1>(palmbase);
+     
     if (palmbase_x_new != -1) { // putting palm when palm coord detected
-        // std::cerr << "palm_ubx:" << palm_ubx << " palm_uby:" << palm_uby << "\n";
         image_palm.copyTo(
             input(
                 cv::Rect(
@@ -203,29 +203,8 @@ void AnchorStatic::draw(
             CV_AA,
             0
         );
-
-
-        // cv::LineIterator it(input, p1, p2, 8);            // get a line iterator
-        // for(int i = 0; i < it.count; i++,it++)
-        //     if ( i%2!=0 ) {(*it)[0] = 255;}         // every 5'th pixel gets dropped, blue stipple lin
-        
-        // cv::LineIterator it2(input, p2, p3, 8);            // get a line iterator
-        // for(int i = 0; i < it2.count; i++,it++)
-        //     if ( i%2!=0 ) {(*it2)[0] = 255;}         // every 5'th pixel gets dropped, blue stipple lin
-    
-        // cv::LineIterator it3(input, p3, p4, 8);            // get a line iterator
-        // for(int i = 0; i < it3.count; i++,it++)
-        //     if ( i%2!=0 ) {(*it3)[0] = 255;}         // every 5'th pixel gets dropped, blue stipple lin
-    
-
-        // cv::LineIterator it4(input, p4, p1, 8);            // get a line iterator
-        // for(int i = 0; i < it4.count; i++,it++)
-        //     if ( i%2!=0 ) {(*it4)[0] = 255;}         // every 5'th pixel gets dropped, blue stipple lin
     
     }
-
-
-    // return;
 
     cv::Mat overlay;
     input.copyTo(overlay);
@@ -257,17 +236,6 @@ void AnchorStatic::draw(
         }
     }
 
-    // cv::imshow("Display window", overlay);
-
-    // cv::waitKey(0);
-
-    // overlay = cv::addWeighted(overlay, 0.4, image_palm, 0.1, 0);
-    
-    // std::cerr << "anchor palmbase_x:" << palmbase_x_new << " palmbase_y:" << palmbase_y_new << "\n";
-    
-
-
-
     drawTextHighlighted(overlay);
     drawTextSelected(overlay);
 
@@ -276,8 +244,3 @@ void AnchorStatic::draw(
     cv::addWeighted(overlay, alpha, input, 1-alpha, 0, input);
 }
 
-void AnchorStatic::reset_palmbase() {
-    // static, hence no reset of palmbase x-y or ws-hs
-    //     palmbase_x = 0;
-    // palmbase_y = 0;
-}

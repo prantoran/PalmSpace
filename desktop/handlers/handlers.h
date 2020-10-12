@@ -27,19 +27,22 @@ class AnchorHandler{
 
     void calculate(
         const cv::Mat& input, 
-        double palmbase_x_new, double palmbase_y_new, 
-        double interface_scaling_factor, 
+        const std::tuple<double, double, double> & palmbase,
+        const std::tuple<double, double, double> & indexbase, 
+        double scale_ratio, 
         int pointer_x, int pointer_y,
         std::vector<double> & extra_params); 
 
     void draw(
         cv::Mat& input, 
-        double palmbase_x_new, double palmbase_y_new, 
-        double interface_scaling_factor, 
+        const std::tuple<double, double, double> & palmbase,
+        const std::tuple<double, double, double> & indexbase, 
+        double scale_ratio, 
         int pointer_x, int pointer_y,
         std::vector<double> & extra_params);
     
     void reset_palmbase();
+    void reset_indexbase();
 
     std::tuple<int, int> selectedIndexes();
     void highlightSelected();

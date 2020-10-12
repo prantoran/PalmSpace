@@ -82,23 +82,24 @@ void Anchor::drawProgressBar(cv::Mat & _image, double _progress) {
 }
 
 
-void Anchor::setupGrid() {
+void Anchor::setupGrid(double enlarged_topleft_x, double enlarged_topleft_y) {
     // setup tile coords
+
+    // enlarged means topleft coords are received after multiplying ratios by width and height
+
     ws = min_ws;
     hs = min_hs;
 
     dx = (ws - (divisions+1)*gap)/divisions;
     dy = (hs - (divisions+1)*gap)/divisions;
 
-    // std::cout << "2dx:" << dx << " dy:" << dy << "\n";
-
-    xs[0] = (palmbase_x*width) - (ws/2);
+    xs[0] = enlarged_topleft_x;
     xs[1] = xs[0]+gap;
     for (int i = 2; i <= divisions; i ++) {
       xs[i] = xs[i-1]+dx+gap;
     }
 
-    ys[0] = (palmbase_y*height) - hs;
+    ys[0] = enlarged_topleft_y;
     ys[1] = ys[0]+gap;
     for (int i = 2; i <= divisions; i ++) {
       ys[i] = ys[i-1]+dy+gap;
@@ -148,6 +149,7 @@ void Anchor::setupSelection(int index_pointer_x, int index_pointer_y) {
     }
 }
 
+
 void Anchor::drawTextHighlighted(cv::Mat & overlay) {
     if (selected_i != -1) {
         cv::putText(overlay, //target image
@@ -161,6 +163,7 @@ void Anchor::drawTextHighlighted(cv::Mat & overlay) {
     }
 }
 
+
 void Anchor::drawTextSelected(cv::Mat & overlay) {
     if (green_i != -1) {
         cv::putText(overlay, //target image
@@ -172,4 +175,20 @@ void Anchor::drawTextSelected(cv::Mat & overlay) {
             3
         );
     }
+}
+
+
+void Anchor::reset_palmbase() {
+    palmbase_x = -1;
+    palmbase_y = -1;
+    ws = 0;
+    hs = 0;
+}
+
+
+void Anchor::reset_indexbase() {
+    indexbase_x = -1;
+    indexbase_y = -1;
+    ws = 0;
+    hs = 0;
 }

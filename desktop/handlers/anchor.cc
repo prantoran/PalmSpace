@@ -5,39 +5,44 @@
 #include "desktop/anchors/anchors.h"
 #include "handlers.h"
 
+
 void AnchorHandler::calculate(
         const cv::Mat& input, 
-        double palmbase_x_new, double palmbase_y_new, 
-        double interface_scaling_factor, 
+        const std::tuple<double, double, double> & palmbase,
+        const std::tuple<double, double, double> & indexbase, 
+        double scale_ratio, 
         int pointer_x, int pointer_y,
         std::vector<double> & extra_params) {
 
     if (_choice == 1) {
-        _dynamic.calculate(input, palmbase_x_new, palmbase_y_new, interface_scaling_factor, pointer_x, pointer_y, extra_params);
+        _dynamic.calculate(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, extra_params);
     } else if (_choice == 2) {
-        _static.calculate(input, palmbase_x_new, palmbase_y_new, interface_scaling_factor, pointer_x, pointer_y, extra_params);
+        _static.calculate(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, extra_params);
     } else if (_choice == 3) {
-        _midair.calculate(input, palmbase_x_new, palmbase_y_new, interface_scaling_factor, pointer_x, pointer_y, extra_params);
+        _midair.calculate(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, extra_params);
     } else {
         std::cerr << "handler_anchor invalid choice:" << _choice << "\n";
     }
 }
 
+
 void AnchorHandler::draw(
         cv::Mat& input, 
-        double palmbase_x_new, double palmbase_y_new, 
-        double interface_scaling_factor, 
+        const std::tuple<double, double, double> & palmbase,
+        const std::tuple<double, double, double> & indexbase, 
+        double scale_ratio, 
         int pointer_x, int pointer_y,
         std::vector<double> & extra_params) {
 
     if (_choice == 1) {
-        _dynamic.draw(input, palmbase_x_new, palmbase_y_new, interface_scaling_factor, pointer_x, pointer_y, extra_params);
+        _dynamic.draw(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, extra_params);
     } else if (_choice == 2){
-        _static.draw(input, palmbase_x_new, palmbase_y_new, interface_scaling_factor, pointer_x, pointer_y, extra_params);
+        _static.draw(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, extra_params);
     } else if (_choice == 3) {
-        _midair.draw(input, palmbase_x_new, palmbase_y_new, interface_scaling_factor, pointer_x, pointer_y, extra_params);
+        _midair.draw(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, extra_params);
     }
 }
+
 
 void AnchorHandler::reset_palmbase() {
     if (_choice == 1) {
@@ -49,6 +54,18 @@ void AnchorHandler::reset_palmbase() {
     }
 }
 
+
+void AnchorHandler::reset_indexbase() {
+    if (_choice == 1) {
+        _dynamic.reset_indexbase();
+    } else if (_choice == 2) {
+        _static.reset_indexbase();
+    } else if (_choice == 3) {
+        _midair.reset_indexbase();
+    }
+}
+
+
 std::tuple<int, int> AnchorHandler::selectedIndexes() {
     if (_choice == 1) {
         return _dynamic.selectedIndexes();
@@ -58,6 +75,7 @@ std::tuple<int, int> AnchorHandler::selectedIndexes() {
         return _midair.selectedIndexes();
     }
 }
+
 
 void AnchorHandler::highlightSelected() {
     if (_choice == 1) {
@@ -69,6 +87,7 @@ void AnchorHandler::highlightSelected() {
     }
 }
 
+
 bool AnchorHandler::static_display() {
     if (_choice == 1) {
         return _dynamic.static_display;
@@ -79,6 +98,7 @@ bool AnchorHandler::static_display() {
     }
 }
 
+
 void AnchorHandler::setDivisions(int _divisions) {
     if (_choice == 1) {
         _dynamic.setDivisions(_divisions);
@@ -88,6 +108,7 @@ void AnchorHandler::setDivisions(int _divisions) {
         _midair.setDivisions(_divisions);
     }
 }
+
 
 int AnchorHandler::getDivisions() {
     if (_choice == 1) {

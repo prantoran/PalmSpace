@@ -1,5 +1,4 @@
 #include "triggers.h"
-#include <iostream>
 
 const int index_top = 8;
 const int CACHE_SIZE = 9;

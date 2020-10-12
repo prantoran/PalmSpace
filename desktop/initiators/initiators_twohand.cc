@@ -1,15 +1,5 @@
 #include "initiators.h"
 
-const int REF_IDX1 = 2; 
-const int REF_IDX2 = 5; 
-const int INDEXTOP_IDX = 8;
-
-const double MIN_WIDTH = 0.1;
-const double MIN_HEIGHT = 0.1;
-
-const double AREA_THRESHOLD = 0.06;
-
-
 
 InitiatorTwoHand::InitiatorTwoHand() {
     name = "Initiator_TwoHand";
@@ -21,6 +11,11 @@ InitiatorTwoHand::InitiatorTwoHand() {
     pointsConvex.resize(2);
     strict = false;
 }
+
+InitiatorTwoHand::~InitiatorTwoHand() {
+    std::cout << "twohand initiator killed\n";
+}
+
 
 
 bool InitiatorTwoHand::inspect(
@@ -95,8 +90,6 @@ bool InitiatorTwoHand::inspect(
         palmbase_x = topleft_x + raw_width_half;
         palmbase_y = bottomright_y;
     }
-
-    std::cerr << "two-hand done setting show_display\n";
 
     return show_display;
 }

@@ -23,11 +23,13 @@
 #include "mediapipe/framework/formats/rect.pb.h"
 #include "mediapipe/framework/formats/detection.pb.h"
 
+#include "desktop/ui/ui.h"
+
 
 // constexpr allows compiler to run statement/function at compile time.
 constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
-constexpr char kWindowName[] = "PalmSpace";
+// constexpr char kWindowName[] = "PalmSpace";
 
 cv::Scalar color_red = cv::Scalar(25, 25, 255);
 cv::Scalar color_green = cv::Scalar(25, 255, 25);
@@ -47,10 +49,6 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
     const int frame_height,
     const int fps, 
     const int debug_mode) {
-    // const std::string& image_ext,
-    // const unsigned int readDelayMS,
-    // std::vector<std::queue<std::shared_ptr<cv::Mat>>> & inq,
-    // std::vector<std::queue<std::shared_ptr<cv::Mat>>> & outq) {
 
   std::string calculator_graph_config_contents;
   MP_RETURN_IF_ERROR(mediapipe::file::GetContents(
@@ -82,16 +80,11 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
   RET_CHECK(capture.isOpened());
 
   }
-  // std::cerr << "capture.isOpened():" << capture.isOpened() << "\n";
-  // RET_CHECK(capture.isOpened());
 
   cv::VideoWriter writer;
   const bool save_video = !output_video_path.empty();
-  std::cerr << "output_video_path:" << output_video_path << " save_video:" << save_video << "\n";
   if (!save_video) {
-    cv::namedWindow(kWindowName, /*flags=WINDOW_AUTOSIZE*/ 1);
-  // std::cerr << "CV VERSION:" << CV_VERSION << " MAJOR_VERSION:" << CV_MAJOR_VERSION << " MINOR_VERSION:" << CV_MINOR_VERSION << " CV_SUBMINOR_VERSION:" << CV_SUBMINOR_VERSION << "\n";
-  // std::cerr << "frame_width:" << frame_width << " frame_height:" << frame_height << " fps:" << fps << "\n";
+    cv::namedWindow(WINDOW_NAME, /*flags=WINDOW_AUTOSIZE*/ 1);
     if (!load_video) {
       #if (CV_MAJOR_VERSION >= 3) && (CV_MINOR_VERSION >= 2)
           capture.set(cv::CAP_PROP_FRAME_WIDTH, frame_width);
@@ -115,13 +108,15 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
   bool grab_frames = true;
   bool show_display = false;
 
-  int cx = -1, cy = -1;
+  int indexfinger_x = -1, indexfinger_y = -1;
+  
+  std::tuple<double, double, double> palmbase = std::make_tuple(-1, -1, -1);
+  std::tuple<double, double, double> indexbase = std::make_tuple(-1, -1, -1);
 
-  double palmbase_x, palmbase_y;
   double interface_scaling_factor = 1;
   // used for smoothing
   double otherindex_x = -1, otherindex_y = -1, otherindex_x_prv, otherindex_y_prv;
-  double otherindex_momentum = 0.2;
+  double otherindex_momentum = 0.8;
 
   int width = 0, height = 0;
 
@@ -131,7 +126,6 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
 
   std::tuple<int, int> selected;
 
-  std::cerr << "finished initializing application variables.\n";
 
 
   int workerID;
@@ -141,6 +135,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
   
   // for storing key values to be passed among handlers
   auto params = ExtraParameters();
+  params.reset();
 
   cv::Mat camera_frame_raw, output_frame_mat;
 
@@ -151,16 +146,9 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
   }
   
   points[2].push_back(std::make_tuple(-1, -1, 0));
-
+  
   while (grab_frames) {
-    // if (load_video) {
-    //   std::string filepath = input_video_path + "/" + imageName(curImageID, image_ext);
-    //   if (!fileExists(filepath)) {
-    //     // std::cerr << "not found: " << imageName(curImageID) << "\n";
-    //     continue;
-    //   }
-    //   camera_frame_raw = cv::imread(filepath);
-    // } else {
+
     capture >> camera_frame_raw;
     
     // if (camera_frame_raw->empty()) break;  // End of video.
@@ -173,22 +161,12 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
       cv::flip(camera_frame, camera_frame, /*flipcode=HORIZONTAL*/ 1);
     }
 
-    // if (debug_mode) {
-    //   cv::imshow("camera_frame", camera_frame);
-    //   cv::waitKey();
-    // }
-
     // Wrap Mat into an ImageFrame.
     auto input_frame = absl::make_unique<mediapipe::ImageFrame>(
         mediapipe::ImageFormat::SRGB, camera_frame.cols, camera_frame.rows,
         mediapipe::ImageFrame::kGlDefaultAlignmentBoundary);
     cv::Mat input_frame_mat = mediapipe::formats::MatView(input_frame.get());
     camera_frame.copyTo(input_frame_mat);
-
-    // if (debug_mode) {
-    //   cv::imshow("input_frame_mat", input_frame_mat);
-    //   cv::waitKey();
-    // }
 
     // Prepare and add graph input packet.
     size_t frame_timestamp_us =
@@ -208,32 +186,34 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
           return ::mediapipe::OkStatus();
         }));
 
-    // std::unique_ptr<mediapipe::ImageFrame> output_frame;
-    // {
-    //   // Get the graph result packet, or stop if that fails.
-    //   mediapipe::Packet packet;
-    //   // check if data exist from graph
-    //   if (!poller.Next(&packet)) break;
 
-    //   // Convert GpuBuffer to ImageFrame.
-    //   MP_RETURN_IF_ERROR(gpu_helper.RunInGlContext(
-    //       [&packet, &output_frame, &gpu_helper]() -> ::mediapipe::Status {
-    //         auto& gpu_frame = packet.Get<mediapipe::GpuBuffer>();
-    //         auto texture = gpu_helper.CreateSourceTexture(gpu_frame);
-    //         output_frame = absl::make_unique<mediapipe::ImageFrame>(
-    //             mediapipe::ImageFormatForGpuBufferFormat(gpu_frame.format()),
-    //             gpu_frame.width(), gpu_frame.height(),
-    //             mediapipe::ImageFrame::kGlDefaultAlignmentBoundary);
-    //         gpu_helper.BindFramebuffer(texture);
-    //         const auto info =
-    //             mediapipe::GlTextureInfoForGpuBufferFormat(gpu_frame.format(), 0);
-    //         glReadPixels(0, 0, texture.width(), texture.height(), info.gl_format,
-    //                     info.gl_type, output_frame->MutablePixelData());
-    //         glFlush();
-    //         texture.Release();
-    //         return ::mediapipe::OkStatus();
-    //       }));
-    // }
+    {
+      // needed block or else there is memory leak (~30MB)
+      std::unique_ptr<mediapipe::ImageFrame> output_frame;
+      // Get the graph result packet, or stop if that fails.
+      mediapipe::Packet packet;
+      // check if data exist from graph
+      if (!poller.Next(&packet)) break;
+
+      // Convert GpuBuffer to ImageFrame.
+      MP_RETURN_IF_ERROR(gpu_helper.RunInGlContext(
+          [&packet, &output_frame, &gpu_helper]() -> ::mediapipe::Status {
+            auto& gpu_frame = packet.Get<mediapipe::GpuBuffer>();
+            auto texture = gpu_helper.CreateSourceTexture(gpu_frame);
+            output_frame = absl::make_unique<mediapipe::ImageFrame>(
+                mediapipe::ImageFormatForGpuBufferFormat(gpu_frame.format()),
+                gpu_frame.width(), gpu_frame.height(),
+                mediapipe::ImageFrame::kGlDefaultAlignmentBoundary);
+            gpu_helper.BindFramebuffer(texture);
+            const auto info =
+                mediapipe::GlTextureInfoForGpuBufferFormat(gpu_frame.format(), 0);
+            glReadPixels(0, 0, texture.width(), texture.height(), info.gl_format,
+                        info.gl_type, output_frame->MutablePixelData());
+            glFlush();
+            texture.Release();
+            return ::mediapipe::OkStatus();
+          }));
+    }
     
     mediapipe::Packet multi_hand_landmarks_packet;
     // check if landmarks exist from graph
@@ -241,32 +221,19 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
     const auto& multi_hand_landmarks = multi_hand_landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
 
 
-    // mediapipe::Packet palm_detections_packet;
-    // if (!multi_hand_palm_detections_poller.Next(&palm_detections_packet)) break;
-    // const auto& palm_detections = palm_detections_packet.Get<std::vector<mediapipe::Detection>>();
-
-    // for (int j = 0; j < palm_detections.size(); j++) {
-    //   // std::ostringstream os;
-    //   // os << output_dirpath + "/"
-    //   //    << "iLoop=" << iLoop << "_"
-    //   //    << "detection_"
-    //   //    << "j=" << j << ".txt";
-    //   // std::ofstream outputfile(os.str());
-
-    //   std::string serializedStr;
-    //   palm_detections[j].SerializeToString(&serializedStr);
-    //   // outputfile << serializedStr << std::flush;
-
-    //   std::cerr << "output detection " << j << ": str:" <<  serializedStr << "\n";
-    // }
-
-
     /*
       points[2] used for sending auxiliary information
-      points[2][0] = {cx, cy, cz};
+      points[2][0] = {indexfinger_x, indexfinger_y, cz};
     */
-    points[2][0] = std::make_tuple(cx, cy, 0);
-        
+
+    // resetting points
+    for (int i = 0; i < 2; i ++) {
+      points[i][0] = std::make_tuple(0, 0, 0);
+      for (int j = 1; j < 21; j ++) {
+        points[i][j] = points[i][0];
+      }
+    }
+
     int hand_index = 0;
 
     for (const auto& hand_landmarks : multi_hand_landmarks) {
@@ -282,20 +249,30 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
 
       ++hand_index;
     }
+
+    points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0);
+
     
+    // params.reset();
+
     initiator.params(points, params);
 
-    params.get_palmbase(palmbase_x, palmbase_y);
-
+    params.get_palmbase(palmbase);
+    params.get_indexbase(indexbase);
+    
     if (initiator.inspect(points)) {
       show_display = true;
       initiator.params(points, params);
 
-      params.get_palmbase(palmbase_x, palmbase_y);
-    
+      params.get_palmbase(palmbase);
+      params.get_indexbase(indexbase);
+
+
     } else {
+      params.reset();
       show_display = false;
-      anchor.reset_palmbase();
+      // anchor.reset_palmbase();
+      // anchor.reset_indexbase();
     }
     
     // Convert back to opencv for display or saving.
@@ -308,10 +285,11 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
         height = output_frame_mat.size().height;
     }
 
-    std::cerr << "width:" << width << " height:" << height << "\n";
+    {
+      // indexfinger_x = -1;
+      // indexfinger_y = -1;
 
-    if (params.is_set_indexfinger()) {
-        // std::cerr << "drawing finger\n";
+      if (params.is_set_indexfinger()) {
         otherindex_x_prv = otherindex_x;
         otherindex_y_prv = otherindex_y;
         
@@ -320,41 +298,34 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
         if (otherindex_x_prv == -1) {
           otherindex_x_prv = otherindex_x;
         }
-        
+
         if (otherindex_y_prv == -1) {
           otherindex_y_prv = otherindex_y;
         }
-        
-        otherindex_x = (1-otherindex_momentum)*otherindex_x + otherindex_momentum*otherindex_x_prv;
-        otherindex_y = (1-otherindex_momentum)*otherindex_y + otherindex_momentum*otherindex_y_prv;
 
-        cx = otherindex_x*width;
-        cy = otherindex_y*height;
-        
-    } else {
-        cx = -1;
-        cy = -1;
+        if (otherindex_x != -1 && otherindex_y != -1) {
+          otherindex_x = (1-otherindex_momentum)*otherindex_x + otherindex_momentum*otherindex_x_prv;
+          otherindex_y = (1-otherindex_momentum)*otherindex_y + otherindex_momentum*otherindex_y_prv;
+
+          indexfinger_x = otherindex_x*width;
+          indexfinger_y = otherindex_y*height;
+        }   
+      }
+
+      std::cerr << "indexfinger x:" << indexfinger_x << " y:" << indexfinger_y << "\n";
     }
 
-    std::cout << "otherindex_x:" << otherindex_x << " otherindex_y:" << otherindex_y << "\n";
-    std::cout << "handler mediapipe cx:" << cx << " cy:" << cy << "\n";
     
     anchor.calculate(
       output_frame_mat, 
-      palmbase_x, 
-      palmbase_y, 
+      palmbase,
+      indexbase, 
       interface_scaling_factor,
-      cx, cy, params.extra_params); // saves selected i,j in extra_params[7,8] 
-
-    // if (debug_mode) {
-    //   cv::imshow("output_frame_mat", output_frame_mat);
-    //   cv::waitKey();
-    // }
+      indexfinger_x, indexfinger_y, params.extra_params); // saves selected i,j in extra_params[7,8] 
     
       if (show_display || anchor.static_display()) {
-      // if (show_display) {
 
-          points[2][0] = std::make_tuple(cx, cy, 0); // putting (cx, cy) if in case trigger is wait
+          points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0); // putting (indexfinger_x, indexfinger_y) if in case trigger is wait
           trigger.update(points, params.extra_params);
 
           if (trigger.status() == TRIGGER::RELEASED) {
@@ -363,16 +334,15 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
           
       anchor.draw(
           output_frame_mat, 
-          palmbase_x, 
-          palmbase_y, 
+          palmbase,
+          indexbase, 
           interface_scaling_factor,
-          cx, cy, params.extra_params);
-        // std::cerr << "done callin transform\n";
+          indexfinger_x, indexfinger_y, params.extra_params);
 
       if (params.is_set_indexfinger()) {
         cv::circle(
           output_frame_mat,
-          cv::Point(cx, cy),
+          cv::Point(indexfinger_x, indexfinger_y),
           10,
           color_dark_blue,
           -1,
@@ -400,22 +370,11 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
           CV_RGB(0, 0, 0), //font color
           2);
         }
-
       }
-
     }
 
 
-    
-    // if (debug_mode) {
-    //   cv::imshow("processed output_frame_mat", output_frame_mat);
-    //   cv::waitKey();
-    // }
-
-    // return ::mediapipe::OkStatus();
-
     if (save_video) {
-      std::cerr << "saving video\n";
 
       if (!writer.isOpened()) {
         LOG(INFO) << "Prepare video writer.";
@@ -437,7 +396,9 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
     //   cv::imwrite( output_video_path + "/" + imageName(curImageID, image_ext), output_frame_mat);
     //   curImageID ++;
     } else {
-      cv::imshow(kWindowName, output_frame_mat);
+
+      // WINDOW_NAME from ui/ui.h
+      cv::imshow(WINDOW_NAME, output_frame_mat);
       // Press any key to exit.
       const int pressed_key = cv::waitKey(5);
       if (pressed_key >= 0 && pressed_key != 255) grab_frames = false;

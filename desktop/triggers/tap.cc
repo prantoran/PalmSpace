@@ -1,5 +1,4 @@
 #include "triggers.h"
-#include <iostream>
 
 const int index_top = 8;
 

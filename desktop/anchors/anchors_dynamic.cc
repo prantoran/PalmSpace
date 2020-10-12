@@ -9,12 +9,16 @@ std::string AnchorDynamic::type() {
     return "anchor-type=dynamic";
 }
 
+AnchorDynamic::~AnchorDynamic() {
+  std::cout << "anchor dynamic killed\n";
+}
+
 AnchorDynamic::AnchorDynamic() {
   name = "dynamic";
   
   width = 0;
   height = 0;
-  palmbase_momentum = 0.9;
+  momentum = 0.9;
   gap = 5;
 
   color_red = cv::Scalar(25, 25, 255);
@@ -25,12 +29,15 @@ AnchorDynamic::AnchorDynamic() {
   selected_i = -1, selected_j = -1;
 
   static_display = false;
+
+  reset_palmbase();
+  reset_indexbase();
 }
 
 AnchorDynamic::AnchorDynamic(cv::Scalar red, cv::Scalar blue) {
   width = 0;
   height = 0;
-  palmbase_momentum = 0.9;
+  momentum = 0.9;
   gap = 5;
 
 
@@ -53,8 +60,9 @@ AnchorDynamic::AnchorDynamic(cv::Scalar red, cv::Scalar blue) {
 
 void AnchorDynamic::calculate(
     const cv::Mat& input, 
-    double palmbase_x_new, double palmbase_y_new, 
-    double interface_scaling_factor, 
+    const std::tuple<double, double, double> & palmbase,
+    const std::tuple<double, double, double> & indexbase,
+    double scale_ratio, 
     int pointer_x, int pointer_y,
     std::vector<double> & extra_params) {
 
@@ -71,43 +79,71 @@ void AnchorDynamic::calculate(
       min_hs = height/3;
     }
 
-    palmbase_x_prv = palmbase_x;
-    palmbase_y_prv = palmbase_y;
+    updatePalmBase(palmbase);
+    updateIndexBase(indexbase);
 
-    palmbase_x = palmbase_x_new;
-    palmbase_y = palmbase_y_new;
+    // using palmbase
+    // setupGrid((palmbase_x*width) - (ws/2), (palmbase_y*height) - hs); // defined in parent anchor class
     
-    // std::cout << "dx:" << dx << " dy:" << dy << "\n";
-        // std::cout << "1dx:" << dx << " dy:" << dy << "\n";
 
-    if (palmbase_x_prv) {
-      palmbase_x = (1-palmbase_momentum)*palmbase_x + palmbase_momentum*palmbase_x_prv;
-    }
-    
-    if (palmbase_y_prv) {
-      palmbase_y = (1-palmbase_momentum)*palmbase_y + palmbase_momentum*palmbase_y_prv;
-    }
-
-    setupGrid(); // defined in parent anchor class
+    // using indexbase
+    setupGrid(indexbase_x*width, (palmbase_y*height)-hs); // defined in parent anchor class
     
 
     setupSelection(pointer_x, pointer_y); // defined in parent anchor class
 
-    std::cout << "anchors_dynamic selected i:" << selected_i << "\tj:" << selected_j << "\n";
+    // std::cout << "anchors_dynamic selected i:" << selected_i << "\tj:" << selected_j << "\n";
     if (extra_params.size() > 7) {
       std::cout << "\tanchors_dynamic storing selected i:" << selected_i << "\tj:" << selected_j << "\n";
 
-      extra_params[7] = selected_i;
-      extra_params[8] = selected_j;
+        extra_params[7] = selected_i;
+        extra_params[8] = selected_j;
     } else {
+      std::cout << "anchor/dynamic selected idx not found\n";
     }
 
 }
 
+
+void AnchorDynamic::updatePalmBase(const std::tuple<double, double, double> & palmbase) {
+  palmbase_x_prv = palmbase_x;
+  palmbase_y_prv = palmbase_y;
+
+  palmbase_x = std::get<0>(palmbase);
+  palmbase_y = std::get<1>(palmbase);
+  
+  if (palmbase_x_prv > 0) {
+    palmbase_x = (1-momentum)*palmbase_x + momentum*palmbase_x_prv;
+  }
+  
+  if (palmbase_y_prv > 0) {
+    palmbase_y = (1-momentum)*palmbase_y + momentum*palmbase_y_prv;
+  }
+}
+
+
+void AnchorDynamic::updateIndexBase(const std::tuple<double, double, double> & indexbase) {
+  indexbase_x_prv = indexbase_x;
+  indexbase_y_prv = indexbase_y;
+
+  indexbase_x = std::get<0>(indexbase);
+  indexbase_y = std::get<1>(indexbase);
+  
+  if (indexbase_x_prv > 0) {
+    indexbase_x = (1-momentum)*indexbase_x + momentum*indexbase_x_prv;
+  }
+  
+  if (indexbase_y_prv > 0) {
+    indexbase_y = (1-momentum)*indexbase_y + momentum*indexbase_y_prv;
+  }
+}
+
+
 void AnchorDynamic::draw(
     cv::Mat& input, 
-    double palmbase_x_new, double palmbase_y_new, 
-    double interface_scaling_factor, 
+    const std::tuple<double, double, double> & palmbase,
+    const std::tuple<double, double, double> & indexbase, 
+    double scale_ratio, 
     int pointer_x, int pointer_y,
     std::vector<double> & extra_params) {
 
@@ -123,7 +159,7 @@ void AnchorDynamic::draw(
         cv::LINE_8,
         0);
     
-    std::cout << "anchor_dynamic draw selected i:" << selected_i << " j:" << selected_j << "\n";
+    // std::cout << "anchor_dynamic draw selected i:" << selected_i << " j:" << selected_j << "\n";
 
     for (int i = 1; i <= divisions; i ++ ) {
         for (int j = 1; j <= divisions; j ++) {
@@ -152,11 +188,5 @@ void AnchorDynamic::draw(
     cv::addWeighted(overlay, alpha, input, 1-alpha, 0, input);
 }
 
-void AnchorDynamic::reset_palmbase() {
-    palmbase_x = 0;
-    palmbase_y = 0;
-    ws = 0;
-    hs = 0;
-}
 
 

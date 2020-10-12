@@ -32,8 +32,9 @@ void InitiatorHandler::params(
 
 
 void InitiatorHandler::setStrict(bool _strict) {
-    // std::cerr << "initiator_handler setstrict _strict:" << _strict << " init_hcoice:" << _choice << "\n";
+    std::cerr << "initiator_handler setstrict _strict:" << _strict << " init_hcoice:" << _choice << "\n";
     if (_choice == 1) {
+        std::cerr << "setting default strict\n";
         _default.strict = _strict;
     } else if (_choice == 2) {
         _twohand.strict = _strict;

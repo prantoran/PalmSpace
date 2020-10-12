@@ -5,6 +5,7 @@
 #include <vector>
 #include <chrono>
 #include <string>
+#include <iostream>
 
 namespace TRIGGER {
     typedef enum{

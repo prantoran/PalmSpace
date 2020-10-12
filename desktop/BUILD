@@ -12,55 +12,6 @@ package(default_visibility = [
 # (or similar nvidia/amd equivalent)
 
 
-cc_import(
-    name = "webrtc_static",
-#    hdrs = glob(["lib/webrtc/include/*.h", "lib/webrtc/include/**/*.h"]),
-#    static_library = "lib/webrtc/lib/x64/Debug/libwebrtc_full.a",
-    # If alwayslink is turned on,
-    # libmylib.a will be forcely linked into any binary that depends on it.
-    # alwayslink = 1,
-)
-
-cc_library(
-    name = "rapidjson",
-    srcs = [],
-    hdrs = glob([
-        "lib/rapidjson/*.h", "lib/rapidjson/**/*.h",
-    ]),
-    copts = ["-Idesktop/lib"],
-)
-
-cc_library(
-    name = "base64",
-    srcs = ["lib/base64.cc"],
-    hdrs = ["lib/base64.h"],
-)
-
-cc_library(
-    name = "crowserver",
-    srcs = [],
-    hdrs = ["lib/crow_all.h"],
-)
-
-cc_library(
-    name = "external_lib",
-    srcs = glob([
-        "lib/*.h",
-        "lib/*.cc",
-        # "lib/webrtc/lib/x64/Debug/libwebrtc_full.a",
-        # "lib/webrtc/lib/x64/Release/libwebrtc_full.a",
-    ]),
-    hdrs = glob([
-        # "lib/webrtc/*.h", "lib/webrtc/**/*.h", "lib/webrtc/**/**/*.h", "lib/webrtc/**/**/**/*.h",
-    ]),
-    copts = ["-Idesktop/lib"],
-    deps = [
-        "rapidjson",
-        "base64",
-        "crowserver",
-    ]
-)
-
 cc_library(
     name = "main_gpu",
     srcs = glob([
@@ -70,15 +21,10 @@ cc_library(
         "triggers/*.h", "triggers/*.cc",
         "initiators/*.h", "initiators/*.cc",
         "config/*.h", "config/*.cc",
+        "ui/*.h", "ui/*.cc",
     ]),
-    hdrs = glob([
-        # "webrtcserve/observers.h",
-    ]),
-    copts = ["-Idesktop/lib"], #, "-Idesktop/lib/webrtc", "-Idesktop/lib/webrtc/include"],
 
     deps = [
-        "external_lib",
-        "webrtc_static",
         "//mediapipe/framework:calculator_framework",
         "//mediapipe/framework/formats:image_frame",
         "//mediapipe/framework/formats:image_frame_opencv",
