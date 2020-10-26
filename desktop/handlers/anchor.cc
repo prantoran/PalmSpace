@@ -121,3 +121,43 @@ int AnchorHandler::getDivisions() {
 
     return -1;
 }
+
+
+cv::Rect AnchorHandler::getGrid() {
+    switch(_choice) {
+        case 1:
+            return _dynamic.getGrid();
+        case 2:
+            return _static.getGrid();
+        case 3:
+            return _midair.getGrid();
+        default:
+            return _dynamic.getGrid();
+    }
+}
+
+
+cv::Point AnchorHandler::getGridTopLeft() {
+    switch (_choice) {
+        case 1:
+            return _dynamic.getGridTopLeft();
+        case 2:
+            return _static.getGridTopLeft();
+        case 3:
+            return _midair.getGridTopLeft();
+        default:
+            return _dynamic.getGridTopLeft();
+    }
+};
+cv::Point AnchorHandler::getGridBottomRight() {
+    switch (_choice) {
+        case 1:
+            return _dynamic.getGridBottomRight();
+        case 2:
+            return _static.getGridBottomRight();
+        case 3:
+            return _midair.getGridBottomRight();
+        default:
+            return _dynamic.getGridBottomRight();
+    }
+};

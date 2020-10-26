@@ -5,12 +5,11 @@
 #include "mediapipe/framework/port/opencv_video_inc.h"
 
 
-const cv::Scalar color_green = cv::Scalar(0, 255, 200);
+// const cv::Scalar color_green = cv::Scalar(0, 255, 200);
 const cv::Scalar color_grey = cv::Scalar(240, 240, 240);
 const cv::Scalar color_light_grey = cv::Scalar(255, 255, 255);
 
 Anchor::~Anchor() {
-    std::cerr << "destroying Anchor abstract class:" + name + "\n";
 }
 
 
@@ -47,7 +46,6 @@ void Anchor::drawProgressBar(cv::Mat & _image, double _progress) {
 
         double pwidth = _progress * (progress_maxwidth);
 
-        std::cerr << "pwidth:" << pwidth << "\t_progress:" << _progress << "\tprogress_maxwidth:"  << progress_maxwidth << "\n";
         // double npwidth = progress_maxwidth - pwidth;
         cv::rectangle(
             _image,
@@ -86,7 +84,6 @@ void Anchor::setupGrid(double enlarged_topleft_x, double enlarged_topleft_y) {
     // setup tile coords
 
     // enlarged means topleft coords are received after multiplying ratios by width and height
-
     ws = min_ws;
     hs = min_hs;
 
@@ -191,4 +188,27 @@ void Anchor::reset_indexbase() {
     indexbase_y = -1;
     ws = 0;
     hs = 0;
+}
+
+void Anchor::reset_grid() {
+
+    int len = (sizeof(xs)/sizeof(*xs));
+    for (int i = 0; i < len; i ++) {
+        xs[i] = 0;
+        ys[i] = 0;
+    }
+}
+
+
+cv::Rect Anchor::getGrid() {
+    return cv::Rect(cv::Point(xs[0], ys[0]), cv::Point(xs[0]+ws, ys[0]+hs));
+}
+
+cv::Point Anchor::getGridTopLeft() {
+
+    return cv::Point(xs[0], ys[0]);
+}
+
+cv::Point Anchor::getGridBottomRight() {
+    return cv::Point(xs[0]+ws, ys[0]+hs);
 }

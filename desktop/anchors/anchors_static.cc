@@ -19,6 +19,8 @@ AnchorStatic::~AnchorStatic() {
 
 AnchorStatic::AnchorStatic() {
     name = "static";
+    ws = 0;
+    hs = 0;
 
     width = 0;
     height = 0;
@@ -36,6 +38,8 @@ AnchorStatic::AnchorStatic() {
     static_display = false;
 
     palm_ubx = 0, palm_uby = 0;
+
+    reset_grid();
 }
 
 
@@ -77,6 +81,8 @@ AnchorStatic::AnchorStatic(cv::Scalar red, cv::Scalar blue, std::string img_path
     // cv::waitKey(0);
 
     palm_ubx = 0, palm_uby = 0;
+
+    reset_grid();
 }
 
 
@@ -211,7 +217,7 @@ void AnchorStatic::draw(
 
     cv::rectangle(
         overlay, 
-        cv::Point(xs[0], ys[0]), cv::Point(xs[0]+ws, ys[0]+hs), 
+        getGridTopLeft(), getGridBottomRight(), 
         cv::Scalar(25, 25, 125),
         -1, 
         cv::LINE_8,

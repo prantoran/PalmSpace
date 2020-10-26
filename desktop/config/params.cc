@@ -113,8 +113,8 @@ void ExtraParameters::get_indexbase(std::tuple<double, double, double> & p) {
 
     // for adjusting topleft pos of grid, since pointing 
     // to top-left grids with other palm's index finger is hard
-    x += 0.03;
-    y += 0.09;
+    // x += 0.03;
+    // y += 0.09;
 
     p = std::make_tuple(x, y, 0);
 }

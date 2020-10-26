@@ -3,6 +3,7 @@
 // This example requires a linux computer and a GPU with EGL support drivers.
 
 #include "handlers.h"
+#include "../config/colors.h"
 #include <tuple>
 
 #include "mediapipe/framework/calculator_framework.h"
@@ -10,7 +11,7 @@
 #include "mediapipe/framework/formats/image_frame_opencv.h"
 #include "mediapipe/framework/port/commandlineflags.h"
 #include "mediapipe/framework/port/file_helpers.h"
-#include "mediapipe/framework/port/opencv_highgui_inc.h"
+#include "mediapipe/framework/port/opencv_highgui_inc.h" // GUI #include "opencv2/highgui/highgui.hpp"
 #include "mediapipe/framework/port/opencv_imgproc_inc.h"
 #include "mediapipe/framework/port/opencv_video_inc.h"
 #include "mediapipe/framework/port/parse_text_proto.h"
@@ -19,25 +20,40 @@
 #include "mediapipe/gpu/gpu_buffer.h"
 #include "mediapipe/gpu/gpu_shared_data_internal.h"
 
+
+// data structures for mediapipe graph
 #include "mediapipe/framework/formats/landmark.pb.h"
 #include "mediapipe/framework/formats/rect.pb.h"
 #include "mediapipe/framework/formats/detection.pb.h"
 
-#include "desktop/ui/ui.h"
+
+// #include <opencv2/opencv.hpp>
 
 
 // constexpr allows compiler to run statement/function at compile time.
 constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
+constexpr char trackbarWindowName[] = "Index Marker Tuning";
 // constexpr char kWindowName[] = "PalmSpace";
-
-cv::Scalar color_red = cv::Scalar(25, 25, 255);
-cv::Scalar color_green = cv::Scalar(25, 255, 25);
-cv::Scalar color_blue = cv::Scalar(255, 25, 25);
-cv::Scalar color_dark_blue = cv::Scalar(69, 1, 1);
+constexpr int BLOB_AREA_THRESH = 500;
+constexpr int INFO_TXT_BOLDNESS = 2;
 
 
-MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
+unsigned int root(unsigned int x){
+    unsigned int a,b;
+    b     = x;
+    a = x = 0x3f;
+    x     = b/x;
+    a = x = (x+a)>>1;
+    x     = b/x;
+    a = x = (x+a)>>1;
+    x     = b/x;
+    x     = (x+a)>>1;
+    return(x);  
+}
+
+MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
+  window_name = _window_name;
   // curImageID = 1;
 }
 
@@ -48,7 +64,8 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
     const int frame_width,
     const int frame_height,
     const int fps, 
-    const int debug_mode) {
+    const int debug_mode,
+    const int dev_video) {
 
   std::string calculator_graph_config_contents;
   MP_RETURN_IF_ERROR(mediapipe::file::GetContents(
@@ -76,6 +93,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
   if (load_video) {
     // capture.open(input_video_path); // read a video file
   } else {
+    capture = cv::VideoCapture(dev_video);
     capture.open(0);
   RET_CHECK(capture.isOpened());
 
@@ -84,7 +102,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
   cv::VideoWriter writer;
   const bool save_video = !output_video_path.empty();
   if (!save_video) {
-    cv::namedWindow(WINDOW_NAME, /*flags=WINDOW_AUTOSIZE*/ 1);
+    cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
     if (!load_video) {
       #if (CV_MAJOR_VERSION >= 3) && (CV_MINOR_VERSION >= 2)
           capture.set(cv::CAP_PROP_FRAME_WIDTH, frame_width);
@@ -117,6 +135,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
   // used for smoothing
   double otherindex_x = -1, otherindex_y = -1, otherindex_x_prv, otherindex_y_prv;
   double otherindex_momentum = 0.8;
+  double points_ratio = -1; // ratio of areas of 2 blobs represented by pixels of 2 different color ranges
 
   int width = 0, height = 0;
 
@@ -126,18 +145,13 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
 
   std::tuple<int, int> selected;
 
-
-
-  int workerID;
-
-
   const int divisions = anchor.getDivisions();
   
   // for storing key values to be passed among handlers
   auto params = ExtraParameters();
   params.reset();
 
-  cv::Mat camera_frame_raw, output_frame_mat;
+  cv::Mat camera_frame_raw, camera_frame, output_frame_mat, hsv, hsv2;
 
   std::vector<std::vector<std::tuple<double, double, double>>> points(3); 
   
@@ -146,20 +160,93 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
   }
   
   points[2].push_back(std::make_tuple(-1, -1, 0));
-  
-  while (grab_frames) {
 
+  // int minH = 130, maxH = 160, minS = 10, maxS = 40, minV = 75, maxV = 130;
+
+  cv::namedWindow(trackbarWindowName, cv::WINDOW_AUTOSIZE);
+  // cv::createTrackbar("MinH", trackbarWindowName, &minH, 239);
+  // cv::createTrackbar("MaxH", trackbarWindowName, &maxH, 239);
+  // cv::createTrackbar("MinS", trackbarWindowName, &minS, 255);
+  // cv::createTrackbar("MaxS", trackbarWindowName, &maxS, 255);
+  // cv::createTrackbar("MinV", trackbarWindowName, &minV, 255);
+  // cv::createTrackbar("MaxV", trackbarWindowName, &maxV, 255);
+
+  int minR = 233, maxR = 255, minG = 233, maxG = 255, minB = 233, maxB = 255;
+  int minR2 = 0, maxR2 = 67, minG2 = 152, maxG2 = 255, minB2 = 208, maxB2 = 255;
+
+  cv::createTrackbar("MinR", trackbarWindowName, &minR, 255);
+  cv::createTrackbar("MaxR", trackbarWindowName, &maxR, 255);
+  cv::createTrackbar("MinG", trackbarWindowName, &minG, 255);
+  cv::createTrackbar("MaxG", trackbarWindowName, &maxG, 255);
+  cv::createTrackbar("MinB", trackbarWindowName, &minB, 255);
+  cv::createTrackbar("MaxB", trackbarWindowName, &maxB, 255);
+
+
+// ffmpeg -i ggg.mp4 -r 15 -vf scale=512:-1 -ss 00:00:03 -to 00:00:06 opengl-rotating-triangle.gif
+
+  while (grab_frames) {
+    capture >> camera_frame_raw;
+    if (camera_frame_raw.empty()) break;  // End of video.
+    cv::cvtColor(camera_frame_raw, hsv, cv::COLOR_BGR2RGB);
+    if (!load_video) {
+      cv::flip(hsv, hsv, 1);
+    }
+
+    cv::inRange(hsv, cv::Scalar(minR, minG, minB), cv::Scalar(maxR, maxG, maxB), hsv);
+
+    // int blurSize = 3;
+    // int elementSize = 3;
+    // cv::medianBlur(hsv, hsv, blurSize);
+    // cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(2 * elementSize + 1, 2 * elementSize + 1), cv::Point(elementSize, elementSize));
+    // cv::dilate(hsv, hsv, element);
+
+
+    cv::imshow(trackbarWindowName, hsv);
+    if (cv::waitKey(30) >= 0) break;
+  }
+
+  cv::destroyWindow(trackbarWindowName);
+
+  while (grab_frames) {
     capture >> camera_frame_raw;
     
     // if (camera_frame_raw->empty()) break;  // End of video.
     if (camera_frame_raw.empty()) break;  // End of video.
 
-    cv::Mat camera_frame;
     // Converts an image from one color space to another.
+    // cv::cvtColor(camera_frame_raw, hsv, CV_BGR2HSV);
+
     cv::cvtColor(camera_frame_raw, camera_frame, cv::COLOR_BGR2RGB);
+    cv::cvtColor(camera_frame_raw, hsv, cv::COLOR_BGR2RGB);
+    cv::cvtColor(camera_frame_raw, hsv2, cv::COLOR_BGR2RGB);
+
+
     if (!load_video) {
       cv::flip(camera_frame, camera_frame, /*flipcode=HORIZONTAL*/ 1);
+      cv::flip(hsv, hsv, 1);
+      cv::flip(hsv2, hsv2, 1);
     }
+
+    // cv::inRange(hsv, cv::Scalar(minH, minS, minV), cv::Scalar(maxH, maxS, maxV), hsv);
+    cv::inRange(hsv, cv::Scalar(minR, minG, minB), cv::Scalar(maxR, maxG, maxB), hsv);
+    cv::inRange(hsv2, cv::Scalar(minR2, minG2, minB2), cv::Scalar(maxR2, maxG2, maxB2), hsv2);
+
+    cv::Moments m1 = cv::moments(hsv);
+    cv::Moments m2 = cv::moments(hsv2);
+
+    cv::Point pt1(m1.m10/m1.m00, m1.m01/m1.m00);
+    cv::Point pt2(m2.m10/m2.m00, m2.m01/m2.m00);
+
+    // std::cerr << "centroid 1: (" << pt1.x << "," << pt1.y << ") centroid 2: (" << pt2.x << ", " << pt2.y << ")\n";
+
+
+    int area1 = cv::countNonZero(hsv);
+    int area2 = cv::countNonZero(hsv2);
+
+    std::cout << "area1:" << area1 << " area2:" << area2 << "\n";
+
+    cv::addWeighted( hsv, 1, hsv2, 1, 0.0, hsv);
+    cv::imshow(trackbarWindowName, hsv);
 
     // Wrap Mat into an ImageFrame.
     auto input_frame = absl::make_unique<mediapipe::ImageFrame>(
@@ -271,8 +358,6 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
     } else {
       params.reset();
       show_display = false;
-      // anchor.reset_palmbase();
-      // anchor.reset_indexbase();
     }
     
     // Convert back to opencv for display or saving.
@@ -312,7 +397,6 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
         }   
       }
 
-      std::cerr << "indexfinger x:" << indexfinger_x << " y:" << indexfinger_y << "\n";
     }
 
     
@@ -323,7 +407,12 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
       interface_scaling_factor,
       indexfinger_x, indexfinger_y, params.extra_params); // saves selected i,j in extra_params[7,8] 
     
-      if (show_display || anchor.static_display()) {
+    cv::Rect gg = anchor.getGrid();
+
+
+    
+
+    if (show_display || anchor.static_display()) {
 
           points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0); // putting (indexfinger_x, indexfinger_y) if in case trigger is wait
           trigger.update(points, params.extra_params);
@@ -344,7 +433,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
           output_frame_mat,
           cv::Point(indexfinger_x, indexfinger_y),
           10,
-          color_dark_blue,
+          COLORS_darkblue,
           -1,
           cv::LINE_8,
           0);
@@ -374,6 +463,102 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
     }
 
 
+    if (area1 > BLOB_AREA_THRESH && pt1.x >= 0 && pt1.x >= 0 && pt1.x < frame_width && pt1.y < frame_height) {
+      cv::circle(
+        output_frame_mat,
+        pt1,
+        10,
+        cv::Scalar(100, 100, 128),
+        -1);
+
+      std::string areamsg1 = "Area1:" + std::to_string(area1);
+      cv::putText(output_frame_mat, //target image
+            areamsg1, //text
+            cv::Point(pt1.x+12, pt1.y), //top-left position
+            cv::FONT_HERSHEY_DUPLEX,
+            0.5,
+            COLORS_darkslategrey, //font color
+            INFO_TXT_BOLDNESS
+        );
+
+    }    
+
+    if (area2 > BLOB_AREA_THRESH && pt2.x >= 0 && pt2.x >= 0 && pt2.x < frame_width && pt2.y < frame_height) {
+      cv::circle(
+        output_frame_mat,
+        pt2,
+        10,
+        cv::Scalar(100, 128, 100),
+        -1);
+
+      std::string areamsg2 = "Area2:" + std::to_string(area2);
+      cv::putText(output_frame_mat, //target image
+            areamsg2, //text
+            cv::Point(pt2.x+12, pt2.y), //top-left position
+            cv::FONT_HERSHEY_DUPLEX,
+            0.5,
+            COLORS_darkslategrey, //font color
+            INFO_TXT_BOLDNESS
+        );
+    }
+
+    // debugging
+    // cv::circle(
+    //     output_frame_mat,
+    //     anchor.getGridTopLeft(),
+    //     10,
+    //     cv::Scalar(10, 10, 10),
+    //     -1);
+
+    if ((area1 > BLOB_AREA_THRESH && pt1.x >= 0 && pt1.x >= 0 && pt1.x < frame_width && pt1.y < frame_height)) {
+
+      if ((area2 > BLOB_AREA_THRESH && pt2.x >= 0 && pt2.x >= 0 && pt2.x < frame_width && pt2.y < frame_height)) {
+        
+
+        cv::line( output_frame_mat, pt1, pt2, cv::Scalar( 128, 128, 128 ), 1 );
+
+        int dx2 = (pt1.x-pt2.x)*(pt1.x-pt2.x);
+        int dy2 = (pt1.y-pt2.y)*(pt1.y-pt2.y);
+
+        int distxy = root(dx2 + dy2); 
+
+        std::string distxy_msg2 = "Distance XY: ~" + std::to_string(distxy);
+        cv::putText(output_frame_mat, //target image
+                distxy_msg2, //text
+                cv::Point((pt1.x+pt2.x)/2, (pt1.y+pt2.y)/2), //top-left position
+                cv::FONT_HERSHEY_DUPLEX,
+                0.5,
+                COLORS_darkslategrey, //font color
+                INFO_TXT_BOLDNESS
+            );
+        
+        if (points_ratio < 0) {
+          points_ratio = (double)area1 / area2;
+        }
+
+        double cur_ratio = (double)area1 / area2;
+
+        std::cerr << "points_ratio:" << points_ratio << " cur_ratio:" << cur_ratio << "\n"; 
+
+        double depth_approx = (points_ratio-cur_ratio)*(points_ratio-cur_ratio)*100;
+
+        std::string depth_msg2 = "Depth difference: ~" + std::to_string(depth_approx);
+        cv::putText(output_frame_mat, //target image
+                depth_msg2, //text
+                cv::Point((pt1.x+pt2.x)/2, 20 + (pt1.y+pt2.y)/2), //top-left position
+                cv::FONT_HERSHEY_DUPLEX,
+                0.5,
+                COLORS_darkslategrey, //font color
+                INFO_TXT_BOLDNESS
+            );
+      }
+    } else {
+      points_ratio = -1; // resetting relative ratio
+    }
+
+
+
+
     if (save_video) {
 
       if (!writer.isOpened()) {
@@ -397,8 +582,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU() {
     //   curImageID ++;
     } else {
 
-      // WINDOW_NAME from ui/ui.h
-      cv::imshow(WINDOW_NAME, output_frame_mat);
+      cv::imshow(window_name, output_frame_mat);
       // Press any key to exit.
       const int pressed_key = cv::waitKey(5);
       if (pressed_key >= 0 && pressed_key != 255) grab_frames = false;

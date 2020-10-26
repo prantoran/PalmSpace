@@ -14,6 +14,19 @@ AnchorDynamic::~AnchorDynamic() {
 }
 
 AnchorDynamic::AnchorDynamic() {
+  initiate();
+  color_red = cv::Scalar(25, 25, 255);
+  color_blue = cv::Scalar(255, 25, 25);
+}
+
+AnchorDynamic::AnchorDynamic(cv::Scalar red, cv::Scalar blue) {
+  initiate();
+  color_red = red;
+  color_blue = blue;
+}
+
+
+void AnchorDynamic::initiate() {
   name = "dynamic";
   
   width = 0;
@@ -21,31 +34,11 @@ AnchorDynamic::AnchorDynamic() {
   momentum = 0.9;
   gap = 5;
 
-  color_red = cv::Scalar(25, 25, 255);
-  color_blue = cv::Scalar(255, 25, 25);
-
-
-  selected_i_prv = -1, selected_j_prv = -1;
-  selected_i = -1, selected_j = -1;
-
-  static_display = false;
-
-  reset_palmbase();
-  reset_indexbase();
-}
-
-AnchorDynamic::AnchorDynamic(cv::Scalar red, cv::Scalar blue) {
-  width = 0;
-  height = 0;
-  momentum = 0.9;
-  gap = 5;
-
-
-  color_red = red;
-  color_blue = blue;
+  ws = 0;
+  hs = 0;
+  
   color_green = cv::Scalar(25, 255, 25);
 
-  
   selected_i_prv = -1, selected_j_prv = -1;
   selected_i = -1, selected_j = -1;
   static_display = false;
@@ -53,9 +46,15 @@ AnchorDynamic::AnchorDynamic(cv::Scalar red, cv::Scalar blue) {
   palmbase_x = 0;
   palmbase_y = 0;
 
-  green_i = -1, green_j = -1;
-}
+  indexbase_x = 0;
+  indexbase_y = 0;
 
+  green_i = -1, green_j = -1;
+
+  reset_grid();
+  reset_palmbase();
+  reset_indexbase();
+}
 
 
 void AnchorDynamic::calculate(
@@ -82,26 +81,20 @@ void AnchorDynamic::calculate(
     updatePalmBase(palmbase);
     updateIndexBase(indexbase);
 
-    // using palmbase
-    // setupGrid((palmbase_x*width) - (ws/2), (palmbase_y*height) - hs); // defined in parent anchor class
-    
+    if (indexbase_x > 0 && indexbase_y > 0) {
+      // using palmbase
+      // setupGrid((palmbase_x*width) - (ws/2), (palmbase_y*height) - hs); // defined in parent anchor class
+      // using indexbase
+      setupGrid(indexbase_x*width, indexbase_y*height); // defined in parent anchor class
+      setupSelection(pointer_x, pointer_y); // defined in parent anchor class
 
-    // using indexbase
-    setupGrid(indexbase_x*width, (palmbase_y*height)-hs); // defined in parent anchor class
-    
-
-    setupSelection(pointer_x, pointer_y); // defined in parent anchor class
-
-    // std::cout << "anchors_dynamic selected i:" << selected_i << "\tj:" << selected_j << "\n";
-    if (extra_params.size() > 7) {
-      std::cout << "\tanchors_dynamic storing selected i:" << selected_i << "\tj:" << selected_j << "\n";
-
-        extra_params[7] = selected_i;
-        extra_params[8] = selected_j;
-    } else {
-      std::cout << "anchor/dynamic selected idx not found\n";
+      if (extra_params.size() > 7) {
+          extra_params[7] = selected_i;
+          extra_params[8] = selected_j;
+      } else {
+        std::cout << "anchor/dynamic selected idx not found\n";
+      }
     }
-
 }
 
 
@@ -153,8 +146,8 @@ void AnchorDynamic::draw(
 
     cv::rectangle(
         overlay, 
-        cv::Point(xs[0], ys[0]), cv::Point(xs[0]+ws, ys[0]+hs), 
-        cv::Scalar(25, 25, 125),
+        getGridTopLeft(), getGridBottomRight(), 
+        COLORS_floralwhite,
         -1, 
         cv::LINE_8,
         0);

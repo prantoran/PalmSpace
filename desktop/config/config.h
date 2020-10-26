@@ -4,6 +4,8 @@
 #include <vector>
 #include <tuple>
 
+const std::string APP_NAME = "PalmSpace";
+
 constexpr int PSIZE = 10;
 
 class ExtraParameters {

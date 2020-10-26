@@ -7,9 +7,9 @@
 #include <tuple>
 #include <vector>
 #include <iostream>
-#include "mediapipe/framework/port/opencv_highgui_inc.h"
-#include "mediapipe/framework/port/opencv_imgproc_inc.h"
-#include "mediapipe/framework/port/opencv_video_inc.h"
+
+#include "mediapipe/framework/port/opencv_imgproc_inc.h" // most likely contains headers for cv::types
+#include "../config/colors.h"
 
 constexpr double alpha = 0.4;
 #define COLORS_floralwhite  cv::Scalar(240,250,255)
@@ -74,6 +74,11 @@ class Anchor { // interface via abstract class
     
     void reset_palmbase();
     void reset_indexbase();
+    void reset_grid();
+
+    cv::Rect getGrid();
+    cv::Point getGridTopLeft();
+    cv::Point getGridBottomRight();
 };
 
 
@@ -105,6 +110,7 @@ class AnchorDynamic: public Anchor {
 
     void updatePalmBase(const std::tuple<double, double, double> & palmbase);
     void updateIndexBase(const std::tuple<double, double, double> & indexbase);
+    void initiate();
 };
 
 

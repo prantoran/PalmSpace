@@ -1,16 +1,11 @@
 #ifndef HANDLERS_H
 #define HANDLERS_H
 
-
 #include "mediapipe/framework/port/status.h"
 #include "desktop/anchors/anchors.h"
 #include "desktop/triggers/triggers.h"
 #include "desktop/initiators/initiators.h"
 #include "desktop/config/config.h"
-
-// #include "mediapipe/framework/calculator_framework.h"
-
-
 
 #include <tuple>
 #include <vector>
@@ -49,6 +44,9 @@ class AnchorHandler{
     int getDivisions();
     bool static_display();
     void setDivisions(int _divisions);
+    cv::Rect getGrid();
+    cv::Point getGridTopLeft();
+    cv::Point getGridBottomRight();
 };
 
 class TriggerHandler {
@@ -95,8 +93,9 @@ class MediaPipeMultiHandGPU {
     TriggerHandler trigger;
     InitiatorHandler initiator;
     // int curImageID;
+    std::string window_name;
 
-    MediaPipeMultiHandGPU();
+    MediaPipeMultiHandGPU(const std::string & _window_name);
 
     ::mediapipe::Status run(
         const std::string& calculator_graph_config_file,
@@ -105,7 +104,8 @@ class MediaPipeMultiHandGPU {
         const int frame_width,
         const int frame_height,
         const int fps,
-        const int debug_mode); 
+        const int debug_mode,
+        const int dev_video); 
 };
 
 #endif

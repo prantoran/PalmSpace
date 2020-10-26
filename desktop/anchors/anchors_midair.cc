@@ -16,7 +16,9 @@ AnchorMidAir::~AnchorMidAir() {
 
 AnchorMidAir::AnchorMidAir() {
     name = "static";
-
+    ws = 0;
+    hs = 0;
+  
     width = 0;
     height = 0;
     gap = 15;
@@ -29,6 +31,8 @@ AnchorMidAir::AnchorMidAir() {
     selected_i = -1, selected_j = -1;
 
     static_display = false;
+
+    reset_grid();
 }
 
 AnchorMidAir::AnchorMidAir(cv::Scalar red, cv::Scalar blue) {
@@ -43,6 +47,8 @@ AnchorMidAir::AnchorMidAir(cv::Scalar red, cv::Scalar blue) {
     selected_i_prv = -1, selected_j_prv = -1;
     selected_i = -1, selected_j = -1;
     static_display = false;
+
+    reset_grid();
 }
 
 void AnchorMidAir::calculate(
@@ -97,7 +103,7 @@ void AnchorMidAir::draw(
 
     cv::rectangle(
         overlay, 
-        cv::Point(xs[0], ys[0]), cv::Point(xs[0]+ws, ys[0]+hs), 
+        getGridTopLeft(), getGridBottomRight(), 
         cv::Scalar(25, 25, 125),
         -1, 
         cv::LINE_8,
