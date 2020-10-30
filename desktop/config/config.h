@@ -7,6 +7,7 @@
 // opencv
 #include "mediapipe/framework/port/opencv_imgproc_inc.h"
 
+#include "choices.h";
 
 const std::string APP_NAME = "PalmSpace";
 
@@ -24,6 +25,7 @@ class DepthArea {
   }
 };
 
+
 class ExtraParameters {
     public:
     std::vector<double> extra_params;
@@ -34,7 +36,7 @@ class ExtraParameters {
     bool load_video; // used by trigger tap_depth_area
 
     DepthArea depth_area;
-
+    
     /*
       0: min_ws
       1: min_hs

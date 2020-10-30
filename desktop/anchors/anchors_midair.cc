@@ -57,7 +57,9 @@ void AnchorMidAir::calculate(
     const std::tuple<double, double, double> & indexbase, 
     double scale_ratio, 
     int pointer_x, int pointer_y,
-    std::vector<double> & extra_params) {
+    ExtraParameters & params) {
+    
+    std::vector<double> & extra_params = params.extra_params; 
 
 
     if (!width || !height) {
@@ -85,7 +87,7 @@ void AnchorMidAir::calculate(
       extra_params[7] = selected_i;
       extra_params[8] = selected_j;
     } else {
-      std::cerr << "anchor_midair extra_params small size, cannot store selected i-j\n";
+      std::cout << "anchor_midair extra_params small size, cannot store selected i-j\n";
     }
 
 }
@@ -96,7 +98,9 @@ void AnchorMidAir::draw(
     const std::tuple<double, double, double> & indexbase, 
     double scale_ratio, 
     int pointer_x, int pointer_y,
-    std::vector<double> & extra_params) {
+    const ExtraParameters & params) {
+    
+    const std::vector<double> & extra_params = params.extra_params;
 
     cv::Mat overlay;
     input.copyTo(overlay);

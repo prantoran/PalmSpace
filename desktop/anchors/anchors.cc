@@ -205,6 +205,12 @@ cv::Point Anchor::getGridTopLeft() {
     return cv::Point(xs[0], ys[0]);
 }
 
+
 cv::Point Anchor::getGridBottomRight() {
     return cv::Point(xs[0]+ws, ys[0]+hs);
+}
+
+
+void Anchor::setScreenSize(eScreenSize size) {
+    screen.size = size;
 }

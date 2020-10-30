@@ -9,11 +9,41 @@
 #include <iostream>
 
 #include "mediapipe/framework/port/opencv_imgproc_inc.h" // most likely contains headers for cv::types
-#include "../config/colors.h"
+
+#include "desktop/config/colors.h"
+#include "desktop/config/config.h"
 
 constexpr double alpha = 0.4;
 #define COLORS_floralwhite  cv::Scalar(240,250,255)
 
+
+class ScreenSize {
+    public:
+    eScreenSize size;
+    
+    void setMinWidthHeight(
+        int &min_width, 
+        int &min_height, 
+        int max_width, 
+        int max_height) {
+        
+        switch (size) {
+            case SMALL:
+                min_width = max_width/4;
+                min_height = max_height/4;
+                break;
+            case LARGE:
+                min_width = (2*max_width)/3;
+                min_height = (2*max_height)/3;
+                break; 
+            default:
+                std::cout << "ERROR anchors/anchor.h ScreenSize setMinWidthHeight() size invalid\n";
+                min_width = -1;
+                min_height = -1;
+        }
+    }
+
+};
 
 class Anchor { // interface via abstract class
     public:
@@ -37,6 +67,8 @@ class Anchor { // interface via abstract class
     int progress_maxwidth, progress_maxheight; // progress bar
     int pwidth, npwidth;
 
+    ScreenSize screen;
+
     virtual ~Anchor();
 
     void setConfig(int _width, int _height);
@@ -50,7 +82,7 @@ class Anchor { // interface via abstract class
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        std::vector<double> & extra_params) = 0;
+        ExtraParameters & params) = 0;
     
     virtual void draw(
         cv::Mat& input, 
@@ -58,7 +90,7 @@ class Anchor { // interface via abstract class
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        std::vector<double> & extra_params) = 0;
+        const ExtraParameters & params) = 0;
 
     std::tuple<int, int> selectedIndexes();
 
@@ -79,6 +111,8 @@ class Anchor { // interface via abstract class
     cv::Rect getGrid();
     cv::Point getGridTopLeft();
     cv::Point getGridBottomRight();
+
+    void setScreenSize(eScreenSize size);
 };
 
 
@@ -98,7 +132,7 @@ class AnchorDynamic: public Anchor {
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        std::vector<double> & extra_params);
+        ExtraParameters & params);
 
     void draw(
         cv::Mat& input, 
@@ -106,7 +140,7 @@ class AnchorDynamic: public Anchor {
         const std::tuple<double, double, double> & indexbase,  
         double area, 
         int pointer_x, int pointer_y,
-        std::vector<double> & extra_params);
+        const ExtraParameters & params);
 
     void updatePalmBase(const std::tuple<double, double, double> & palmbase);
     void updateIndexBase(const std::tuple<double, double, double> & indexbase);
@@ -132,7 +166,7 @@ class AnchorStatic: public Anchor {
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        std::vector<double> & extra_params);
+        ExtraParameters & params);
 
     void draw(
         cv::Mat& input, 
@@ -140,7 +174,7 @@ class AnchorStatic: public Anchor {
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        std::vector<double> & extra_params);
+        const ExtraParameters & params);
 };
 
 
@@ -159,7 +193,7 @@ class AnchorMidAir: public Anchor {
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        std::vector<double> & extra_params);
+        ExtraParameters & params);
 
     void draw(
         cv::Mat& input, 
@@ -167,7 +201,7 @@ class AnchorMidAir: public Anchor {
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        std::vector<double> & extra_params);
+        const ExtraParameters & params);
 };
 
 

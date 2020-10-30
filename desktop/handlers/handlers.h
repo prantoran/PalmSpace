@@ -6,6 +6,7 @@
 #include "desktop/triggers/triggers.h"
 #include "desktop/initiators/initiators.h"
 #include "desktop/config/config.h"
+#include "desktop/config/choices.h"
 
 #include <tuple>
 #include <vector>
@@ -26,7 +27,7 @@ class AnchorHandler{
         const std::tuple<double, double, double> & indexbase, 
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        std::vector<double> & extra_params); 
+        ExtraParameters & params); 
 
     void draw(
         cv::Mat& input, 
@@ -34,7 +35,7 @@ class AnchorHandler{
         const std::tuple<double, double, double> & indexbase, 
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        std::vector<double> & extra_params);
+        const ExtraParameters & params);
     
     void reset_palmbase();
     void reset_indexbase();
@@ -47,6 +48,8 @@ class AnchorHandler{
     cv::Rect getGrid();
     cv::Point getGridTopLeft();
     cv::Point getGridBottomRight();
+
+    void setScreenSize(eScreenSize size);
 };
 
 class TriggerHandler {

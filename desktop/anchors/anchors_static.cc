@@ -92,8 +92,10 @@ void AnchorStatic::calculate(
     const std::tuple<double, double, double> & indexbase, 
     double scale_ratio, 
     int pointer_x, int pointer_y,
-    std::vector<double> & extra_params) {
-
+    ExtraParameters & params) {
+    
+    std::vector<double> & extra_params = params.extra_params; 
+    
     if (!width || !height) {
         setConfig(input.size().width, input.size().height);
         
@@ -170,7 +172,9 @@ void AnchorStatic::draw(
     const std::tuple<double, double, double> & indexbase, 
     double scale_ratio, 
     int pointer_x, int pointer_y,
-    std::vector<double> & extra_params) {
+    const ExtraParameters & params) {
+    
+    const std::vector<double> & extra_params = params.extra_params;
     
     double palmbase_x_new = std::get<0>(palmbase);
     double palmbase_y_new = std::get<1>(palmbase);

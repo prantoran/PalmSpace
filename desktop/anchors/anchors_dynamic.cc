@@ -63,7 +63,9 @@ void AnchorDynamic::calculate(
     const std::tuple<double, double, double> & indexbase,
     double scale_ratio, 
     int pointer_x, int pointer_y,
-    std::vector<double> & extra_params) {
+    ExtraParameters & params) {
+    
+    std::vector<double> & extra_params = params.extra_params; 
 
     if (!width || !height) {
       setConfig(input.size().width, input.size().height);
@@ -73,9 +75,8 @@ void AnchorDynamic::calculate(
       // extra parameters, for eg from initiator
       min_ws = extra_params[0]*width;
       min_hs = extra_params[1]*height;
-    } else {
-      min_ws = width/3;
-      min_hs = height/3;
+    } {
+      screen.setMinWidthHeight(min_ws, min_hs, width, height);
     }
 
     updatePalmBase(palmbase);
@@ -138,7 +139,9 @@ void AnchorDynamic::draw(
     const std::tuple<double, double, double> & indexbase, 
     double scale_ratio, 
     int pointer_x, int pointer_y,
-    std::vector<double> & extra_params) {
+    const ExtraParameters & params) {
+    
+    const std::vector<double> & extra_params = params.extra_params;
 
 
     cv::Mat overlay;

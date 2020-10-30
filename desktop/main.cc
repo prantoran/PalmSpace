@@ -89,8 +89,6 @@ int main(int argc, char** argv) {
 
   std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
 
-  std::cerr << "/dev/video:" << FLAGS_dev_video << "\n";
-
 
   const bool load_video = !FLAGS_input_video_path.empty();
   const bool save_video = !FLAGS_output_video_path.empty();
@@ -151,7 +149,7 @@ int main(int argc, char** argv) {
     mp_graph->trigger = handler_trigger;
   }
 
-  Menu menu = Menu(
+  PalmSpaceUI::Menu menu = PalmSpaceUI::Menu(
     FLAGS_frame_width,
     FLAGS_frame_height,
     choice_divisions,
@@ -169,13 +167,16 @@ int main(int argc, char** argv) {
     choice_screensize,
     choice_debug);
 
-  std::cerr << "initiator:" << choices.initiator_label(static_cast<initiators>(choice_initiator)) << "\n";
-
   mp_graph->initiator._choice = choice_initiator;
   mp_graph->anchor._choice = choice_anchor;
   mp_graph->anchor.setDivisions(choice_divisions);
   mp_graph->trigger._choice = choice_trigger;
   mp_graph->trigger._wait.choice = choice_anchor;
+  
+  eScreenSize ssize = choices.getScreenSize(choice_screensize);
+  
+  mp_graph->anchor.setScreenSize(ssize);
+    
 
   if (choice_anchor == 1 && choice_initiator == 2) {
     exit(-1);
@@ -186,9 +187,7 @@ int main(int argc, char** argv) {
     mp_graph->initiator.setStrict(true); // only look for pointer in second hand
   } else if (choice_trigger == 6) {
     std::cout << "given dwell trigger, checking choice_anchor\n";
-    if (choice_anchor != 3) {
-      std::cerr << "setting initiator strict\n";
-      mp_graph->initiator.setStrict(true); // only look for pointer in second hand
+    if (choice_anchor != 3) {      mp_graph->initiator.setStrict(true); // only look for pointer in second hand
     }
   }
 

@@ -44,7 +44,6 @@ void ExtraParameters::set(int i, double v) {
 
 
 void ExtraParameters::set(const std::vector<double> & p) {
-    std::cerr << "params reset called\n";
     for (int i = 0; i < psize; i ++) {
         extra_params[i] = p[i];
     }

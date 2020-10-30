@@ -12,18 +12,25 @@ void TriggerHandler::update(
     switch (_choice) {
         case 1:
             _thumb.update(input_image, points, params);
+            break;
         case 2:
             _thumb_other.update(input_image, points, params);
+            break;
         case 3:
             _pinch.update(input_image, points, params);
+            break;
         case 4:
             _wait.update(input_image, points, params);
+            break;
         case 5:
             _tappalm.update(input_image, points, params);
+            break;
         case 6:
             _dwell.update(input_image, points, params);
+            break;
         case 7:
             _tap_depth_area.update(input_image, points, params);
+            break;
         default:
             std::cout << "handlers.trigger: invalid trigger choice\n";
             _dwell.update(input_image, points, params);

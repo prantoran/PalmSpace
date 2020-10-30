@@ -4,19 +4,20 @@
 #define CHOICES_H
 
 #include <string>
+#include <iostream>
 
-enum initiators {
+enum eInitiators {
     DEFAULT = 1, 
     TWOHAND
 };
 
-enum anchors {
+enum eAnchors {
     DYNAMIC = 1, 
     STATIC, 
     MIDAIR
 };
 
-enum triggers {
+enum eTriggers {
     THUMBBASEPALM = 1,
     THUMBFREEPALM,
     PINCHFREEPALM,
@@ -25,10 +26,15 @@ enum triggers {
     DWELL
 };
 
+enum eScreenSize {
+    INVALID,
+    SMALL = 1,
+    LARGE,
+};
+
 class Choices {
     public:
-
-    static std::string initiator_label(initiators i) {
+    static std::string initiatorLabel(eInitiators i) {
         switch (i) {
             case DEFAULT:
                 return "DEFAULT";
@@ -38,8 +44,9 @@ class Choices {
                 return "INVALID";
         }
     }
-    
-    static std::string anchor_label(anchors a) {
+
+
+    static std::string anchorLabel(eAnchors a) {
         switch (a) {
             case DYNAMIC:
                 return "DYNAMIC";
@@ -52,7 +59,8 @@ class Choices {
         }
     }
 
-    static std::string trigger_label(triggers t) {
+
+    static std::string triggerLabel(eTriggers t) {
         switch (t) {
             case THUMBBASEPALM:
                 return "THUMBBASEPALM";
@@ -70,8 +78,30 @@ class Choices {
                 return "INVALID";
         }
     }
+
+
+    static std::string screensizeLabel(eScreenSize s) {
+        switch (s) {
+            case SMALL:
+                return "small";
+            case LARGE:
+                return "large";
+            default:
+                return "INVALID";
+        }
+    }
+
+
+    eScreenSize getScreenSize(int choice_screensize) {
+        switch (choice_screensize) {
+            case 1:
+                return SMALL;
+            case 2:
+                return LARGE;
+            default:
+                return INVALID;
+        }
+    }
 };
-
-
 
 #endif

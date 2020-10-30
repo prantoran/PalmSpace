@@ -5,7 +5,7 @@
 #define CVUI_IMPLEMENTATION
 #include "cvui.h"
 
-Menu::Menu(
+PalmSpaceUI::Menu::Menu(
 		int FLAGS_frame_width, int FLAGS_frame_height,
 		int choice_divisions, int choice_screensize,
 		bool FLAGS_debug, std::string window_name
@@ -25,7 +25,7 @@ Menu::Menu(
 	ancdyn = true, ancstat  = false, ancmid  = false; 
 	trigpalmbase = false, trigpalmfree = false, trigpinch = false, trigwait = false, trigtap = false, trigdwell = true;
 
-	scalex = -10 + width/6, scaley = -10 + height/4;
+	scalex = -10 + width/7, scaley = -10 + height/4;
 	std::cerr << "scalex:" << scalex << " scaley:" << scaley << "\n";
 
 	errormsg = "";
@@ -33,11 +33,15 @@ Menu::Menu(
 
 	bool _debug = FLAGS_debug;
 
-	
+	screen_small = 1, screen_large = 0;
+	if (choice_screensize == 2) {
+		screen_large = 1;
+		screen_small = 0;
+	}
 }
 
 
-void Menu::run() {
+void PalmSpaceUI::Menu::run() {
 	while(true) {
 		// std::cerr << "rendering ui\n";
 		// clear the frame
@@ -69,7 +73,10 @@ void Menu::run() {
 		if (cellcnt > 10) cellcnt = 10;
 		cvui::window(frame, scalex + 120, scaley + 170, 200, 50, "Number of cells per row/col");
 		cvui::counter(frame, scalex + 175, scaley + 195, &cellcnt);
-
+		
+		cvui::window(frame, scalex + 330, scaley + 10, 100, 80, "Screen Size");
+		cvui::checkbox(frame, scalex + 330, scaley + 30, "Small", &screen_small);
+		cvui::checkbox(frame, scalex + 330, scaley + 50, "Large", &screen_large);
 
 
 		if (cvui::button(frame, width - 120, height - 50, 100, 30, "Next")) {
@@ -107,6 +114,16 @@ void Menu::run() {
 				}
 			}
 
+			if (valid) {
+				cnt = 0;
+				if (screen_large) cnt ++;
+				if (screen_small) cnt ++;
+				if (cnt != 1) {
+					valid = 0;
+					errormsg = "Select exactly 1 screen size.";
+				}
+			}
+
 
 
 			if (valid) {
@@ -130,7 +147,7 @@ void Menu::run() {
 }
 
 
-void Menu::get_choices(
+void PalmSpaceUI::Menu::get_choices(
     int & initiator, 
     int & anchor, 
     int & trigger, 
@@ -151,6 +168,10 @@ void Menu::get_choices(
   if (trigwait) trigger = 4;
   if (trigtap) trigger = 5;
   if (trigdwell) trigger = 6;
+
+
+  if (screen_small) screensize = 1;
+  else if (screen_large) screensize = 2; 
 
   divisions = cellcnt;
 

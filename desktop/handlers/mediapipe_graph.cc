@@ -335,7 +335,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
       palmbase,
       indexbase, 
       interface_scaling_factor,
-      indexfinger_x, indexfinger_y, params.extra_params); // saves selected i,j in extra_params[7,8] 
+      indexfinger_x, indexfinger_y, params); // saves selected i,j in extra_params[7,8] 
     
     cv::Rect gg = anchor.getGrid();
 
@@ -353,7 +353,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
           palmbase,
           indexbase, 
           interface_scaling_factor,
-          indexfinger_x, indexfinger_y, params.extra_params);
+          indexfinger_x, indexfinger_y, params);
 
       if (params.is_set_indexfinger()) {
         cv::circle(

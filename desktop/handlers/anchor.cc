@@ -12,16 +12,16 @@ void AnchorHandler::calculate(
         const std::tuple<double, double, double> & indexbase, 
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        std::vector<double> & extra_params) {
+        ExtraParameters & params) {
 
     if (_choice == 1) {
-        _dynamic.calculate(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, extra_params);
+        _dynamic.calculate(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, params);
     } else if (_choice == 2) {
-        _static.calculate(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, extra_params);
+        _static.calculate(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, params);
     } else if (_choice == 3) {
-        _midair.calculate(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, extra_params);
+        _midair.calculate(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, params);
     } else {
-        std::cerr << "handler_anchor invalid choice:" << _choice << "\n";
+        std::cout << "handler_anchor invalid choice:" << _choice << "\n";
     }
 }
 
@@ -32,14 +32,14 @@ void AnchorHandler::draw(
         const std::tuple<double, double, double> & indexbase, 
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        std::vector<double> & extra_params) {
+        const ExtraParameters & params) {
 
     if (_choice == 1) {
-        _dynamic.draw(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, extra_params);
+        _dynamic.draw(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, params);
     } else if (_choice == 2){
-        _static.draw(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, extra_params);
+        _static.draw(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, params);
     } else if (_choice == 3) {
-        _midair.draw(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, extra_params);
+        _midair.draw(input, palmbase, indexbase, scale_ratio, pointer_x, pointer_y, params);
     }
 }
 
@@ -161,3 +161,19 @@ cv::Point AnchorHandler::getGridBottomRight() {
             return _dynamic.getGridBottomRight();
     }
 };
+
+void AnchorHandler::setScreenSize(eScreenSize size) {
+    switch (_choice) {
+        case 1:
+            _dynamic.setScreenSize(size);
+            break;
+        case 2:
+            _static.setScreenSize(size);
+            break;
+        case 3:
+            _midair.setScreenSize(size);
+            break;
+        default:
+            _dynamic.setScreenSize(size);
+    }
+}

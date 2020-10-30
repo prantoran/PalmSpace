@@ -70,8 +70,6 @@ bool InitiatorTwoHand::inspect(
             raw_height = bottomright_y-topleft_y;
             raw_width_half = raw_width / 2;
 
-            // std::cerr << "topleft_x:" << topleft_x << " bottomright_x:" << bottomright_x << " raw_width:" << raw_width << "\n";
-
             if (raw_width < MIN_WIDTH || raw_height < MIN_HEIGHT) {
                 topleft_x = -1;
                 topleft_y = -1;
