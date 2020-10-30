@@ -17,10 +17,14 @@ TriggerThumb::TriggerThumb(int _width, int _height) {
 }
 
 void TriggerThumb::update(
+    const cv::Mat & input_image,
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-    std::vector<double> & extra_params) {
+    ExtraParameters & params) {
 
-    
+    std::vector<double> & extra_params = params.extra_params;
+
+
+
     if (points[0].size() <= index_bottom) {
         std::cerr << "trigger thumb update: not enough points\n";
         cur_state = TRIGGER::OPEN;

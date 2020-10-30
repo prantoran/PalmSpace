@@ -29,7 +29,7 @@
 #include "desktop/ui/menu.h"
 #include "desktop/config/config.h";
 
-
+#include "desktop/config/choices.h";
 
 
 DEFINE_string(
@@ -78,6 +78,8 @@ void checkOpenCVHardwareSupport() {
 }
 
 
+Choices choices;
+
 int main(int argc, char** argv) {
 
   checkOpenCVHardwareSupport();
@@ -89,11 +91,17 @@ int main(int argc, char** argv) {
 
   std::cerr << "/dev/video:" << FLAGS_dev_video << "\n";
 
+
+  const bool load_video = !FLAGS_input_video_path.empty();
+  const bool save_video = !FLAGS_output_video_path.empty();
+
   int choice_anchor = 1;
   int choice_trigger = 6;
   int choice_initiator = 1;
   int choice_divisions = 6;
+  int choice_screensize = 1;
   int choice_debug = FLAGS_debug;
+
   
   
   if (mp_graph == NULL) {
@@ -124,6 +132,13 @@ int main(int argc, char** argv) {
     handler_trigger._wait = TriggerWait(FLAGS_frame_width, FLAGS_frame_height, -1);
     // handler_trigger._tap = TriggerTap(FLAGS_frame_width, FLAGS_frame_height);
     handler_trigger._dwell = TriggerDwell();
+    handler_trigger._tap_depth_area = TriggerTapDepthArea(
+      load_video, 
+      save_video, 
+      FLAGS_dev_video, 
+      FLAGS_fps,
+      FLAGS_frame_width, 
+      FLAGS_frame_height);
 
 
     InitiatorHandler handler_initiator;
@@ -131,35 +146,30 @@ int main(int argc, char** argv) {
     handler_initiator._twohand = InitiatorTwoHand();
 
 
-
     mp_graph->anchor = handler_anchor;
     mp_graph->initiator = handler_initiator;
     mp_graph->trigger = handler_trigger;
   }
 
-  Menu menu = Menu(FLAGS_frame_width, FLAGS_frame_height, choice_divisions, choice_debug, APP_NAME);
+  Menu menu = Menu(
+    FLAGS_frame_width,
+    FLAGS_frame_height,
+    choice_divisions,
+    choice_screensize,
+    choice_debug,
+    APP_NAME);
 
   menu.run();
 
-  menu.get_choices(choice_initiator, choice_anchor, choice_trigger, choice_divisions, choice_debug);
+  menu.get_choices(
+    choice_initiator,
+    choice_anchor,
+    choice_trigger,
+    choice_divisions,
+    choice_screensize,
+    choice_debug);
 
-  // choice_initiator = 1;
-  // choice_anchor = 1;
-  // choice_trigger = 1;
-
-  // while(true) {
-
-  // std::cout << "Pick initiator (1 : Default, 2: Two-Hand): ";
-  // std::cin >> choice_initiator;
-
-  // std::cout << "Pick anchor (1 : Dynamic, 2: static, 3: midair): ";
-  // std::cin >> choice_anchor;
-
-  // std::cout << "Pick the number of cells per row/col (3 - 10): ";
-  // std::cin>> choice_divisions;
-  
-  // std::cout << "Pick trigger (1: Thumb of base palm, 2: Thumb of free palm, 3: Pinch with free palm, 4: Wait to select, 5: Tap, 6: Dwell): ";
-  // std::cin >> choice_trigger;
+  std::cerr << "initiator:" << choices.initiator_label(static_cast<initiators>(choice_initiator)) << "\n";
 
   mp_graph->initiator._choice = choice_initiator;
   mp_graph->anchor._choice = choice_anchor;
@@ -190,7 +200,9 @@ int main(int argc, char** argv) {
       FLAGS_frame_height, 
       FLAGS_fps,
       choice_debug,
-      FLAGS_dev_video); 
+      FLAGS_dev_video,
+      load_video,
+      save_video); 
   
   if (!run_status.ok()) {
     LOG(ERROR) << "Failed to run the graph: " << run_status.message();

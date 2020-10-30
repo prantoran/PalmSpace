@@ -32,14 +32,17 @@ class Menu {
 
     public:
     Menu(
-        int FLAGS_frame_width, int FLAGS_frame_height, 
-        int choice_divisions, bool FLAGS_debug, std::string window_name);
+        int FLAGS_frame_width, int FLAGS_frame_height,
+		int choice_divisions, int choice_screensize,
+		bool FLAGS_debug, std::string window_name
+    );
     void run();
     void get_choices(
         int & initiator, 
         int & anchor, 
         int & trigger, 
         int & divisions,
+        int & screensize,
         int & debug);
 };
 

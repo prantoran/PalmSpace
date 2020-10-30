@@ -31,8 +31,12 @@ TriggerTapPalm::TriggerTapPalm(int _width, int _height) {
 }
 
 void TriggerTapPalm::update(
+    const cv::Mat & input_image,
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-    std::vector<double> & extra_params) {
+    ExtraParameters & params) {
+
+    std::vector<double> & extra_params = params.extra_params;
+
 
     if (points.size() < 0) {
         std::cerr << "trigger_tap_palm: less than two hands, resetting trigger\n";

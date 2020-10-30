@@ -17,9 +17,14 @@ TriggerPinch::TriggerPinch(int _width, int _height) {
 }
 
 void TriggerPinch::update(
+    const cv::Mat & input_image,
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-    std::vector<double> & extra_params) {
-    
+    ExtraParameters & params) {
+
+
+    std::vector<double> & extra_params = params.extra_params;
+
+
     if (points[1].size() < 9) {
         std::cerr << "trigger_thumb_other=not enough points for free palm\n";
         return;

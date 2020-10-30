@@ -4,9 +4,25 @@
 #include <vector>
 #include <tuple>
 
+// opencv
+#include "mediapipe/framework/port/opencv_imgproc_inc.h"
+
+
 const std::string APP_NAME = "PalmSpace";
 
 constexpr int PSIZE = 10;
+
+
+class DepthArea {
+  public:
+  int area1, area2;
+  cv::Point pt1, pt2;
+  bool initiated;
+
+  DepthArea() {
+    initiated = false;
+  }
+};
 
 class ExtraParameters {
     public:
@@ -15,6 +31,10 @@ class ExtraParameters {
 
     std::tuple<double, double, double> indexbase, palmbase;
     
+    bool load_video; // used by trigger tap_depth_area
+
+    DepthArea depth_area;
+
     /*
       0: min_ws
       1: min_hs
@@ -29,15 +49,17 @@ class ExtraParameters {
     */
 
     ExtraParameters();
+    ExtraParameters(bool _load_video);
     ~ExtraParameters();
 
+    void init(bool _load_video);
+    void reset();
+    
     void set(int i, double v);
     void set(const std::vector<double> & p);
 
     double at(int i);
 
-    void reset();
-    
     void set_indexfinger(const std::tuple<double, double, double> & p);
     void get_indexfinger(double &x, double &y);
     bool is_set_indexfinger();

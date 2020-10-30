@@ -59,12 +59,14 @@ class TriggerHandler {
     TriggerTap _tap;
     TriggerTapPalm _tappalm;
     TriggerDwell _dwell;
+    TriggerTapDepthArea _tap_depth_area;
     
     int _choice;
 
     void update(
+        const cv::Mat & input_image,
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        std::vector<double> & extra_params);
+        ExtraParameters & params);
         
     TRIGGER::state status();
 };
@@ -105,7 +107,9 @@ class MediaPipeMultiHandGPU {
         const int frame_height,
         const int fps,
         const int debug_mode,
-        const int dev_video); 
+        const int dev_video,
+        const bool load_video,
+        const bool save_video); 
 };
 
 #endif

@@ -5,10 +5,6 @@
 #include "mediapipe/framework/port/opencv_video_inc.h"
 
 
-// const cv::Scalar color_green = cv::Scalar(0, 255, 200);
-const cv::Scalar color_grey = cv::Scalar(240, 240, 240);
-const cv::Scalar color_light_grey = cv::Scalar(255, 255, 255);
-
 Anchor::~Anchor() {
 }
 
@@ -61,7 +57,7 @@ void Anchor::drawProgressBar(cv::Mat & _image, double _progress) {
             _image,
             cv::Point(10+pwidth, height-10-progress_maxheight),
             cv::Point(10+progress_maxwidth, height-10),
-            color_grey, // blue
+            COLORS_grey, // blue
             cv::FILLED,
             8,
             0
@@ -71,7 +67,7 @@ void Anchor::drawProgressBar(cv::Mat & _image, double _progress) {
             _image,
             cv::Point(10, height-10-progress_maxheight),
             cv::Point(10+progress_maxwidth, height-10),
-            color_grey, // blue
+            COLORS_grey, // blue
             2,
             8,
             0

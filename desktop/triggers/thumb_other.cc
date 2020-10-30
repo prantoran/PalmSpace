@@ -16,8 +16,12 @@ TriggerThumbOther::TriggerThumbOther(int _width, int _height) {
 }
 
 void TriggerThumbOther::update(
+    const cv::Mat & input_image,
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-    std::vector<double> & extra_params) {
+    ExtraParameters & params) {
+
+    std::vector<double> & extra_params = params.extra_params;
+
 
     if (points[1].size() < 6) {
         std::cerr << "trigger_thumb_other=not enough points for free palm\n";

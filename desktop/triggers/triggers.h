@@ -1,11 +1,22 @@
 #ifndef TRIGGERS_H
 #define TRIGGERS_H
 
+
 #include <tuple>
 #include <vector>
 #include <chrono>
 #include <string>
 #include <iostream>
+
+
+// opencv
+#include "mediapipe/framework/port/opencv_imgproc_inc.h"
+
+#include "desktop/config/config.h"
+
+
+constexpr char trackbarWindowName[] = "Index Marker Tuning";
+
 
 namespace TRIGGER {
     typedef enum{
@@ -29,8 +40,11 @@ class Trigger {
     
 
     virtual void update(
+        const cv::Mat & input_image,
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        std::vector<double> & extra_params) = 0;
+        ExtraParameters & params) = 0;
+
+    // TODO: refactor status def to parent
     virtual TRIGGER::state status() = 0;
 };
 
@@ -41,8 +55,10 @@ class TriggerThumb: public Trigger {
     TriggerThumb(int _width, int _height);
 
     void update(
+        const cv::Mat & input_image,
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        std::vector<double> & extra_params);
+        ExtraParameters & params);
+
     TRIGGER::state status();
 };
 
@@ -54,8 +70,10 @@ class TriggerThumbOther: public Trigger {
     TriggerThumbOther(int _width, int _height);
 
     void update(
+        const cv::Mat & input_image,
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        std::vector<double> & extra_params);
+        ExtraParameters & params);
+
     TRIGGER::state status();
 };
 
@@ -66,8 +84,10 @@ class TriggerPinch: public Trigger {
     TriggerPinch(int _width, int _height);
 
     void update(
+        const cv::Mat & input_image,
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        std::vector<double> & extra_params);
+        ExtraParameters & params);
+
     TRIGGER::state status();
 };
 
@@ -89,8 +109,10 @@ class TriggerWait: public Trigger {
     TriggerWait(int _width, int _height, int _anchor_choice);
 
     void update(
+        const cv::Mat & input_image,
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        std::vector<double> & extra_params);
+        ExtraParameters & params);
+
     TRIGGER::state status();
 };
 
@@ -105,8 +127,10 @@ class TriggerTap: public Trigger {
     TriggerTap(int _width, int _height);
 
     void update(
+        const cv::Mat & input_image,
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        std::vector<double> & extra_params);
+        ExtraParameters & params);
+
     TRIGGER::state status();
 };
 
@@ -127,8 +151,10 @@ class TriggerTapPalm: public Trigger {
     TriggerTapPalm(int _width, int _height);
 
     void update(
+        const cv::Mat & input_image,
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        std::vector<double> & extra_params);
+        ExtraParameters & params);
+
     TRIGGER::state status();
 };
 
@@ -142,9 +168,40 @@ class TriggerDwell: public Trigger {
     TriggerDwell();
 
     void update(
+        const cv::Mat & input_image,
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        std::vector<double> & extra_params);
+        ExtraParameters & params);
+
     TRIGGER::state status();
 };
+
+class TriggerTapDepthArea: public Trigger {
+    public:
+
+    int minR, maxR, minG, maxG, minB, maxB;
+    int minR2, maxR2, minG2, maxG2, minB2, maxB2;
+
+    cv::Mat hsv, hsv2;
+
+    TriggerTapDepthArea();
+
+    TriggerTapDepthArea(
+        const bool save_video, 
+        const bool load_video, 
+        const int opt_dev_video, 
+        const int fps,
+        const int frame_width,
+        const int frame_height
+    );
+    
+    void update(
+        const cv::Mat & input_image,
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        ExtraParameters & params);
+
+    TRIGGER::state status();
+    
+};
+
 
 #endif

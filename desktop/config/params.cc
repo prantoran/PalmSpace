@@ -10,8 +10,33 @@ ExtraParameters::~ExtraParameters() {
 ExtraParameters::ExtraParameters() {
     extra_params = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     psize = extra_params.size();
+
+    reset();
 }
 
+ExtraParameters::ExtraParameters(bool _load_video) {
+    extra_params = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    psize = extra_params.size();
+
+    reset();
+    init(_load_video);
+}
+
+
+void ExtraParameters::reset() {
+    for (int i = 0; i < psize; i ++) {
+        extra_params[i] = -1;
+    }
+
+    indexbase = std::make_tuple(-1, -1, -1);
+
+    load_video = false;
+}
+
+
+void ExtraParameters::init(bool _load_video) {
+    load_video = _load_video;
+}
 
 void ExtraParameters::set(int i, double v) {
     extra_params[i] = v;
@@ -31,13 +56,6 @@ double ExtraParameters::at(int i) {
 }
 
 
-void ExtraParameters::reset() {
-    for (int i = 0; i < psize; i ++) {
-        extra_params[i] = -1;
-    }
-
-    indexbase = std::make_tuple(-1, -1, -1);
-}
 
 void ExtraParameters::set_indexfinger(const std::tuple<double, double, double> & p) {
     extra_params[4] = std::get<0>(p);

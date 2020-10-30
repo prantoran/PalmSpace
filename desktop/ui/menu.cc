@@ -7,7 +7,8 @@
 
 Menu::Menu(
 		int FLAGS_frame_width, int FLAGS_frame_height,
-		int choice_divisions, bool FLAGS_debug, std::string window_name
+		int choice_divisions, int choice_screensize,
+		bool FLAGS_debug, std::string window_name
 	  ) {
     
     width = FLAGS_frame_width;
@@ -24,13 +25,15 @@ Menu::Menu(
 	ancdyn = true, ancstat  = false, ancmid  = false; 
 	trigpalmbase = false, trigpalmfree = false, trigpinch = false, trigwait = false, trigtap = false, trigdwell = true;
 
-	scalex = -10 + width/4, scaley = -10 + height/4;
+	scalex = -10 + width/6, scaley = -10 + height/4;
 	std::cerr << "scalex:" << scalex << " scaley:" << scaley << "\n";
 
 	errormsg = "";
 	valid = true;
 
 	bool _debug = FLAGS_debug;
+
+	
 }
 
 
@@ -66,6 +69,8 @@ void Menu::run() {
 		if (cellcnt > 10) cellcnt = 10;
 		cvui::window(frame, scalex + 120, scaley + 170, 200, 50, "Number of cells per row/col");
 		cvui::counter(frame, scalex + 175, scaley + 195, &cellcnt);
+
+
 
 		if (cvui::button(frame, width - 120, height - 50, 100, 30, "Next")) {
 			int cnt = 0;
@@ -130,6 +135,7 @@ void Menu::get_choices(
     int & anchor, 
     int & trigger, 
     int & divisions,
+	int & screensize,
 	int & debug) {
 
   if (onehand) initiator = 1;
