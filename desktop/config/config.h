@@ -35,8 +35,10 @@ class ExtraParameters {
     
     bool load_video; // used by trigger tap_depth_area
 
-    DepthArea depth_area;
+    DepthArea depth_area; // for area based depth calculation
     
+    bool is_static_display;
+
     /*
       0: min_ws
       1: min_hs
@@ -75,6 +77,9 @@ class ExtraParameters {
     void get_indexbase(std::tuple<double, double, double> & p);
     void set_indexbase(const std::tuple<double, double, double> & p);
     void set_indexbase(double x, double y);
+
+    void set_is_static(bool is_static);
+    bool is_static();
 };
 
 #endif

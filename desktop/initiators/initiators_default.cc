@@ -13,6 +13,7 @@ InitiatorDefault::~InitiatorDefault() {
 
 bool InitiatorDefault::inspect(
         std::vector<std::vector<std::tuple<double, double, double>>> & points) {
+    // may modify the position of vectors within points
     
     valid[0] = true;
     valid[1] = true;
@@ -56,7 +57,7 @@ void InitiatorDefault::params(
   const std::vector<std::vector<std::tuple<double, double, double>>> & points,
   ExtraParameters & parameters) {
   
-  // params() to be called after inspect() returns true
+  // params() to be called if inspect() returns true
 
   int n = points.size();
   int m0 = 0, m1 = 0;
@@ -81,9 +82,16 @@ void InitiatorDefault::params(
     }
   }
 
+  int idx = -1;
+  if (n > 1 && m1 > INDEXTOP_IDX && valid[1]) {
+    idx = 1;
+  } else if (parameters.is_static() && n > 0 && m0 > INDEXTOP_IDX && valid[0]) { // used for static displays
+    idx = 0;
+  }
 
-  if (n > 1 && m1 > INDEXTOP_IDX && valid[1] && 
-    points[1].size() > INDEXTOP_IDX && areas[1] > SMALLAREA_THRESHOLD) {
-      parameters.set_indexfinger(points[1][INDEXTOP_IDX]);
-  } 
+  if (idx >= 0) {
+    if (points[idx].size() > INDEXTOP_IDX && areas[idx] > SMALLAREA_THRESHOLD) {
+      parameters.set_indexfinger(points[idx][INDEXTOP_IDX]);
+    }
+  }
 }

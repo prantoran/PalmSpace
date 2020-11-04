@@ -78,6 +78,7 @@ void checkOpenCVHardwareSupport() {
 }
 
 
+
 Choices choices;
 
 int main(int argc, char** argv) {
@@ -87,21 +88,11 @@ int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
-
-
   const bool load_video = !FLAGS_input_video_path.empty();
   const bool save_video = !FLAGS_output_video_path.empty();
 
-  int choice_anchor = 1;
-  int choice_trigger = 6;
-  int choice_initiator = 1;
-  int choice_divisions = 6;
-  int choice_screensize = 1;
-  int choice_debug = FLAGS_debug;
+  std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
 
-  
-  
   if (mp_graph == NULL) {
     mp_graph = std::make_shared<MediaPipeMultiHandGPU>(APP_NAME);
     
@@ -116,12 +107,14 @@ int main(int argc, char** argv) {
 
 
     // note: if image path invalid then cv::resize() error occurs
+    // handler_anchor._static = AnchorStatic();
+
     handler_anchor._static = AnchorStatic(
-                              cv::Scalar(25, 25, 255), 
-                              cv::Scalar(255, 25, 25), 
-                              "/home/prantoran/work/src/github.com/google/mediapipe/desktop/anchors/Hand.png");
+                                  cv::Scalar(25, 25, 255), 
+                                  cv::Scalar(255, 25, 25), 
+                                  "/home/prantoran/work/src/github.com/google/mediapipe/desktop/anchors/Hand.png");
 
-
+    
 
     TriggerHandler handler_trigger;
     handler_trigger._thumb = TriggerThumb(FLAGS_frame_width, FLAGS_frame_height);
@@ -149,9 +142,21 @@ int main(int argc, char** argv) {
     mp_graph->trigger = handler_trigger;
   }
 
+  
+  int choice_anchor = 2;
+  int choice_trigger = 4;
+  int choice_initiator = 1;
+  int choice_divisions = 6;
+  int choice_screensize = 3;
+  int choice_debug = FLAGS_debug;
+
+
   PalmSpaceUI::Menu menu = PalmSpaceUI::Menu(
     FLAGS_frame_width,
     FLAGS_frame_height,
+    choice_anchor,
+    choice_trigger,
+    choice_divisions,
     choice_divisions,
     choice_screensize,
     choice_debug,
@@ -167,6 +172,7 @@ int main(int argc, char** argv) {
     choice_screensize,
     choice_debug);
 
+
   mp_graph->initiator._choice = choice_initiator;
   mp_graph->anchor._choice = choice_anchor;
   mp_graph->anchor.setDivisions(choice_divisions);
@@ -175,10 +181,14 @@ int main(int argc, char** argv) {
   
   eScreenSize ssize = choices.getScreenSize(choice_screensize);
   
+
+  std::cerr << "ssize:" << ssize << "\n";
+
   mp_graph->anchor.setScreenSize(ssize);
     
 
   if (choice_anchor == 1 && choice_initiator == 2) {
+    // throw std::invalid_argument("")
     exit(-1);
   }
 

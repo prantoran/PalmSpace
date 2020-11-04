@@ -7,6 +7,7 @@
 
 PalmSpaceUI::Menu::Menu(
 		int FLAGS_frame_width, int FLAGS_frame_height,
+		int choice_anchor, int choice_trigger, int choice_initiator,
 		int choice_divisions, int choice_screensize,
 		bool FLAGS_debug, std::string window_name
 	  ) {
@@ -22,21 +23,41 @@ PalmSpaceUI::Menu::Menu(
 	cellcnt = choice_divisions;
 
 	onehand = true, twohand = false;
+	if (choice_initiator == 2) {
+		twohand = true;
+		onehand = false;
+	}
+
 	ancdyn = true, ancstat  = false, ancmid  = false; 
+	if (choice_anchor == 2) {
+		ancdyn = false;
+		ancstat = true;
+	}
+
+	if (choice_anchor == 3) {
+		ancdyn = false;
+		ancmid = true;
+	}
+
 	trigpalmbase = false, trigpalmfree = false, trigpinch = false, trigwait = false, trigtap = false, trigdwell = true;
+	
 
 	scalex = -10 + width/7, scaley = -10 + height/4;
-	std::cerr << "scalex:" << scalex << " scaley:" << scaley << "\n";
 
 	errormsg = "";
 	valid = true;
 
 	bool _debug = FLAGS_debug;
 
-	screen_small = 1, screen_large = 0;
+
+
+	screen_small = 1, screen_large = 0, screen_full = 0;
 	if (choice_screensize == 2) {
 		screen_large = 1;
 		screen_small = 0;
+	} else if (choice_screensize == 3) {
+		screen_small = 0;
+		screen_full = 1;
 	}
 }
 
@@ -77,6 +98,7 @@ void PalmSpaceUI::Menu::run() {
 		cvui::window(frame, scalex + 330, scaley + 10, 100, 80, "Screen Size");
 		cvui::checkbox(frame, scalex + 330, scaley + 30, "Small", &screen_small);
 		cvui::checkbox(frame, scalex + 330, scaley + 50, "Large", &screen_large);
+		cvui::checkbox(frame, scalex + 330, scaley + 70, "Fullscreen", &screen_full);
 
 
 		if (cvui::button(frame, width - 120, height - 50, 100, 30, "Next")) {
@@ -118,6 +140,7 @@ void PalmSpaceUI::Menu::run() {
 				cnt = 0;
 				if (screen_large) cnt ++;
 				if (screen_small) cnt ++;
+				if (screen_full) cnt ++;
 				if (cnt != 1) {
 					valid = 0;
 					errormsg = "Select exactly 1 screen size.";
@@ -172,6 +195,8 @@ void PalmSpaceUI::Menu::get_choices(
 
   if (screen_small) screensize = 1;
   else if (screen_large) screensize = 2; 
+  else if (screen_full) screensize = 3;
+
 
   divisions = cellcnt;
 

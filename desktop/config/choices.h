@@ -5,6 +5,10 @@
 
 #include <string>
 #include <iostream>
+#include <unordered_map>
+
+
+typedef int initiator_t;
 
 enum eInitiators {
     DEFAULT = 1, 
@@ -30,78 +34,39 @@ enum eScreenSize {
     INVALID,
     SMALL = 1,
     LARGE,
+    FULL,
 };
+
+
 
 class Choices {
     public:
-    static std::string initiatorLabel(eInitiators i) {
-        switch (i) {
-            case DEFAULT:
-                return "DEFAULT";
-            case TWOHAND:
-                return "TWOHAND";
-            default:
-                return "INVALID";
-        }
-    }
-
-
-    static std::string anchorLabel(eAnchors a) {
-        switch (a) {
-            case DYNAMIC:
-                return "DYNAMIC";
-            case STATIC:
-                return "STATIC";
-            case MIDAIR:
-                return "MIDAIR";
-            default:
-                return "INVALID";
-        }
-    }
-
-
-    static std::string triggerLabel(eTriggers t) {
-        switch (t) {
-            case THUMBBASEPALM:
-                return "THUMBBASEPALM";
-            case THUMBFREEPALM:
-                return "THUMBFREEPALM";
-            case PINCHFREEPALM:
-                return "PINCHFREEPALM";
-            case WAIT:
-                return "WAIT";
-            case TAP:
-                return "TAP";
-            case DWELL:
-                return "DWELL";
-            default:
-                return "INVALID";
-        }
-    }
-
-
-    static std::string screensizeLabel(eScreenSize s) {
-        switch (s) {
-            case SMALL:
-                return "small";
-            case LARGE:
-                return "large";
-            default:
-                return "INVALID";
-        }
-    }
-
-
     eScreenSize getScreenSize(int choice_screensize) {
         switch (choice_screensize) {
             case 1:
                 return SMALL;
             case 2:
                 return LARGE;
+            case 3:
+                return FULL;
             default:
                 return INVALID;
         }
     }
 };
+
+
+
+// extern std::unordered_map <int, eScreenSize> fromIntToeScreenSize;
+
+// extern std::unordered_map <initiator_t, std::string> eInitiators_strmap;
+
+// extern std::unordered_map <eAnchors,std::string> eAnchors_strmap;
+
+// extern std::unordered_map <eTriggers,std::string> eTriggers_strmap;
+
+// extern std::unordered_map <eScreenSize,std::string> eScreenSize_strmap;
+
+
 
 #endif

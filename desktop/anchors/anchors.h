@@ -26,7 +26,6 @@ class ScreenSize {
         int &min_height, 
         int max_width, 
         int max_height) {
-        
         switch (size) {
             case SMALL:
                 min_width = max_width/4;
@@ -36,11 +35,21 @@ class ScreenSize {
                 min_width = (2*max_width)/3;
                 min_height = (2*max_height)/3;
                 break; 
+            case FULL:
+                min_width = max_width;
+                min_height = max_height;
+                break;
             default:
                 std::cout << "ERROR anchors/anchor.h ScreenSize setMinWidthHeight() size invalid\n";
                 min_width = -1;
                 min_height = -1;
         }
+
+        std::cerr << "screensize setminwidthheight min_width:" << min_width << " min_height:" << min_height << " max_width:" << max_width << " max_height:" << max_height << "\n";
+    }
+
+    bool isFull() {
+        return size == FULL;
     }
 
 };
@@ -152,7 +161,7 @@ class AnchorStatic: public Anchor {
     public:
     ~AnchorStatic();
     AnchorStatic();
-    AnchorStatic(cv::Scalar red, cv::Scalar blue, std::string img_path);
+    AnchorStatic(cv::Scalar red, cv::Scalar blue, std::string imagePath);
     std::string type();
 
     cv::Mat image_palm, mask;
@@ -175,6 +184,12 @@ class AnchorStatic: public Anchor {
         double scale_ratio, 
         int pointer_x, int pointer_y,
         const ExtraParameters & params);
+    
+    void initiate();
+    void setup_palmiamge(std::string imagePath);
+    void checkSelectionWithinPalm(
+        int pointer_x, int pointer_y,
+        const std::tuple<double, double, double> & palmbase);
 };
 
 

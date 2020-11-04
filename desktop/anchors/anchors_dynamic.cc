@@ -37,10 +37,12 @@ void AnchorDynamic::initiate() {
   ws = 0;
   hs = 0;
   
-  color_green = cv::Scalar(25, 255, 25);
+  color_green = COLORS_darkgreen;
 
   selected_i_prv = -1, selected_j_prv = -1;
   selected_i = -1, selected_j = -1;
+  green_i = -1, green_j = -1;
+
   static_display = false;
 
   palmbase_x = 0;
@@ -49,7 +51,6 @@ void AnchorDynamic::initiate() {
   indexbase_x = 0;
   indexbase_y = 0;
 
-  green_i = -1, green_j = -1;
 
   reset_grid();
   reset_palmbase();
@@ -69,14 +70,14 @@ void AnchorDynamic::calculate(
 
     if (!width || !height) {
       setConfig(input.size().width, input.size().height);
-    }
-    
-    if (extra_params.size() >= 2 && extra_params[0] != -1 && extra_params[1] != -1) {
-      // extra parameters, for eg from initiator
-      min_ws = extra_params[0]*width;
-      min_hs = extra_params[1]*height;
-    } {
-      screen.setMinWidthHeight(min_ws, min_hs, width, height);
+      
+      if (extra_params.size() >= 2 && extra_params[0] != -1 && extra_params[1] != -1) {
+        // extra parameters, for eg from initiator
+        min_ws = extra_params[0]*width;
+        min_hs = extra_params[1]*height;
+      } {
+        screen.setMinWidthHeight(min_ws, min_hs, width, height);
+      }
     }
 
     updatePalmBase(palmbase);
@@ -97,7 +98,6 @@ void AnchorDynamic::calculate(
       }
     }
 }
-
 
 void AnchorDynamic::updatePalmBase(const std::tuple<double, double, double> & palmbase) {
   palmbase_x_prv = palmbase_x;

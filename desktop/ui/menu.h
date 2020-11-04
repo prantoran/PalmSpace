@@ -27,7 +27,7 @@ namespace PalmSpaceUI {
 
         // eScreenSize screen_size;
 
-        bool screen_small, screen_large;
+        bool screen_small, screen_large, screen_full;
 
         int scalex, scaley; // to adjust topleft position of frame
 
@@ -39,6 +39,7 @@ namespace PalmSpaceUI {
         public:
         Menu(
             int FLAGS_frame_width, int FLAGS_frame_height,
+            int choice_anchor, int choice_trigger, int choice_initiator,
             int choice_divisions, int choice_screensize,
             bool FLAGS_debug, std::string window_name
         );

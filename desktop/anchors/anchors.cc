@@ -201,7 +201,6 @@ cv::Rect Anchor::getGrid() {
 }
 
 cv::Point Anchor::getGridTopLeft() {
-
     return cv::Point(xs[0], ys[0]);
 }
 

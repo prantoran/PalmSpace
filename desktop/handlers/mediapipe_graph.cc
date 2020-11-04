@@ -251,20 +251,20 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
       }
     }
 
-    int hand_index = 0;
+    {
+      int hand_id = 0;
 
-    for (const auto& hand_landmarks : multi_hand_landmarks) {
-      if (hand_index == 2) break; // considering only two hands
-      
-      int j = 0;
-      
-      for (const auto& landmark : hand_landmarks.landmark()) {
-        points[hand_index][j] = std::make_tuple(landmark.x(), landmark.y(), landmark.z());
-      
-        ++ j;
+      for (const auto& hand_landmarks : multi_hand_landmarks) {
+        if (hand_id == 2) break; // considering only two hands
+
+        int j = 0;        
+        for (const auto& landmark : hand_landmarks.landmark()) {
+          points[hand_id][j] = std::make_tuple(landmark.x(), landmark.y(), landmark.z());
+          ++ j;
+        }
+
+        ++hand_id;
       }
-
-      ++hand_index;
     }
 
     points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0);
@@ -277,6 +277,8 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
     params.get_palmbase(palmbase);
     params.get_indexbase(indexbase);
     
+    params.set_is_static(anchor.static_display());
+
     if (initiator.inspect(points)) {
       show_display = true;
       initiator.params(points, params);
@@ -285,7 +287,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
       params.get_indexbase(indexbase);
 
 
-    } else {
+    } else if (!anchor.static_display()) {
       params.reset();
       show_display = false;
     }
@@ -340,6 +342,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
     cv::Rect gg = anchor.getGrid();
 
     if (show_display || anchor.static_display()) {
+      std::cerr << "mediapipe_graph indexfinger x:" << indexfinger_x << " y:" << indexfinger_y << "\n";
 
           points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0); // putting (indexfinger_x, indexfinger_y) if in case trigger is wait
           trigger.update(camera_frame_raw, points, params);
@@ -491,8 +494,6 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
         points_ratio = -1; // resetting relative ratio
       }
     }
-
-
 
     if (save_video) {
 

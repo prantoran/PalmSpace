@@ -29,7 +29,8 @@ void ExtraParameters::reset() {
     }
 
     indexbase = std::make_tuple(-1, -1, -1);
-
+    
+    is_static_display = false;
     load_video = false;
 }
 
@@ -134,4 +135,12 @@ void ExtraParameters::get_indexbase(std::tuple<double, double, double> & p) {
     // y += 0.09;
 
     p = std::make_tuple(x, y, 0);
+}
+
+void ExtraParameters::set_is_static(bool s) {
+    is_static_display = s;
+}
+
+bool ExtraParameters::is_static() {
+    return is_static_display;
 }
