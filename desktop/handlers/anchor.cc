@@ -252,7 +252,7 @@ cv::Point AnchorHandler::getGridBottomRight() {
     }
 };
 
-void AnchorHandler::setScreenSize(eScreenSize size) {
+void AnchorHandler::setScreenSize(choices::eScreenSize size) {
     switch (_choice) {
         case 1:
             _dynamic.setScreenSize(size);

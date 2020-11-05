@@ -210,6 +210,6 @@ cv::Point Anchor::getGridBottomRight() {
 }
 
 
-void Anchor::setScreenSize(eScreenSize size) {
+void Anchor::setScreenSize(choices::eScreenSize size) {
     screen.size = size;
 }

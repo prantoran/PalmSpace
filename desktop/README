@@ -1,61 +1,28 @@
-0 110
-0 255
-171 255
-
+# PalmSspace
+### Virtual interface for mid-air interaction
 
 TODOS:
 throw exception, modular func, less dependency on shared memory
 read constants from env file using config pkg
 anchor calculate refactor indexfinger x y
+use forward declaration, wherever possible, to speed up compilation
+use namespaces wherever possible
+
+NOTES:
+- forward declaration (i.e. seperating declarations in header files and definintions in .cpp translation/compilation units) 
+  allow faster compilation since changes to definition does not cause header file, and subsequent users of that header file, to be recompiled.
+- functions are external linkage by default, const are internal linkage by default.
+- external force external linkage, static force internal linkage.
+- const global variables have internal linkage by default, and non-const global variables have external linkage by default.
 
 bazel build -c opt --copt -DMESA_EGL_NO_X11_HEADERS --copt -DEGL_NO_X11 desktop:main --verbose_failures
 GLOG_logtostderr=1 bazel-bin/desktop/main --calculator_graph_config_file=mediapipe/graphs/hand_tracking/multi_hand_tracking_mobile.pbtxt --debug=1
 
 
 
-
-
-
-
 bazel build -c opt --copt -DMESA_EGL_NO_X11_HEADERS --copt -DEGL_NO_X11 mediapipe/examples/desktop/multi_hand_tracking:multi_hand_tracking_gpu
 
 GLOG_logtostderr=1 bazel-bin/mediapipe/examples/desktop/multi_hand_tracking/multi_hand_tracking_gpu --calculator_graph_config_file=mediapipe/graphs/hand_tracking/multi_hand_tracking_mobile.pbtxt
-
-
-
-
-3x3
-
-left hand - control window position
-
-right hand index finger - trigger selection
-
-Need a video - 
-5 sec - moving the window with left hand
-
-~10 sec - moving right hand index finger without any selection
-
-~15 min - using right hand index finger to select cell 1-9
-
-
-
-
-
-
-
-
-**WebSocket C++**
-
-telnet host port
-
-
-
-
-
-
-
-
-
 
 
 

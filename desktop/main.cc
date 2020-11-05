@@ -77,10 +77,6 @@ void checkOpenCVHardwareSupport() {
   std::cout << "OpenCV is optimized code enabled: " << (cv::useOptimized()? "yes": "no") << "\n";
 }
 
-
-
-Choices choices;
-
 int main(int argc, char** argv) {
 
   checkOpenCVHardwareSupport();
@@ -179,7 +175,7 @@ int main(int argc, char** argv) {
   mp_graph->trigger._choice = choice_trigger;
   mp_graph->trigger._wait.choice = choice_anchor;
   
-  eScreenSize ssize = choices.getScreenSize(choice_screensize);
+  choices::eScreenSize ssize = choices::getScreenSize(choice_screensize);
   
 
   std::cerr << "ssize:" << ssize << "\n";

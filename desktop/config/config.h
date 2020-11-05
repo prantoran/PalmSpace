@@ -7,7 +7,7 @@
 // opencv
 #include "mediapipe/framework/port/opencv_imgproc_inc.h"
 
-#include "choices.h";
+#include "choices.h"
 
 const std::string APP_NAME = "PalmSpace";
 

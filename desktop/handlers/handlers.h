@@ -49,7 +49,7 @@ class AnchorHandler{
     cv::Point getGridTopLeft();
     cv::Point getGridBottomRight();
 
-    void setScreenSize(eScreenSize size);
+    void setScreenSize(choices::eScreenSize size);
 };
 
 class TriggerHandler {

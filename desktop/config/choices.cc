@@ -1,22 +1,24 @@
 #include "choices.h"
 #include <utility>
 
-// std::unordered_map <int, eScreenSize> fromIntToeScreenSize = {
-//     {0: INVALID},
-//     {1: SMALL},
-//     {2: LARGE},
-//     {3: FULL}
-// };
+namespace choices {
+    eScreenSize getScreenSize(int choice_screensize) {
+        return from_int_to_eScreenSize[choice_screensize];
+    }
 
+    std::unordered_map <int, eScreenSize> from_int_to_eScreenSize = {
+        {0, INVALID},
+        {1, SMALL},
+        {2, LARGE},
+        {3, FULL}
+    };
+}
 
-// std::unordered_map <initiator_t, std::string> initiator_t_strmap = {
-//     {initiator_t(1): "DEFAULT"}
-// };
 
 // std::unordered_map <eInitiators, std::string> eInitiators_strmap = {
-//     {DEFAULT: "DEFAULT"},
-//     {TWOHAND: "TWOHAND"},
-//     {INVALID: "INVALID"}
+//     {DEFAULT, "DEFAULT"},
+//     {TWOHAND, "TWOHAND"},
+//     {INVALID, "INVALID"}
 // };
 
 // std::ostream& operator<<(std::ostream& out, const eInitiators value) {
@@ -24,12 +26,13 @@
 // }
 
 
-// std::unordered_map <eAnchors, std::string> eAnchors_strmap = {
-//     {DYNAMIC: "DYNAMIC"},
-//     {STATIC: "STATIC"},
-//     {MIDAIR: "MIDAIR"},
-//     {INVALID: "INVALID"}
+// std::unordered_map <eAnchors, char*> eAnchors_strmap = {
+//     {DYNAMIC, "DYNAMIC"},
+//     {STATIC, "STATIC"},
+//     {MIDAIR, "MIDAIR"},
+//     {INVALID, "INVALID"}
 // };
+
 
 // std::ostream& operator<<(std::ostream& out, const eAnchors value) {
 //     cout << eAnchors_strmap[value];

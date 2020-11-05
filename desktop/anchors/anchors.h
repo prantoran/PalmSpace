@@ -16,10 +16,12 @@
 constexpr double alpha = 0.4;
 #define COLORS_floralwhite  cv::Scalar(240,250,255)
 
+// forward declaration, defined in config/config.h
+// class ExtraParameters;
 
 class ScreenSize {
     public:
-    eScreenSize size;
+    choices::eScreenSize size;
     
     void setMinWidthHeight(
         int &min_width, 
@@ -27,15 +29,15 @@ class ScreenSize {
         int max_width, 
         int max_height) {
         switch (size) {
-            case SMALL:
+            case choices::SMALL:
                 min_width = max_width/4;
                 min_height = max_height/4;
                 break;
-            case LARGE:
+            case choices::LARGE:
                 min_width = (2*max_width)/3;
                 min_height = (2*max_height)/3;
                 break; 
-            case FULL:
+            case choices::FULL:
                 min_width = max_width;
                 min_height = max_height;
                 break;
@@ -49,7 +51,7 @@ class ScreenSize {
     }
 
     bool isFull() {
-        return size == FULL;
+        return size == choices::FULL;
     }
 
 };
@@ -121,7 +123,7 @@ class Anchor { // interface via abstract class
     cv::Point getGridTopLeft();
     cv::Point getGridBottomRight();
 
-    void setScreenSize(eScreenSize size);
+    void setScreenSize(choices::eScreenSize size);
 };
 
 
