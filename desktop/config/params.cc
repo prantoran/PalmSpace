@@ -144,3 +144,23 @@ void ExtraParameters::set_is_static(bool s) {
 bool ExtraParameters::is_static() {
     return is_static_display;
 }
+
+// the const makes the promise that the func will not change state
+int ExtraParameters::total_hands_detected() const {
+    return total_hands;
+}
+
+void ExtraParameters::set_total_hands(int hands) {
+    total_hands = hands;
+}
+
+
+void ExtraParameters::get_selected_cell(int &row_i, int &col_j) {
+    row_i = std::get<0>(selected_cell);
+    col_j = std::get<1>(selected_cell);
+}
+
+void ExtraParameters::set_selected_cell(int row_i, int col_j) {
+    selected_cell = std::make_tuple(row_i, col_j);
+}
+

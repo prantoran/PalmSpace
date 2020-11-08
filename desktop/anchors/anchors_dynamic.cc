@@ -1,9 +1,6 @@
 #include "anchors.h"
 #include <string>
 #include <iostream>
-#include "mediapipe/framework/port/opencv_highgui_inc.h"
-#include "mediapipe/framework/port/opencv_imgproc_inc.h"
-#include "mediapipe/framework/port/opencv_video_inc.h"
 
 std::string AnchorDynamic::type() {
     return "anchor-type=dynamic";
@@ -88,14 +85,9 @@ void AnchorDynamic::calculate(
       // setupGrid((palmbase_x*width) - (ws/2), (palmbase_y*height) - hs); // defined in parent anchor class
       // using indexbase
       setupGrid(indexbase_x*width, indexbase_y*height); // defined in parent anchor class
-      setupSelection(pointer_x, pointer_y); // defined in parent anchor class
+      setupSelection(pointer_x, pointer_y, selected_i, selected_j); // defined in parent anchor class
 
-      if (extra_params.size() > 7) {
-          extra_params[7] = selected_i;
-          extra_params[8] = selected_j;
-      } else {
-        std::cout << "anchor/dynamic selected idx not found\n";
-      }
+      params.set_selected_cell(selected_i, selected_j);
     }
 }
 
@@ -140,9 +132,6 @@ void AnchorDynamic::draw(
     double scale_ratio, 
     int pointer_x, int pointer_y,
     const ExtraParameters & params) {
-    
-    const std::vector<double> & extra_params = params.extra_params;
-
 
     cv::Mat overlay;
     input.copyTo(overlay);
@@ -155,7 +144,6 @@ void AnchorDynamic::draw(
         cv::LINE_8,
         0);
     
-    // std::cout << "anchor_dynamic draw selected i:" << selected_i << " j:" << selected_j << "\n";
 
     for (int i = 1; i <= divisions; i ++ ) {
         for (int j = 1; j <= divisions; j ++) {
@@ -179,7 +167,7 @@ void AnchorDynamic::draw(
     drawTextHighlighted(overlay);
     drawTextSelected(overlay);
 
-    drawProgressBar(overlay, extra_params[9]);
+    drawProgressBar(overlay, params.extra_params[9]);
     
     cv::addWeighted(overlay, alpha, input, 1-alpha, 0, input);
 }

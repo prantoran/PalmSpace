@@ -140,11 +140,12 @@ int main(int argc, char** argv) {
 
   
   int choice_anchor = 2;
-  int choice_trigger = 4;
+  int choice_trigger = 6;
   int choice_initiator = 1;
   int choice_divisions = 6;
-  int choice_screensize = 3;
+  int choice_screensize = 1;
   int choice_debug = FLAGS_debug;
+  int choice_visibility = 2;
 
 
   PalmSpaceUI::Menu menu = PalmSpaceUI::Menu(
@@ -155,6 +156,7 @@ int main(int argc, char** argv) {
     choice_divisions,
     choice_divisions,
     choice_screensize,
+    choice_visibility,
     choice_debug,
     APP_NAME);
 
@@ -166,6 +168,7 @@ int main(int argc, char** argv) {
     choice_trigger,
     choice_divisions,
     choice_screensize,
+    choice_visibility,
     choice_debug);
 
 
@@ -177,11 +180,10 @@ int main(int argc, char** argv) {
   
   choices::eScreenSize ssize = choices::getScreenSize(choice_screensize);
   
-
-  std::cerr << "ssize:" << ssize << "\n";
+  choices::eVisibility _visibility = choices::getVisibility(choice_visibility);
 
   mp_graph->anchor.setScreenSize(ssize);
-    
+  mp_graph->anchor.setVisibility(_visibility);
 
   if (choice_anchor == 1 && choice_initiator == 2) {
     // throw std::invalid_argument("")

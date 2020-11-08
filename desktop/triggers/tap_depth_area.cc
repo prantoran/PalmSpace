@@ -68,7 +68,7 @@ TriggerTapDepthArea::TriggerTapDepthArea(
 
     cv::Mat camera_frame_raw;
 
-    while (true) {
+    while (false) {
         capture >> camera_frame_raw;
         if (camera_frame_raw.empty()) break;  // End of video.
             cv::cvtColor(camera_frame_raw, hsv, cv::COLOR_BGR2RGB);
@@ -117,8 +117,6 @@ void TriggerTapDepthArea::update(
     cv::Point pt1(m1.m10/m1.m00, m1.m01/m1.m00);
     cv::Point pt2(m2.m10/m2.m00, m2.m01/m2.m00);
 
-    // std::cerr << "centroid 1: (" << pt1.x << "," << pt1.y << ") centroid 2: (" << pt2.x << ", " << pt2.y << ")\n";
-
     int area1 = cv::countNonZero(hsv);
     int area2 = cv::countNonZero(hsv2);
 
@@ -127,8 +125,6 @@ void TriggerTapDepthArea::update(
     params.depth_area.area2 = area2;
     params.depth_area.pt1 = pt1;
     params.depth_area.pt2 = pt2;
-
-    std::cerr << "area1:" << area1 << " area2:" << area2 << "\n";
 
 
     cv::addWeighted( hsv, 1, hsv2, 1, 0.0, hsv);

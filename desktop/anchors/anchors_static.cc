@@ -1,11 +1,4 @@
 #include "anchors.h"
- 
-#include "mediapipe/framework/port/opencv_highgui_inc.h"
-#include "mediapipe/framework/port/opencv_imgproc_inc.h"
-#include "mediapipe/framework/port/opencv_video_inc.h"
-
-#include <vector>
-
 
 std::string AnchorStatic::type() {
     return "anchor-type=static";
@@ -95,44 +88,30 @@ void AnchorStatic::calculate(
     double scale_ratio, 
     int pointer_x, int pointer_y,
     ExtraParameters & params) {
-    
-    std::vector<double> & extra_params = params.extra_params; 
-    
-    std::cerr << "anchor_static calculate widht:" << width << " height:" << height << "\n";
-
+        
     if (!width || !height) {
         setConfig(input.size().width, input.size().height);
-        
-        // static_display = true; // keep on showing display
-
-        // min_ws = width;
-        // min_hs = height;
-
+                
         screen.setMinWidthHeight(min_ws, min_hs, width, height);
-
     }
-
-
-    std::cerr <<"width:" << width << "\theight:" << height <<"\tmin_ws:" << min_ws << "\tmin_hs:" << min_hs << "\n";
 
     if (!static_display) {
         indexbase_x = std::get<0>(indexbase);
         indexbase_y = std::get<1>(indexbase);
 
-
         if (indexbase_x > 0 && indexbase_y > 0) {
             static_display = true;
   
-            // fixing at center
-            indexbase_x = ((double)(width - min_ws) / 2) / width;
-            indexbase_y = ((double)(height - min_hs) / 2) / height;
-
             if (screen.isFull()) {
                 palmbase_x = 0.5; // determines a position of grid
                 palmbase_y = 1;   // middle-bottom point
 
                 indexbase_x = 0;
                 indexbase_y = 0;
+            } else if (screen.isCentered()){
+                // fixing at center
+                indexbase_x = ((double)(width - min_ws) / 2) / width;
+                indexbase_y = ((double)(height - min_hs) / 2) / height;
             } else {
                 if (indexbase_x*width + min_ws >= width) {
                     indexbase_x = (double)(width-min_ws)/width;
@@ -144,34 +123,37 @@ void AnchorStatic::calculate(
             }
         }
     } 
+
+    // reset static_display if visibility not fixed and 0 hands detected.
+    static_display &= isVisible(params);
     
     if (static_display) {
         // setupGrid((palmbase_x*width) - (ws/2), (palmbase_y*height) - hs); // defined in parent anchor class
-        
-        std::cerr << "anchor_static calculate static_disp indexx:" << indexbase_x << " indexy:" << indexbase_y << " pointerx:" << pointer_x << " pointer_y:" << pointer_y << "\n"; 
         setupGrid(indexbase_x*width, indexbase_y*height); // defined in parent anchor class
 
         checkSelectionWithinPalm(pointer_x, pointer_y, palmbase);
 
-        setupSelection(pointer_x, pointer_y); // defined in parent anchor class
+        setupSelection(pointer_x, pointer_y, selected_i, selected_j); // defined in parent anchor class
         
-        std::cout << "anchors_static selected i:" << selected_i << "\tj:" << selected_j << "\n";
         if (green_i != -1 && green_j != -1) {
-            double gdx = xs[green_i] - palmstart_x;
-            double gdy = ys[green_j] - palmstart_y;
-            if (gdx < 50 || gdx > 250 || gdy < 50 || gdy > 250) {
-            // invalidating pointer_x for pointers outside the palm image
-                green_i = -1;
-                green_j = -1;
-            }
+            // ensureMarkedCellWithinPalm(green_i, green_j);
         }
 
-        if (extra_params.size() > 7) {
-            extra_params[7] = selected_i;
-            extra_params[8] = selected_j;
-        } 
+        params.set_selected_cell(selected_i, selected_j);
     }
 }
+
+
+void AnchorStatic::ensureMarkedCellWithinPalm(int & marked_row_i, int & marked_col_j) {
+    double gdx = xs[marked_row_i] - palmstart_x;
+    double gdy = ys[marked_col_j] - palmstart_y;
+    if (gdx < 50 || gdx > 250 || gdy < 50 || gdy > 250) {
+    // invalidating pointer_x for pointers outside the palm image
+        marked_row_i = -1;
+        marked_col_j = -1;
+    }
+}
+
 
 void AnchorStatic::checkSelectionWithinPalm(
     int pointer_x, int pointer_y,
@@ -217,9 +199,7 @@ void AnchorStatic::draw(
     double scale_ratio, 
     int pointer_x, int pointer_y,
     const ExtraParameters & params) {
-    
-    const std::vector<double> & extra_params = params.extra_params;
-    
+        
     double palmbase_x_new = std::get<0>(palmbase);
     double palmbase_y_new = std::get<1>(palmbase);
 
@@ -294,7 +274,7 @@ void AnchorStatic::draw(
     drawTextHighlighted(overlay);
     drawTextSelected(overlay);
 
-    drawProgressBar(overlay, extra_params[9]);
+    drawProgressBar(overlay, params.extra_params[9]);
 
     cv::addWeighted(overlay, alpha, input, 1-alpha, 0, input);
 }

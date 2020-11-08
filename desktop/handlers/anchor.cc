@@ -268,3 +268,21 @@ void AnchorHandler::setScreenSize(choices::eScreenSize size) {
             return;
     }
 }
+
+
+void AnchorHandler::setVisibility(choices::eVisibility _visibility) {
+    switch (_choice) {
+        case 1:
+            _dynamic.setVisibility(_visibility);
+            break;
+        case 2:
+            _static.setVisibility(_visibility);
+            break;
+        case 3:
+            _midair.setVisibility(_visibility);
+            break;
+        default:
+            std::cout << "ERROR handlers/anchor.cc setVisibility() invalid anchor choice\n";
+            return;
+    }
+}

@@ -1,10 +1,4 @@
 #include "anchors.h"
- 
-#include "mediapipe/framework/port/opencv_highgui_inc.h"
-#include "mediapipe/framework/port/opencv_imgproc_inc.h"
-#include "mediapipe/framework/port/opencv_video_inc.h"
-
-#include <vector>
 
 std::string AnchorMidAir::type() {
     return "anchor-type=dynamic";
@@ -58,9 +52,6 @@ void AnchorMidAir::calculate(
     double scale_ratio, 
     int pointer_x, int pointer_y,
     ExtraParameters & params) {
-    
-    std::vector<double> & extra_params = params.extra_params; 
-
 
     if (!width || !height) {
         setConfig(input.size().width, input.size().height);
@@ -79,17 +70,11 @@ void AnchorMidAir::calculate(
     setupGrid((palmbase_x*width) - (ws/2), (palmbase_y*height) - hs); // defined in parent anchor class
         
     std::cout << "anchor_midair pointer x:" << pointer_x << " y:" << pointer_y << "\n";
-    setupSelection(pointer_x, pointer_y); // defined in parent anchor class
+    setupSelection(pointer_x, pointer_y, selected_i, selected_j); // defined in parent anchor class
 
     std::cout << "anchor_midair selected i:" << selected_i << "\tj:" << selected_j << "\n";
 
-    if (extra_params.size() > 7) {
-      extra_params[7] = selected_i;
-      extra_params[8] = selected_j;
-    } else {
-      std::cout << "anchor_midair extra_params small size, cannot store selected i-j\n";
-    }
-
+    params.set_selected_cell(selected_i, selected_j);
 }
 
 void AnchorMidAir::draw(
@@ -100,8 +85,6 @@ void AnchorMidAir::draw(
     int pointer_x, int pointer_y,
     const ExtraParameters & params) {
     
-    const std::vector<double> & extra_params = params.extra_params;
-
     cv::Mat overlay;
     input.copyTo(overlay);
 
@@ -135,7 +118,7 @@ void AnchorMidAir::draw(
     drawTextHighlighted(overlay);
     drawTextSelected(overlay);
 
-    drawProgressBar(overlay, extra_params[9]);
+    drawProgressBar(overlay, params.extra_params[9]);
 
     cv::addWeighted(overlay, alpha, input, 1-alpha, 0, input);
 }

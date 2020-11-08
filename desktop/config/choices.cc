@@ -12,6 +12,17 @@ namespace choices {
         {2, LARGE},
         {3, FULL}
     };
+
+
+    eVisibility getVisibility(int choice_visibility) {
+        return from_int_to_eVisibility[choice_visibility];
+    }
+
+    std::unordered_map <int, eVisibility> from_int_to_eVisibility = {
+        {0, INVALID_VISIBILITY},
+        {1, FIXED},
+        {2, CONDITIONAL},
+    };
 }
 
 
@@ -63,7 +74,6 @@ namespace choices {
 
 
 // std::ostream& operator<<(std::ostream& out, const eScreenSize value) {
-//     std::cerr << "escreeensize str:" <<  eScreenSize_strmap[value] << "\n";
 //     cout << eScreenSize_strmap[value];
 // }
 

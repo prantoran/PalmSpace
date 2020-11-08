@@ -25,6 +25,10 @@ bool InitiatorDefault::inspect(
             if (std::get<0>(u) < 0.1 && std::get<1>(u) < 0.1) {
               valid[i] = false;
             }
+
+            if (std::get<0>(u) > 0.9 && std::get<1>(u) > 0.9) {
+              valid[i] = false;
+            }
         }
     }
 
@@ -42,11 +46,15 @@ bool InitiatorDefault::inspect(
       std::swap(areas[0], areas[1]);
       std::swap(valid[0], valid[1]);
     }
+    
 
-
-    show_display = false;
-    if (areas[0] > AREA_THRESHOLD) {
-        show_display = true;
+    show_display = true;
+    if (areas[0] < AREA_THRESHOLD) {
+      show_display = false;
+      if (areas[0] < SMALLAREA_THRESHOLD) {
+        valid[0] = false;
+        valid[1] = false;
+      }
     }
 
     return show_display;
@@ -60,6 +68,15 @@ void InitiatorDefault::params(
   // params() to be called if inspect() returns true
 
   int n = points.size();
+  int valid_n = 0;
+  for (int i = 0; i < n; i ++) {
+    if (valid[i]) {
+      valid_n ++;
+    }
+  }
+
+  parameters.set_total_hands(valid_n);
+
   int m0 = 0, m1 = 0;
   if (n > 0) {
     m0 = points[0].size();

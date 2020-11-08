@@ -7,6 +7,4 @@ Initiator::~Initiator() {
         pointsConvex[i].clear();
     }
     pointsConvex.clear();
-
-    std::cerr << "destroying Initiator abstract class:" + name + "\n";
 }

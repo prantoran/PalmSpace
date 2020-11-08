@@ -35,21 +35,32 @@ namespace PalmSpaceUI {
 
         bool valid;
 
+        bool visibility_fixed, visibility_conditional;
 
         public:
+        
         Menu(
-            int FLAGS_frame_width, int FLAGS_frame_height,
-            int choice_anchor, int choice_trigger, int choice_initiator,
-            int choice_divisions, int choice_screensize,
-            bool FLAGS_debug, std::string window_name
+            int frame_width, 
+            int frame_height,
+            int anchor, 
+            int trigger, 
+            int initiator,
+            int divisions, 
+            int screensize,
+            int visibility,
+            bool debug, 
+            std::string window_name
         );
+
         void run();
+        
         void get_choices(
             int & initiator, 
             int & anchor, 
             int & trigger, 
             int & divisions,
             int & screensize,
+            int & visibility,
             int & debug);
     };
 };

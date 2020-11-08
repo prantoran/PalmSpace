@@ -31,7 +31,6 @@ TriggerWait::TriggerWait(int _width, int _height, int anchor_choice) {
 
     cur_state = TRIGGER::OPEN;
 
-    // std::cerr <<"TriggerWait constructor _width:" << _width << " _height:" << _height << " width:" << width << " height:" << height << "\n";
 }
 
 void TriggerWait::update(
@@ -73,7 +72,6 @@ void TriggerWait::update(
         if (palmbase_y_prv) {
           palmbase_y = (1-palmbase_momentum)*palmbase_y + palmbase_momentum*palmbase_y_prv;
         }
-        // std::cerr << "anchor ws:" << ws << " hs:" << hs << " gap:" << gap << " dx:" << dx << " dy:" << dy << " palmbase_x:" << palmbase_x << " palmbase_y:" << palmbase_y << " palmbase_x_prv:" << palmbase_x_prv << " palmbase_y_prv:" << palmbase_y_prv << "\n";
 
         xs[0] = (palmbase_x*width) - (ws/2);
         xs[1] = xs[0]+gap;
@@ -117,9 +115,6 @@ void TriggerWait::update(
     }
 
 
-    std::cerr << "wait x0:" << xs[0] << " y0:" << ys[0] << " x1:" << xs[1] << " y1:" << ys[1] << " x2:" << xs[2] << " y2:" << ys[2] << " x3:" << xs[3] << " y3:" << ys[3] << "\n";
-    std::cerr << "wait palmbase_x:" << palmbase_x << " width:" << width << " ws:" << ws << "\n";
-    std::cerr  << "wait pointer_x:" << pointer_x << " pointer_y:" << pointer_y << " selected_i: " << selected_i << " selected_j: " << selected_j << " selected_i_prv:" << selected_i_prv << " selected_j_prv:" << selected_j_prv << "\n";
 
 
     if (selected_i != -1) {
@@ -128,7 +123,6 @@ void TriggerWait::update(
                 ptime = _timestamp[selected_i_prv][selected_j_prv];
                 // trigger if time diff larger than threshold
                 auto d = std::chrono::duration_cast<std::chrono::milliseconds>(ctime - ptime).count();
-                std::cerr << "duration:" << d  << "\n";
                 if (d > 2000) {
                     cur_state = TRIGGER::RELEASED;
                 }

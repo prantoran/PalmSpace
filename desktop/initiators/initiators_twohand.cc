@@ -42,10 +42,6 @@ bool InitiatorTwoHand::inspect(
       std::swap(areas[0], areas[1]);
     }
     
-
-    // std::cerr <<"inspect area0:" << areas[0] << " area1:" << areas[1] << "\n";
-
-
     if ((areas[0]+areas[1]) > AREA_THRESHOLD && topleft_x == -1) {
         if (points[0].size() > REF_IDX2 && points[1].size() > REF_IDX2) {
             topleft_x = (std::get<0>(points[0][REF_IDX1]) + std::get<0>(points[0][REF_IDX2]))/2;
@@ -96,6 +92,8 @@ bool InitiatorTwoHand::inspect(
 void InitiatorTwoHand::params(
   const std::vector<std::vector<std::tuple<double, double, double>>> & points,
   ExtraParameters & parameters) {
+
+    parameters.set_total_hands(points.size());
 
     parameters.set(0, raw_width);
     parameters.set(1, raw_height);

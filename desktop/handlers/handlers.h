@@ -50,6 +50,7 @@ class AnchorHandler{
     cv::Point getGridBottomRight();
 
     void setScreenSize(choices::eScreenSize size);
+    void setVisibility(choices::eVisibility _visibility);
 };
 
 class TriggerHandler {

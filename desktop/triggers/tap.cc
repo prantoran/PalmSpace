@@ -27,7 +27,7 @@ void TriggerTap::update(
 
 
     if (points.size() < 0) {
-        std::cerr << "trigger_tap: less than two hands, resetting trigger\n";
+        std::cout << "trigger_tap: less than two hands, resetting trigger\n";
         return;
     }
 

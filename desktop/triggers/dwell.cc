@@ -30,26 +30,11 @@ void TriggerDwell::update(
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
     ExtraParameters & params) {
 
-
-    std::vector<double> & extra_params = params.extra_params;
-
-
     ctime = cur_time();
-
-    std::cerr << "dwell params size:" << extra_params.size() << "\n";
     
-    if (extra_params.size() > 9) {
-        selected_i = extra_params[7];
-        selected_j = extra_params[8];
-    } else {
-    //   std::cout << "trigger_dwell extra_params small size, cannot fetch selected i-j\n";
-    }
+    params.get_selected_cell(selected_i, selected_j);
 
-
-    // std::cout << "dwell selected i:" << selected_i << "\tj:" << selected_j << "\tprevi:" << selected_i_prv << "\tprevj:" << selected_j_prv << "\tparams7:" <<  extra_params[7] << "\tparams8:" <<  extra_params[8] << "" << "\n";
-
-
-    extra_params[9] = -1; // reset progress for drawing progress bar in anchor
+    params.extra_params[9] = -1; // reset progress for drawing progress bar in anchor
 
     if (selected_i != -1) {
         if (selected_i_prv != -1) {
@@ -64,7 +49,7 @@ void TriggerDwell::update(
                 }
 
                 // set progress for drawing progress bar in anchor
-                extra_params[9] = (double)d/DWELLWAIT_MS;
+                params.extra_params[9] = (double)d/DWELLWAIT_MS;
 
             } else {
 

@@ -279,6 +279,8 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
     
     params.set_is_static(anchor.static_display());
 
+    show_display = false;
+
     if (initiator.inspect(points)) {
       show_display = true;
       initiator.params(points, params);
@@ -289,7 +291,6 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
 
     } else if (!anchor.static_display()) {
       params.reset();
-      show_display = false;
     }
     
     // Convert back to opencv for display or saving.
@@ -341,8 +342,8 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
     
     cv::Rect gg = anchor.getGrid();
 
+
     if (show_display || anchor.static_display()) {
-      std::cerr << "mediapipe_graph indexfinger x:" << indexfinger_x << " y:" << indexfinger_y << "\n";
 
           points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0); // putting (indexfinger_x, indexfinger_y) if in case trigger is wait
           trigger.update(camera_frame_raw, points, params);
@@ -368,6 +369,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
           cv::LINE_8,
           0);
       }
+
 
       if (debug_mode == 1) {
         // drawing landmarks of hand 0
@@ -476,7 +478,6 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
 
           double cur_ratio = (double)area1 / area2;
 
-          std::cerr << "points_ratio:" << points_ratio << " cur_ratio:" << cur_ratio << "\n"; 
 
           double depth_approx = (points_ratio-cur_ratio)*(points_ratio-cur_ratio)*100;
 

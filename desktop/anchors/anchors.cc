@@ -100,44 +100,46 @@ void Anchor::setupGrid(double enlarged_topleft_x, double enlarged_topleft_y) {
 }
 
 
-void Anchor::setupSelection(int index_pointer_x, int index_pointer_y) {
+void Anchor::setupSelection(
+    int index_pointer_x, int index_pointer_y, 
+    int & selected_row_i, int & selected_col_j) {
     // checks whether index_pointer is within a til in the grid,
     // if yes then setup selected i,j and message
 
     if (index_pointer_x != -1 && index_pointer_y != -1) {
-        selected_i_prv = selected_i;
-        selected_j_prv = selected_j;
+        selected_i_prv = selected_row_i;
+        selected_j_prv = selected_col_j;
 
-        selected_i = -1;
-        selected_j = -1;
+        selected_row_i = -1;
+        selected_col_j = -1;
 
         for (int i = 1;i <= divisions; i ++) {
           if (index_pointer_x > xs[i] && index_pointer_x < xs[i] + dx) {
-            selected_i = i;
+            selected_row_i = i;
             break;
           }     
         }
 
         for (int j = 1;j <= divisions; j ++) {
           if (index_pointer_y > ys[j] && index_pointer_y < ys[j] + dy) {
-            selected_j = j;
+            selected_col_j = j;
             break;
           }
         }
 
-        if (selected_i == -1 || selected_j == -1) {
-            selected_i = -1;
-            selected_j = -1;
+        if (selected_row_i == -1 || selected_col_j == -1) {
+            selected_row_i = -1;
+            selected_col_j = -1;
         }
 
-        if (selected_i != -1) {
-            if (selected_i != selected_i_prv || selected_j != selected_j_prv) {
+        if (selected_row_i != -1) {
+            if (selected_row_i != selected_i_prv || selected_col_j != selected_j_prv) {
                 message = "Highlighted: ";
-                message += std::to_string((selected_j-1)*divisions + selected_i);
+                message += std::to_string((selected_col_j-1)*divisions + selected_row_i);
             }
         } else {
-            selected_i = selected_i_prv;
-            selected_j = selected_j_prv;
+            selected_row_i = selected_i_prv;
+            selected_col_j = selected_j_prv;
         }
     }
 }
@@ -210,6 +212,28 @@ cv::Point Anchor::getGridBottomRight() {
 }
 
 
-void Anchor::setScreenSize(choices::eScreenSize size) {
+void Anchor::setScreenSize(const choices::eScreenSize & size) {
     screen.size = size;
+}
+
+void Anchor::setVisibility(const choices::eVisibility & _visibility) {
+    visibility = _visibility;
+}
+
+
+choices::eVisibility Anchor::getVisibility() {
+    return visibility;
+}
+
+
+bool Anchor::isVisible(const ExtraParameters & params) {
+    switch (visibility) {
+        case choices::FIXED:
+            return true;
+        case choices::CONDITIONAL:
+            return (params.total_hands_detected() > 0);
+        default:
+            std::cout << "ERROR anchors/anchors.cc isVisible() invalid choice visibility\n.";
+            return false;
+    }
 }
