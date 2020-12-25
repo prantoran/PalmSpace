@@ -16,7 +16,6 @@ TriggerTapDepthArea::TriggerTapDepthArea() {}
 TriggerTapDepthArea::TriggerTapDepthArea(
     const bool save_video, 
     const bool load_video, 
-    const int opt_dev_video, 
     const int fps,
     const int frame_width,
     const int frame_height) {
@@ -47,7 +46,7 @@ TriggerTapDepthArea::TriggerTapDepthArea(
     if (load_video) {
         // capture.open(input_video_path); // read a video file
     } else {
-        capture = cv::VideoCapture(opt_dev_video);
+        capture = cv::VideoCapture(0);
         capture.open(0);
         if (!capture.isOpened()) {
             std::cout << "ERROR: trigger_tap_depth_area: camera could not be opened\n";
@@ -129,9 +128,4 @@ void TriggerTapDepthArea::update(
 
     cv::addWeighted( hsv, 1, hsv2, 1, 0.0, hsv);
     cv::imshow(trackbarWindowName, hsv);
-}
-
-
-TRIGGER::state TriggerTapDepthArea::status() {
-    return cur_state;
 }

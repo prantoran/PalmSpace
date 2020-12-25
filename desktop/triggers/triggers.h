@@ -15,6 +15,8 @@
 #include "desktop/config/config.h"
 
 
+// TODO remove unused triggers
+
 constexpr char trackbarWindowName[] = "Index Marker Tuning";
 
 
@@ -44,8 +46,7 @@ class Trigger {
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
         ExtraParameters & params) = 0;
 
-    // TODO: refactor status def to parent
-    virtual TRIGGER::state status() = 0;
+    TRIGGER::state status();
 };
 
 class TriggerThumb: public Trigger {
@@ -59,7 +60,6 @@ class TriggerThumb: public Trigger {
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
         ExtraParameters & params);
 
-    TRIGGER::state status();
 };
 
 
@@ -74,7 +74,6 @@ class TriggerThumbOther: public Trigger {
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
         ExtraParameters & params);
 
-    TRIGGER::state status();
 };
 
 class TriggerPinch: public Trigger {
@@ -88,7 +87,6 @@ class TriggerPinch: public Trigger {
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
         ExtraParameters & params);
 
-    TRIGGER::state status();
 };
 
 class TriggerWait: public Trigger {
@@ -113,7 +111,6 @@ class TriggerWait: public Trigger {
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
         ExtraParameters & params);
 
-    TRIGGER::state status();
 };
 
 class TriggerTap: public Trigger {
@@ -131,7 +128,6 @@ class TriggerTap: public Trigger {
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
         ExtraParameters & params);
 
-    TRIGGER::state status();
 };
 
 class TriggerTapPalm: public Trigger {
@@ -155,7 +151,6 @@ class TriggerTapPalm: public Trigger {
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
         ExtraParameters & params);
 
-    TRIGGER::state status();
 };
 
 
@@ -172,7 +167,6 @@ class TriggerDwell: public Trigger {
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
         ExtraParameters & params);
 
-    TRIGGER::state status();
 };
 
 class TriggerTapDepthArea: public Trigger {
@@ -188,7 +182,6 @@ class TriggerTapDepthArea: public Trigger {
     TriggerTapDepthArea(
         const bool save_video, 
         const bool load_video, 
-        const int opt_dev_video, 
         const int fps,
         const int frame_width,
         const int frame_height
@@ -198,10 +191,84 @@ class TriggerTapDepthArea: public Trigger {
         const cv::Mat & input_image,
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
         ExtraParameters & params);
-
-    TRIGGER::state status();
-    
 };
 
+
+class SupportPoints {
+    public:
+    int m_support_pts_size;
+    std::vector<int> m_xcoords, m_ycoords;
+    std::vector<int> m_xcoords_prev, m_ycoords_prev;
+    SupportPoints();
+    void init(int _size);
+    void backup_prev();
+    void update_support(
+        int indices[],
+        const std::vector<std::tuple<double, double, double>> & coords,
+        const ExtraParameters & params); 
+    void print();
+};
+
+
+
+
+class TriggerTapDepth: public Trigger {
+    public:
+    // TODO clean up unused attributes
+    double m_depth_base, m_depth_cursor;
+    double m_depth_base_prev, m_depth_cursor_prev;
+    
+    SupportPoints m_base_pts, m_cursor_pts;
+
+    int m_base_indices[4];
+    int m_cursor_indices[4];
+
+    // channel medians - flood fill start
+    int m_channel_cnt;
+    int m_median_size;
+    int m_medians[5][100];
+    int m_median_indices[5];
+    int m_ch_medians[5];
+    int floodfill_pixel_variance;
+    Range m_flood_width, m_flood_height;
+    
+    // end
+
+    int positive_frames_cnt;
+
+    TriggerTapDepth();
+    
+    void update(
+        const cv::Mat & input_image,
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        ExtraParameters & params);
+    
+    void get_channel_medians(cv::Mat * mat, int col_x, int row_y);
+    void flood_fill(ExtraParameters & params, int & cnt);
+    void process_depths(ExtraParameters & params);
+    void palm_rect_fill(ExtraParameters & params, int & cnt);
+};
+
+
+class TriggerTapDepthSingle: public Trigger {
+    public:
+    float m_median_depths[120];
+    double m_depth, m_depth_prev;
+    int m_id;
+    int positive_frames_cnt;
+    int m_buffer;
+    
+    TriggerTapDepthSingle();
+
+    void update(
+        const cv::Mat & input_image,
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        ExtraParameters & params);
+    void median_depth_region(ExtraParameters & params, double & depth_cursor);
+    void finger_length_ratio(
+    const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        ExtraParameters & params,
+        double & depth_cursor);   
+};
 
 #endif

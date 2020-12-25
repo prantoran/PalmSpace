@@ -50,7 +50,7 @@ void TriggerTapPalm::update(
         return;
     }
 
-    if (extra_params[4] > 0) { // other hand index x axis is set (0-1]
+    if (params.is_set_primary_cursor()) { // other hand index x axis is set (0-1]
         zvalue = 0.5*prev_zvalue + 0.5*extra_params[6]*10000;
     } else {
         if (prev_handID != hand_ID) {
@@ -84,8 +84,4 @@ void TriggerTapPalm::update(
     } else {
         cur_state = TRIGGER::OPEN;
     }
-}
-
-TRIGGER::state TriggerTapPalm::status() {
-    return cur_state;
 }

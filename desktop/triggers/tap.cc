@@ -45,7 +45,7 @@ void TriggerTap::update(
     }
 
     
-    if (extra_params[4] > 0) { // other hand index x axis is set (0-1]
+    if (params.is_set_primary_cursor()) { // other hand index x axis is set (0-1]
         zvalue = 0.5*prev_zvalue + 0.5*extra_params[6]*100;
         std::cout << "trigger_tap getting from extra params\n";
     } else {
@@ -92,8 +92,4 @@ void TriggerTap::update(
 
 
     std::cerr << "tap zvalue:" << zvalue << "\tcnt:" << cnt << "\tcurstate:" << cur_state << "\n";
-}
-
-TRIGGER::state TriggerTap::status() {
-    return cur_state;
 }

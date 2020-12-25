@@ -8,6 +8,14 @@
 #include <unordered_map>
 
 namespace choices {
+    namespace anchor {
+        enum types {
+            DYNAMIC = 1,
+            STATIC,
+            MIDAIR
+        };
+    }
+
     enum eInitiators {
         DEFAULT = 1, 
         TWOHAND

@@ -28,6 +28,7 @@
 #include "mediapipe/framework/formats/rect.pb.h"
 #include "mediapipe/framework/formats/detection.pb.h"
 
+#include "desktop/ui/menu.h"
 
 // #include <opencv2/opencv.hpp>
 
@@ -54,10 +55,148 @@ unsigned int root(unsigned int x){
     return(x);  
 }
 
+
 MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
-  window_name = _window_name;
+  m_window_name = _window_name;
   // curImageID = 1;
+  camera = NULL;
 }
+
+
+MediaPipeMultiHandGPU::~MediaPipeMultiHandGPU() {
+  if (camera != NULL) {
+    delete camera;
+  }
+
+  if (trigger != NULL) {
+    delete trigger;
+  }
+
+  if (cv::getWindowProperty(m_window_name, 0) >= 0) {
+    cv::destroyWindow(m_window_name);
+  }
+}
+
+
+void MediaPipeMultiHandGPU::debug(
+  cv::Mat & m_primary_output, 
+  std::vector<std::vector<std::tuple<double, double, double>>> & points,
+  ExtraParameters & params) {
+    
+  // // drawing landmarks of hand 0
+  // for (int i = 0; i < points[0].size(); i ++) {
+  //   cv::putText(m_primary_output, //target image
+  //     std::to_string(i), //text
+  //     cv::Point(std::get<0>(
+  //       points[0][i])*params.m_frame_width, 
+  //       std::get<1>(points[0][i])*params.m_frame_height),
+  //     cv::FONT_HERSHEY_DUPLEX,
+  //     1.0,
+  //     CV_RGB(0, 0, 0), //font color
+  //     2);
+  // }
+
+  // // drawing landmarks of hand 1
+  // for (int i = 0; i < points[1].size(); i ++) {
+  //   cv::putText(m_primary_output, //target image
+  //     std::to_string(i), //text
+  //     cv::Point(
+  //       std::get<0>(points[1][i])*params.m_frame_width, 
+  //       std::get<1>(points[1][i])*params.m_frame_height
+  //       ),
+  //     cv::FONT_HERSHEY_DUPLEX,
+  //     1.0,
+  //     CV_RGB(0, 0, 0), //font color
+  //     2);
+  // }
+
+
+  int row_base, col_base;
+  params.get_indexbase_cv_indices(row_base, col_base);
+  // std::cerr << "tap base row:" << row_base << " col:" << col_base << "\n";
+
+  int row_cursor, col_cursor;
+  params.get_primary_cursor_cv_indices(row_cursor, col_cursor);
+  // std::cerr << "tap cursor row:" << row_cursor << " col:" << col_cursor << "\n";
+
+  // cv::circle(
+  //   m_primary_output,
+  //   cv::Point(row_base, col_base),
+  //   10,
+  //   cv::Scalar(0, 0, 255),
+  //   cv::FILLED,
+  //   cv::LINE_8
+  // );
+
+
+  cv::circle(
+    m_primary_output,
+    cv::Point(row_cursor, col_cursor),
+    10,
+    cv::Scalar(0, 255, 0),
+    cv::FILLED,
+    cv::LINE_8
+  );
+
+
+  // for (int k = 0, i = 10; i < 15; i += 4, k ++) {
+  //       cv::circle(
+  //         m_primary_output,
+  //         cv::Point(
+  //           params.m_frame_width * std::get<0>(points[0][i]), 
+  //           params.m_frame_height * std::get<1>(points[0][i])),
+  //         10,
+  //         cv::Scalar(240,255,240),
+  //         cv::FILLED,
+  //         cv::LINE_8
+  //       );
+  // }
+
+  cv::rectangle(
+    m_primary_output,
+    cv::Point(params.m_flood_width.m_lower_bound, params.m_flood_height.m_lower_bound),
+    cv::Point(params.m_flood_width.m_upper_bound, params.m_flood_height.m_upper_bound),
+    cv::Scalar(255, 255, 0), 
+    2, 
+    8, 
+    0
+  );
+
+  cv::circle(
+          m_primary_output,
+          cv::Point(params.m_row, params.m_col),
+          10,
+          cv::Scalar(0,215,255),
+          cv::FILLED,
+          cv::LINE_8
+        );
+  
+
+  // int xcol_palmid, yrow_palmid;
+  // params.get_primary_cursor_middlefinger_base_cv_indices(xcol_palmid, yrow_palmid); 
+
+  // cv::circle(
+  //         m_primary_output,
+  //         cv::Point(xcol_palmid, yrow_palmid),
+  //         30,
+  //         cv::Scalar(0,215,255),
+  //         cv::FILLED,
+  //         cv::LINE_8
+  //       );
+
+  if (!m_depth_map.empty()) { 
+    cv::rectangle(
+      m_depth_map,
+      cv::Point(params.m_flood_width.m_lower_bound, params.m_flood_height.m_lower_bound),
+      cv::Point(params.m_flood_width.m_upper_bound, params.m_flood_height.m_upper_bound),
+      cv::Scalar(255, 255, 0), 
+      2, 
+      8, 
+      0
+    );
+  }
+}
+
 
 ::mediapipe::Status MediaPipeMultiHandGPU::run(
     const std::string& calculator_graph_config_file,
@@ -67,7 +206,6 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
     const int frame_height,
     const int fps, 
     const int debug_mode,
-    const int dev_video,
     const bool load_video,
     const bool save_video) {
 
@@ -92,26 +230,20 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
   gpu_helper.InitializeForTest(graph.GetGpuResources().get());
 
   LOG(INFO) << "Initialize the camera or load the video.";
-  cv::VideoCapture capture;
+  // cv::VideoCapture capture;
+
   if (load_video) {
     // capture.open(input_video_path); // read a video file
   } else {
-    capture = cv::VideoCapture(dev_video);
-    capture.open(0);
-  RET_CHECK(capture.isOpened());
-
+    RET_CHECK(camera->isOpened());
   }
 
   cv::VideoWriter writer;
   if (!save_video) {
-    cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
+    cv::namedWindow(m_window_name, cv::WINDOW_AUTOSIZE);
     if (!load_video) {
-      #if (CV_MAJOR_VERSION >= 3) && (CV_MINOR_VERSION >= 2)
-          capture.set(cv::CAP_PROP_FRAME_WIDTH, frame_width);
-          capture.set(cv::CAP_PROP_FRAME_HEIGHT, frame_height);
-          capture.set(cv::CAP_PROP_FPS, fps);
-      #endif
-    }
+      // moved to camera/opencv
+    } 
   }
 
   LOG(INFO) << "Start running the calculator graph.";
@@ -125,7 +257,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
   MP_RETURN_IF_ERROR(graph.StartRun({}));
 
   LOG(INFO) << "Start grabbing and processing frames.";
-  bool grab_frames = true;
+  m_grab_frames = true;
   bool show_display = false;
 
   int indexfinger_x = -1, indexfinger_y = -1;
@@ -149,11 +281,12 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
 
   const int divisions = anchor.getDivisions();
   
+
+  cv::Mat camera_frame_raw, camera_frame;
   // for storing key values to be passed among handlers
-  ExtraParameters params = ExtraParameters(load_video);
-
-  cv::Mat camera_frame_raw, camera_frame, output_frame_mat;
-
+  ExtraParameters params = ExtraParameters(frame_width, frame_height, load_video, camera);
+  params.set_depth_map(&m_depth_map);
+  
   std::vector<std::vector<std::tuple<double, double, double>>> points(3); 
   
   for (int i = 0; i < 2; i ++) {
@@ -162,12 +295,24 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
   
   points[2].push_back(std::make_tuple(-1, -1, 0));
 
-  while (grab_frames) {
-    capture >> camera_frame_raw;
-    
+  bool isDone = false;
+
+  while (!isDone && m_grab_frames) {
+    camera->get_frames();
+
+    if (!camera->is_valid()) {
+      std::cout << "camera input invalid\n";
+      continue;
+    }
+
+    camera->depth(m_depth_map);
+    // m_depth_map.convertTo(m_depth_map, CV_8UC1, 255.0/1000);
+    camera->rgb(camera_frame_raw);
+
     // if (camera_frame_raw->empty()) break;  // End of video.
     if (camera_frame_raw.empty()) break;  // End of video.
 
+    
     // Converts an image from one color space to another.
     // cv::cvtColor(camera_frame_raw, hsv, CV_BGR2HSV);
 
@@ -176,6 +321,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
 
     if (!params.load_video) {
       cv::flip(camera_frame, camera_frame, /*flipcode=HORIZONTAL*/ 1);
+      cv::flip(m_depth_map, m_depth_map, 1);
     }
 
     // Wrap Mat into an ImageFrame.
@@ -203,6 +349,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
           return ::mediapipe::OkStatus();
         }));
 
+    cv::cvtColor(camera_frame, camera_frame, cv::COLOR_RGB2BGR);
 
     {
       // needed block or else there is memory leak (~30MB)
@@ -237,12 +384,6 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
     if (!multi_hand_landmarks_poller.Next(&multi_hand_landmarks_packet)) break;
     const auto& multi_hand_landmarks = multi_hand_landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
 
-
-    /*
-      points[2] used for sending auxiliary information
-      points[2][0] = {indexfinger_x, indexfinger_y, cz};
-    */
-
     // resetting points
     for (int i = 0; i < 2; i ++) {
       points[i][0] = std::make_tuple(0, 0, 0);
@@ -269,9 +410,6 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
 
     points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0);
 
-    
-    // params.reset();
-
     initiator.params(points, params);
 
     params.get_palmbase(palmbase);
@@ -294,24 +432,34 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
     }
     
     // Convert back to opencv for display or saving.
-    // cv::Mat output_frame_mat = mediapipe::formats::MatView(output_frame.get());
-    output_frame_mat = camera_frame;
-    cv::cvtColor(output_frame_mat, output_frame_mat, cv::COLOR_RGB2BGR);
+    // cv::Mat m_primary_output = mediapipe::formats::MatView(output_frame.get());
+    if (anchor.type() == choices::anchor::MIDAIR) {
+      try {
+        m_primary_output = cv::Mat(
+            camera_frame.rows, 
+            camera_frame.cols, 
+            CV_8UC3, 
+            cv::Scalar(0, 0, 0));
+
+      } catch(cv::Exception e) {
+          std::cerr << "ERROR anchors/anchors_static.cpp draw() " << e.what() << "\n";
+      }
+    } else {
+      m_primary_output = camera_frame;
+    }
+    
     
     if (!width) {
-        width = output_frame_mat.size().width;
-        height = output_frame_mat.size().height;
+        width = camera_frame.size().width;
+        height = camera_frame.size().height;
     }
 
     {
-      // indexfinger_x = -1;
-      // indexfinger_y = -1;
-
-      if (params.is_set_indexfinger()) {
+      if (params.is_set_primary_cursor()) {
         otherindex_x_prv = otherindex_x;
         otherindex_y_prv = otherindex_y;
         
-        params.get_indexfinger(otherindex_x, otherindex_y);
+        params.get_primary_cursor(otherindex_x, otherindex_y);
 
         if (otherindex_x_prv == -1) {
           otherindex_x_prv = otherindex_x;
@@ -329,12 +477,10 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
           indexfinger_y = otherindex_y*height;
         }   
       }
-
     }
-
     
     anchor.calculate(
-      output_frame_mat, 
+      camera_frame, 
       palmbase,
       indexbase, 
       interface_scaling_factor,
@@ -342,26 +488,26 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
     
     cv::Rect gg = anchor.getGrid();
 
-
     if (show_display || anchor.static_display()) {
 
-          points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0); // putting (indexfinger_x, indexfinger_y) if in case trigger is wait
-          trigger.update(camera_frame_raw, points, params);
+      points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0); // putting (indexfinger_x, indexfinger_y) if in case trigger is wait
+      trigger->update(camera_frame_raw, points, params);
 
-          if (trigger.status() == TRIGGER::RELEASED) {
-            anchor.highlightSelected();
-          }
+      if (trigger->status() == TRIGGER::RELEASED) {
+        anchor.highlightSelected();
+      }
           
       anchor.draw(
-          output_frame_mat, 
+          camera_frame, 
+          m_primary_output,
           palmbase,
           indexbase, 
           interface_scaling_factor,
           indexfinger_x, indexfinger_y, params);
 
-      if (params.is_set_indexfinger()) {
+      if (params.is_set_primary_cursor()) {
         cv::circle(
-          output_frame_mat,
+          m_primary_output,
           cv::Point(indexfinger_x, indexfinger_y),
           10,
           COLORS_darkblue,
@@ -370,171 +516,85 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(const std::string & _window_name) {
           0);
       }
 
-
       if (debug_mode == 1) {
-        // drawing landmarks of hand 0
-        for (int i = 0; i < points[0].size(); i ++) {
-          cv::putText(output_frame_mat, //target image
-            std::to_string(i), //text
-            cv::Point(std::get<0>(points[0][i])*width, std::get<1>(points[0][i])*height),
-            cv::FONT_HERSHEY_DUPLEX,
-            1.0,
-            CV_RGB(0, 0, 0), //font color
-            2);
-        }
-
-        // drawing landmarks of hand 1
-        for (int i = 0; i < points[1].size(); i ++) {
-          cv::putText(output_frame_mat, //target image
-            std::to_string(i), //text
-            cv::Point(std::get<0>(points[1][i])*width, std::get<1>(points[1][i])*height),
-            cv::FONT_HERSHEY_DUPLEX,
-            1.0,
-            CV_RGB(0, 0, 0), //font color
-            2);
-        }
+        debug(m_primary_output, points, params);
       }
     }
 
-    if (params.depth_area.initiated) {
+    combine_output_frames();
 
-      auto & area1 = params.depth_area.area1;
-      auto & area2 = params.depth_area.area2;
-      auto & pt1 = params.depth_area.pt1;
-      auto & pt2 = params.depth_area.pt2;
-
-      if (area1 > BLOB_AREA_THRESH && pt1.x >= 0 && pt1.x >= 0 && pt1.x < frame_width && pt1.y < frame_height) {
-        cv::circle(
-          output_frame_mat,
-          pt1,
-          10,
-          cv::Scalar(100, 100, 128),
-          -1);
-
-        std::string areamsg1 = "Area1:" + std::to_string(area1);
-        cv::putText(output_frame_mat, //target image
-              areamsg1, //text
-              cv::Point(pt1.x+12, pt1.y), //top-left position
-              cv::FONT_HERSHEY_DUPLEX,
-              0.5,
-              COLORS_darkslategrey, //font color
-              INFO_TXT_BOLDNESS
-          );
-
-      }    
-
-      if (area2 > BLOB_AREA_THRESH && pt2.x >= 0 && pt2.x >= 0 && pt2.x < frame_width && pt2.y < frame_height) {
-        cv::circle(
-          output_frame_mat,
-          pt2,
-          10,
-          cv::Scalar(100, 128, 100),
-          -1);
-
-        std::string areamsg2 = "Area2:" + std::to_string(area2);
-        cv::putText(output_frame_mat, //target image
-              areamsg2, //text
-              cv::Point(pt2.x+12, pt2.y), //top-left position
-              cv::FONT_HERSHEY_DUPLEX,
-              0.5,
-              COLORS_darkslategrey, //font color
-              INFO_TXT_BOLDNESS
-          );
-      }
-
-      // debugging
-      // cv::circle(
-      //     output_frame_mat,
-      //     anchor.getGridTopLeft(),
-      //     10,
-      //     cv::Scalar(10, 10, 10),
-      //     -1);
-
-      if ((area1 > BLOB_AREA_THRESH && pt1.x >= 0 && pt1.x >= 0 && pt1.x < frame_width && pt1.y < frame_height)) {
-
-        if ((area2 > BLOB_AREA_THRESH && pt2.x >= 0 && pt2.x >= 0 && pt2.x < frame_width && pt2.y < frame_height)) {
-          
-
-          cv::line( output_frame_mat, pt1, pt2, cv::Scalar( 128, 128, 128 ), 1 );
-
-          int dx2 = (pt1.x-pt2.x)*(pt1.x-pt2.x);
-          int dy2 = (pt1.y-pt2.y)*(pt1.y-pt2.y);
-
-          int distxy = root(dx2 + dy2); 
-
-          std::string distxy_msg2 = "Distance XY: ~" + std::to_string(distxy);
-          cv::putText(output_frame_mat, //target image
-                  distxy_msg2, //text
-                  cv::Point((pt1.x+pt2.x)/2, (pt1.y+pt2.y)/2), //top-left position
-                  cv::FONT_HERSHEY_DUPLEX,
-                  0.5,
-                  COLORS_darkslategrey, //font color
-                  INFO_TXT_BOLDNESS
-              );
-          
-          if (points_ratio < 0) {
-            points_ratio = (double)area1 / area2;
-          }
-
-          double cur_ratio = (double)area1 / area2;
-
-
-          double depth_approx = (points_ratio-cur_ratio)*(points_ratio-cur_ratio)*100;
-
-          std::string depth_msg2 = "Depth difference: ~" + std::to_string(depth_approx);
-          cv::putText(output_frame_mat, //target image
-                  depth_msg2, //text
-                  cv::Point((pt1.x+pt2.x)/2, 20 + (pt1.y+pt2.y)/2), //top-left position
-                  cv::FONT_HERSHEY_DUPLEX,
-                  0.5,
-                  COLORS_darkslategrey, //font color
-                  INFO_TXT_BOLDNESS
-              );
-        }
-      } else {
-        points_ratio = -1; // resetting relative ratio
-      }
-    }
-
-    if (save_video) {
-
-      if (!writer.isOpened()) {
-        LOG(INFO) << "Prepare video writer.";
-        writer.open(output_video_path,
-                    mediapipe::fourcc('a', 'v', 'c', '1'),  // .mp4
-                    capture.get(cv::CAP_PROP_FPS), output_frame_mat.size());
-        RET_CHECK(writer.isOpened());
-      }
-      writer.write(output_frame_mat);
-
-    //   // if (!writer.isOpened()) {
-    //   //   LOG(INFO) << "Prepare video writer.";
-    //   //   writer.open(output_video_path,
-    //   //               mediapipe::fourcc('a', 'v', 'c', '1'),  // .mp4
-    //   //               capture.get(cv::CAP_PROP_FPS), output_frame_mat.size());
-    //   //   RET_CHECK(writer.isOpened());
-    //   // }
-    //   // writer.write(output_frame_mat);
-    //   cv::imwrite( output_video_path + "/" + imageName(curImageID, image_ext), output_frame_mat);
-    //   curImageID ++;
-    } else {
-
-      cv::imshow(window_name, output_frame_mat);
-      // Press any key to exit.
-      const int pressed_key = cv::waitKey(5);
-      if (pressed_key >= 0 && pressed_key != 255) grab_frames = false;
-      
-      
-      // cv::imshow(kWindowName, output_frame_mat);
-      // const int pressed_key = cv::waitKey(5);
-      // if (pressed_key >= 0 && pressed_key != 255) grab_frames = false;
-    }
+    cv::imshow(m_window_name, m_combined_output);
+    
+    check_keypress();
+    save_output();
   }
 
   LOG(INFO) << "Shutting down.";
+  
+
+
   if (writer.isOpened()) writer.release();
   MP_RETURN_IF_ERROR(graph.CloseInputStream(kInputStream));
   return graph.WaitUntilDone();
 }
 
+
+void MediaPipeMultiHandGPU::combine_output_frames() {
+  if (m_depth_map.empty()) {
+    m_combined_output = m_primary_output;
+  } else {
+    cv::Size sz1 = m_primary_output.size();
+    cv::Size sz2 = m_depth_map.size();
+    if (m_combined_output.empty() || 
+      m_combined_output.size().width < (sz1.width + sz2.width)) {
+      m_combined_output = cv::Mat(
+        std::max(sz1.height, sz2.height),
+        sz1.width + sz2.width,
+        CV_8UC3);
+      m_combined_output_left = cv::Mat(
+        m_combined_output,
+        cv::Rect(0, 0, sz1.width, sz1.height));
+      m_combined_output_right = cv::Mat(
+        m_combined_output,
+        cv::Rect(sz1.width, 0, sz2.width, sz2.height));
+    } 
+
+    m_primary_output.copyTo(m_combined_output_left);
+    m_depth_map.copyTo(m_combined_output_right);
+  }
+}
+
+
+void MediaPipeMultiHandGPU::check_keypress() {
+  // Press any key to exit.
+  const int pressed_key = cv::waitKey(5);
+  if (pressed_key >= 0 && pressed_key != 255) m_grab_frames = false;
+}
+
+
+void MediaPipeMultiHandGPU::save_output() {
+  //   if (save_video) {
+
+  // if (!writer.isOpened()) {
+  //   LOG(INFO) << "Prepare video writer.";
+  //   writer.open(output_video_path,
+  //   mediapipe::fourcc('a', 'v', 'c', '1'),  // .mp4
+  //   camera->get_fps(), m_primary_output.size());
+  //   RET_CHECK(writer.isOpened());
+  // }
+  // writer.write(m_primary_output);
+
+  // //   // if (!writer.isOpened()) {
+  // //   //   LOG(INFO) << "Prepare video writer.";
+  // //   //   writer.open(output_video_path,
+  // //   //               mediapipe::fourcc('a', 'v', 'c', '1'),  // .mp4
+  // //   //               capture.get(cv::CAP_PROP_FPS), m_primary_output.size());
+  // //   //   RET_CHECK(writer.isOpened());
+  // //   // }
+  // //   // writer.write(m_primary_output);
+  // //   cv::imwrite( output_video_path + "/" + imageName(curImageID, image_ext), m_primary_output);
+  // //   curImageID ++;
+  // } else {
+
+}
 

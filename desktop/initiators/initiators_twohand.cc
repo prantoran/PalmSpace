@@ -99,8 +99,18 @@ void InitiatorTwoHand::params(
     parameters.set(1, raw_height);
 
     parameters.set_palmbase(palmbase_x, palmbase_y);
+    parameters.m_cursor_id = -1;
 
-    if (points[0].size() > INDEXTOP_IDX) {
-        parameters.set_indexfinger(points[0][INDEXTOP_IDX]);
+    int idx = 0;
+
+    // TODO refactor common code block below
+    if (points[idx].size() > INDEXTOP_IDX) {
+        parameters.m_cursor_id = 0;
+        parameters.set_primary_cursor(points[idx][INDEXTOP_IDX]);
+    }
+
+    if (points[idx].size() > MIDDLEFINGERBASE) {
+        parameters.m_cursor_middlebase_id = idx;      
+        parameters.set_primary_cursor_middlefinger_base(points[idx][MIDDLEFINGERBASE]);
     }
 }
