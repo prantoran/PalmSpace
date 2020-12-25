@@ -1,7 +1,14 @@
 # PalmSspace
 ### Virtual interface for mid-air interaction
-
-
+- Main project code is in the Desktop directory
+  - `main.cc` initiates everything and start the application
+  - `handlers` package has the MediaPipe graph and controls communication with other packages.
+  - `anchors` provide interface for the grid
+  - `initiator` looks for start of interaction
+  - `trigger` is responsible for triggering actions
+  - `ui` controls the initial display to show choices
+  - `config` handles the information used by all the other packages
+  
 ## SETUP:
 - Install [MediaPipe](https://mediapipe.dev/)
 - Copy the `desktop` folder into the root directory of MediaPipe which has the `WORKSPACE` file.
