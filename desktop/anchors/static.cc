@@ -88,7 +88,7 @@ void AnchorStatic::calculate(
     const std::tuple<double, double, double> & indexbase, 
     double scale_ratio, 
     int pointer_x, int pointer_y,
-    ExtraParameters & params) {
+    Parameters & params) {
         
     if (!width || !height) {
         setConfig(input.size().width, input.size().height);
@@ -200,7 +200,7 @@ void AnchorStatic::draw(
     const std::tuple<double, double, double> & indexbase, 
     double scale_ratio, 
     int pointer_x, int pointer_y,
-    const ExtraParameters & params) {
+    Parameters & params) {
         
     double palmbase_x_new = std::get<0>(palmbase);
     double palmbase_y_new = std::get<1>(palmbase);
@@ -277,7 +277,7 @@ void AnchorStatic::draw(
     drawTextHighlighted(overlay);
     drawTextSelected(overlay);
 
-    drawProgressBar(overlay, params.extra_params[9]);
+    drawProgressBar(overlay, params);
 
     cv::addWeighted(overlay, alpha, input, 1-alpha, 0, output);
 }

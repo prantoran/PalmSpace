@@ -18,6 +18,7 @@ namespace PalmSpaceUI {
 			int visibility,
 			bool debug, 
 			bool depth,
+			int resolution,
 			std::string window_name
 		) {
 		
@@ -48,7 +49,7 @@ namespace PalmSpaceUI {
 			ancmid = true;
 		}
 
-		trigpalmbase = false, trigpalmfree = false, trigpinch = false, trigwait = false, trigtap = false, trigdwell = true, trigtapdepth = false, trigtapdepthsingle = false;
+		trigpalmbase = false, trigpalmfree = false, trigpinch = false, trigtap = false, trigdwell = true, trigtapdepth = false, trigtapdepthsingle = false, trigdepthdistance = false;
 		switch (trigger) {
 			case 1:
 				trigdwell = false;
@@ -62,10 +63,6 @@ namespace PalmSpaceUI {
 				trigdwell = false;
 				trigpinch = true;
 				break;
-			case 4:
-				trigdwell = false;
-				trigwait = true;
-				break;
 			case 5:
 				trigdwell = false;
 				trigtap = true;
@@ -76,13 +73,28 @@ namespace PalmSpaceUI {
 			case 9:
 				trigdwell = false;
 				trigtapdepthsingle = true;
+			case 10:
+				trigdwell = false;
+				trigdepthdistance = true;
+			default:
+				break;
+		}
+
+
+		resolution_1280 = true;
+		resolution_640 = false;
+		switch (resolution) {
+			case 1:
+				resolution_1280 = false;
+				resolution_640 = true;
+				break;
 			default:
 				break;
 		}
 
 
 
-		scalex = -10 + width/7, scaley = -10 + height/4;
+		scalex = width/2 - width/5, scaley = height/2 - height/4;
 
 		errormsg = "";
 		valid = true;
@@ -115,7 +127,9 @@ namespace PalmSpaceUI {
 			// clear the frame
 			frame = cv::Scalar(79,79,79);
 			// render a message in the frame at position (10, 15)
-
+			
+			// TODO make UI relative to width and height
+			
 			cvui::checkbox(frame, width - 120, height - 100, "Debug", &_debug);
 			cvui::checkbox(frame, width - 120, height - 130, "Depth", &_depth);
 
@@ -134,7 +148,7 @@ namespace PalmSpaceUI {
 			cvui::checkbox(frame, scalex + 125, scaley + 30, "Thumb of base palm", &trigpalmbase);
 			cvui::checkbox(frame, scalex + 125, scaley + 50, "Shoot", &trigpalmfree); // "Thumb of free palm"
 			cvui::checkbox(frame, scalex + 125, scaley + 70, "Pinch with free palm", &trigpinch);
-			cvui::checkbox(frame, scalex + 125, scaley + 90, "Wait to select", &trigwait);
+			cvui::checkbox(frame, scalex + 125, scaley + 90, "Tap Depth Distance", &trigdepthdistance);
 			cvui::checkbox(frame, scalex + 125, scaley + 110, "Tap", &trigtap);
 			cvui::checkbox(frame, scalex + 125, scaley + 130, "Dwell", &trigdwell);
 			cvui::checkbox(frame, scalex + 125, scaley + 150, "Tap Depth", &trigtapdepth);
@@ -150,10 +164,15 @@ namespace PalmSpaceUI {
 			cvui::checkbox(frame, scalex + 330, scaley + 50, "Large", &screen_large);
 			cvui::checkbox(frame, scalex + 330, scaley + 70, "Fullscreen", &screen_full);
 
-
-			cvui::window(frame, scalex + 330, scaley + 100, 100, 80, "Visibility");
+			cvui::window(frame, scalex + 330, scaley + 100, 100, 70, "Visibility");
 			cvui::checkbox(frame, scalex + 330, scaley + 120, "Fixed", &visibility_fixed);
 			cvui::checkbox(frame, scalex + 330, scaley + 140, "Conditional", &visibility_conditional);
+
+			cvui::window(frame, scalex + 330, scaley + 180, 100, 70, "Resolution");
+			cvui::checkbox(frame, scalex + 330, scaley + 200, " 640x480", &resolution_640);
+			cvui::checkbox(frame, scalex + 330, scaley + 220, "1280x720", &resolution_1280);
+
+
 
 			if (cvui::button(frame, width - 120, height - 50, 100, 30, "Next")) {
 				int cnt = 0;
@@ -181,11 +200,11 @@ namespace PalmSpaceUI {
 					if (trigpalmbase) cnt ++;
 					if (trigpalmfree) cnt ++;
 					if (trigpinch) cnt ++;
-					if (trigwait) cnt ++;
 					if (trigtap) cnt ++;
 					if (trigdwell) cnt ++;
 					if (trigtapdepth) cnt ++;
 					if (trigtapdepthsingle) cnt ++;
+					if (trigdepthdistance) cnt ++;
 					if (cnt != 1) {
 						valid = 0;
 						errormsg = "Select exactly 1 trigger.";
@@ -214,9 +233,25 @@ namespace PalmSpaceUI {
 				}
 
 
-				if (trigtapdepth && !_depth) {
+				if (valid) {
+					cnt = 0;
+					if (resolution_1280) cnt ++;
+					if (resolution_640) cnt ++;
+					if (cnt != 1) {
+						valid = 0;
+						errormsg = "Select exactly 1 resolution.";
+					}
+				}
+
+
+				if (resolution_1280 && !_depth) {
 					valid = 0;
-					errormsg = "depth camera should be used for depth based tap";
+					errormsg = "Normal camera does not support 1280x720.";
+				}
+
+				if ((trigtapdepth || trigdepthdistance) && !_depth) {
+					valid = 0;
+					errormsg = "depth camera should be used for depth based tap.";
 				}
 
 				if (valid) {
@@ -248,7 +283,8 @@ namespace PalmSpaceUI {
 		int & screensize,
 		int & visibility,
 		int & debug,
-		int & depth) {
+		int & depth,
+		int & resolution) {
 
 		if (onehand) initiator = 1;
 		if (twohand) initiator = 2;
@@ -260,10 +296,11 @@ namespace PalmSpaceUI {
 		if (trigpalmbase) trigger = 1;
 		if (trigpalmfree) trigger = 2;
 		if (trigpinch) trigger = 3;
-		if (trigwait) trigger = 4;
 		if (trigtap) trigger = 5;
 		if (trigdwell) trigger = 6;
 		if (trigtapdepth) trigger = 8;
+		if (trigtapdepthsingle) trigger = 9;
+		if (trigdepthdistance) trigger = 10;
 
 
 		if (screen_small) screensize = 1;
@@ -279,6 +316,9 @@ namespace PalmSpaceUI {
 		debug = _debug;
 
 		depth = _depth;
+
+		if (resolution_640) resolution = 1;
+		else if (resolution_1280) resolution = 2;
 	}
 
 

@@ -79,3 +79,8 @@ Adjust depth scale (CAUTION)
 - rs2_set_option(...) with RS2_OPTION_DEPTH_UNITS, which 
     specifies the number of meters per one increment of depth. 0.001 would indicate 
     millimeter scale, while 0.01 would indicate centimeter scale.
+
+
+Determining correct width, height, fps for realsense depth camera:
+    - check config of available devices annotating supported dimensions and fps
+        - `/usr/local/bin/rs-enumerate-devices`

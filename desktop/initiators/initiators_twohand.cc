@@ -91,12 +91,11 @@ bool InitiatorTwoHand::inspect(
 
 void InitiatorTwoHand::params(
   const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-  ExtraParameters & parameters) {
+  Parameters & parameters) {
 
     parameters.set_total_hands(points.size());
 
-    parameters.set(0, raw_width);
-    parameters.set(1, raw_height);
+    parameters.set_raw_dimensions(raw_width, raw_height);
 
     parameters.set_palmbase(palmbase_x, palmbase_y);
     parameters.m_cursor_id = -1;

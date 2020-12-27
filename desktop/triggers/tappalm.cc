@@ -33,10 +33,7 @@ TriggerTapPalm::TriggerTapPalm(int _width, int _height) {
 void TriggerTapPalm::update(
     const cv::Mat & input_image,
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-    ExtraParameters & params) {
-
-    std::vector<double> & extra_params = params.extra_params;
-
+    Parameters & params) {
 
     if (points.size() < 0) {
         std::cout << "trigger_tap_palm: less than two hands, resetting trigger\n";
@@ -50,8 +47,10 @@ void TriggerTapPalm::update(
         return;
     }
 
+    params.get_other_index_z_value(m_zvalue);
+
     if (params.is_set_primary_cursor()) { // other hand index x axis is set (0-1]
-        zvalue = 0.5*prev_zvalue + 0.5*extra_params[6]*10000;
+        zvalue = 0.5*prev_zvalue + 0.5*m_zvalue*10000;
     } else {
         if (prev_handID != hand_ID) {
             hand_switch_ignore_cnt ++;

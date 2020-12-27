@@ -16,7 +16,7 @@ bool InitiatorHandler::inspect(
 
 void InitiatorHandler::params(
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-    ExtraParameters & parameters) {
+    Parameters & parameters) {
     
     switch (_choice) {
         case 1:

@@ -12,7 +12,7 @@ void AnchorHandler::calculate(
         const std::tuple<double, double, double> & indexbase, 
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        ExtraParameters & params) {
+        Parameters & params) {
 
     switch (_choice) {
         case 1:
@@ -56,7 +56,7 @@ void AnchorHandler::draw(
         const std::tuple<double, double, double> & indexbase, 
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        const ExtraParameters & params) {
+        Parameters & params) {
 
 
     switch (_choice) {

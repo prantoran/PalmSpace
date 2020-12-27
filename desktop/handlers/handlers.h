@@ -13,75 +13,13 @@
 #include <vector>
 #include <queue>
 
-class AnchorHandler{
-    public:
-    
-    AnchorDynamic _dynamic;
-    AnchorStatic _static;
-    AnchorMidAir _midair;
-
-    int _choice;
-
-    void calculate(
-        const cv::Mat& input, 
-        const std::tuple<double, double, double> & palmbase,
-        const std::tuple<double, double, double> & indexbase, 
-        double scale_ratio, 
-        int pointer_x, int pointer_y,
-        ExtraParameters & params); 
-
-    void draw(
-        const cv::Mat& input, 
-        cv::Mat& output, 
-        const std::tuple<double, double, double> & palmbase,
-        const std::tuple<double, double, double> & indexbase, 
-        double scale_ratio, 
-        int pointer_x, int pointer_y,
-        const ExtraParameters & params);
-    
-    void reset_palmbase();
-    void reset_indexbase();
-
-    std::tuple<int, int> selectedIndexes();
-    void highlightSelected();
-    int getDivisions();
-    bool static_display();
-    void setDivisions(int _divisions);
-    cv::Rect getGrid();
-    cv::Point getGridTopLeft();
-    cv::Point getGridBottomRight();
-
-    void setScreenSize(choices::eScreenSize size);
-    void setVisibility(choices::eVisibility _visibility);
-
-    choices::anchor::types type();
-};
-
-
-class InitiatorHandler {
-    public:
-    InitiatorDefault _default;
-    InitiatorTwoHand _twohand;
-
-    int _choice;
-
-    bool inspect(
-        std::vector<std::vector<std::tuple<double, double, double>>> & points);
-    void params(
-        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        ExtraParameters & parameters);
-    void setStrict(bool _strict);
-};
-
-
 
 class MediaPipeMultiHandGPU {
     public:
-    AnchorHandler anchor;
-    // TriggerHandler trigger;
-    InitiatorHandler initiator;
-    Camera *camera;
-    Trigger *trigger;
+    Anchor * anchor;
+    Initiator * initiator;
+    Camera * camera; // TODO add m_
+    Trigger * trigger;
     // int curImageID;
     std::string m_window_name;
 
@@ -91,14 +29,15 @@ class MediaPipeMultiHandGPU {
     cv::Mat m_combined_output_left, m_combined_output_right;
     cv::Mat m_depth_map;
     
+    cv::VideoWriter m_writer;
+    std::string m_output_video_path;
 
-    MediaPipeMultiHandGPU(const std::string & _window_name);
+    MediaPipeMultiHandGPU(const std::string & _window_name, const std::string & _output_video_path);
     ~MediaPipeMultiHandGPU();
 
     ::mediapipe::Status run(
         const std::string& calculator_graph_config_file,
         const std::string& input_video_path,
-        const std::string& output_video_path,
         const int frame_width,
         const int frame_height,
         const int fps,
@@ -109,11 +48,10 @@ class MediaPipeMultiHandGPU {
     void debug(
         cv::Mat & output_frame_mat, 
         std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        ExtraParameters & params);
+        Parameters & params);
 
     void combine_output_frames();
     void check_keypress();
-    void save_output();
 };
 
 

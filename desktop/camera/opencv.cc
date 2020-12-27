@@ -6,11 +6,11 @@
 #include "mediapipe/framework/port/opencv_highgui_inc.h" // GUI #include "opencv2/highgui/highgui.hpp"
 
 
-CameraOpenCV::CameraOpenCV() {
+CameraOpenCV::CameraOpenCV(int _m_width, int _height, int _fps) {
     m_valid = true;
-    m_width = 640;
-    m_height = 480;
-    m_fps = 15;
+    m_width = _m_width;
+    m_height = _height;
+    m_fps = _fps;
 
     // capture = cv::VideoCapture(0);
     m_capture.open(0);
