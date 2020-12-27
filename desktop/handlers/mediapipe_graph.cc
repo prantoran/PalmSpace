@@ -4,17 +4,11 @@
 
 #include "handlers.h"
 #include "../config/colors.h"
-#include <tuple>
-
-// opencv
-#include "mediapipe/framework/port/opencv_highgui_inc.h" // GUI #include "opencv2/highgui/highgui.hpp"
-#include "mediapipe/framework/port/opencv_imgproc_inc.h"
-#include "mediapipe/framework/port/opencv_video_inc.h"
 
 #include "mediapipe/framework/calculator_framework.h"
 #include "mediapipe/framework/formats/image_frame.h"
 #include "mediapipe/framework/formats/image_frame_opencv.h"
-#include "mediapipe/framework/port/commandlineflags.h"
+
 #include "mediapipe/framework/port/file_helpers.h"
 #include "mediapipe/framework/port/parse_text_proto.h"
 #include "mediapipe/framework/port/status.h"
@@ -26,8 +20,6 @@
 #include "mediapipe/framework/formats/landmark.pb.h"
 #include "mediapipe/framework/formats/rect.pb.h"
 #include "mediapipe/framework/formats/detection.pb.h"
-
-#include "desktop/ui/menu.h"
 
 
 // constexpr allows compiler to run statement/function at compile time.
@@ -77,12 +69,17 @@ MediaPipeMultiHandGPU::~MediaPipeMultiHandGPU() {
     delete trigger;
   }
 
+  if (anchor != NULL) {
+    delete anchor;
+  }
+
+  if (initiator != NULL) {
+    delete initiator;
+  }
+
   if (cv::getWindowProperty(m_window_name, 0) >= 0) {
     cv::destroyWindow(m_window_name);
   }
-
-
-
 
   std::cerr << "MediaPipeMultiHandGPU destructor successful\n";
 }
@@ -122,13 +119,9 @@ void MediaPipeMultiHandGPU::debug(
 
   int row_base, col_base;
   params.get_indexbase_cv_indices(row_base, col_base);
-  // std::cerr << "tap base row:" << row_base << " col:" << col_base << "\n";
 
   int row_cursor, col_cursor;
   params.get_primary_cursor_cv_indices(row_cursor, col_cursor);
-  // std::cerr << "tap cursor row:" << row_cursor << " col:" << col_cursor << "\n";
-
-
 
   cv::circle(
     m_primary_output,
@@ -241,7 +234,6 @@ void MediaPipeMultiHandGPU::debug(
   gpu_helper.InitializeForTest(graph.GetGpuResources().get());
 
   LOG(INFO) << "Initialize the camera or load the video.";
-  // cv::VideoCapture capture;
 
   if (load_video) {
     // capture.open(input_video_path); // read a video file
@@ -291,7 +283,7 @@ void MediaPipeMultiHandGPU::debug(
 
   std::tuple<int, int> selected;
 
-  const int divisions = anchor.getDivisions();
+  const int divisions = anchor->getDivisions();
   
   cv::Mat camera_frame;
   // for storing key values to be passed among handlers
@@ -320,7 +312,6 @@ void MediaPipeMultiHandGPU::debug(
     // m_depth_map.convertTo(m_depth_map, CV_8UC1, 255.0/1000);
     camera->rgb(camera_frame);
 
-    // if (camera_frame->empty()) break;  // End of video.
     if (camera_frame.empty()) break;  // End of video.
 
     // Converts an image from one color space to another.
@@ -420,30 +411,30 @@ void MediaPipeMultiHandGPU::debug(
 
     points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0);
 
-    initiator.params(points, params);
+    initiator->params(points, params);
 
     params.get_palmbase(palmbase);
     params.get_indexbase(indexbase);
     
-    params.set_is_static(anchor.static_display());
+    params.set_is_static(anchor->static_display);
 
     show_display = false;
 
-    if (initiator.inspect(points)) {
+    if (initiator->inspect(points)) {
       show_display = true;
-      initiator.params(points, params);
+      initiator->params(points, params);
 
       params.get_palmbase(palmbase);
       params.get_indexbase(indexbase);
 
 
-    } else if (!anchor.static_display()) {
+    } else if (!anchor->static_display) {
       params.reset();
     }
     
     // Convert back to opencv for display or saving.
     // cv::Mat m_primary_output = mediapipe::formats::MatView(output_frame.get());
-    if (anchor.type() == choices::anchor::MIDAIR) {
+    if (anchor->type() == choices::anchor::MIDAIR) {
       try {
         m_primary_output = cv::Mat(
             camera_frame.rows, 
@@ -489,25 +480,25 @@ void MediaPipeMultiHandGPU::debug(
       }
     }
     
-    anchor.calculate(
+    anchor->calculate(
       camera_frame, 
       palmbase,
       indexbase, 
       interface_scaling_factor,
       indexfinger_x, indexfinger_y, params); 
     
-    cv::Rect gg = anchor.getGrid();
+    cv::Rect gg = anchor->getGrid();
 
-    if (show_display || anchor.static_display()) {
+    if (show_display || anchor->static_display) {
 
       points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0); // putting (indexfinger_x, indexfinger_y) if in case trigger is wait
       trigger->update(camera_frame, points, params);
 
       if (trigger->status() == TRIGGER::RELEASED) {
-        anchor.highlightSelected();
+        anchor->highlightSelected();
       }
           
-      anchor.draw(
+      anchor->draw(
           camera_frame, 
           m_primary_output,
           palmbase,

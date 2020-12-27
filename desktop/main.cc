@@ -2,27 +2,6 @@
 // An example of sending OpenCV webcam frames into a MediaPipe graph.
 // This example requires a linux computer and a GPU with EGL support drivers.
 
-// stl
-#include <iostream>
-#include <iterator>
-#include <algorithm>
-#include <string>
-#include <cstdlib>
-#include <functional>
-#include <memory>
-#include <thread>
-#include <vector>
-#include <unordered_map>
-#include <ctime> // for unique video file name
-
-#include "mediapipe/framework/port/commandlineflags.h"
-#include "mediapipe/framework/port/status.h"
-
-// opencv
-#include "mediapipe/framework/port/opencv_highgui_inc.h"
-#include "mediapipe/framework/port/opencv_imgproc_inc.h"
-#include "mediapipe/framework/port/opencv_video_inc.h"
-
 #include "desktop/anchors/anchors.h"
 #include "desktop/triggers/triggers.h"
 #include "desktop/initiators/initiators.h"
@@ -105,9 +84,6 @@ int main(int argc, char** argv) {
   const bool load_video = !FLAGS_input_video_path.empty();
   const bool save_video = !FLAGS_output_video_path.empty();
 
-
-  
-
   if (mp_graph == NULL) {
     mp_graph = std::make_shared<MediaPipeMultiHandGPU>(
       APP_NAME, 
@@ -118,28 +94,6 @@ int main(int argc, char** argv) {
     } catch (const std::exception& e) {
       std::cout << "exception tst:" << e.what() << "\n";
     } 
-
-    AnchorHandler handler_anchor;
-    handler_anchor._dynamic = AnchorDynamic(cv::Scalar(25, 25, 255), cv::Scalar(255, 25, 25));
-
-
-    // note: if image path invalid then cv::resize() error occurs
-    // handler_anchor._static = AnchorStatic();
-
-    handler_anchor._static = AnchorStatic(
-                                  cv::Scalar(25, 25, 255), 
-                                  cv::Scalar(255, 25, 25), 
-                                  "/home/prantoran/work/src/github.com/google/mediapipe/desktop/anchors/Hand.png");
-
-    
-    InitiatorHandler handler_initiator;
-    handler_initiator._default = InitiatorDefault();
-    handler_initiator._twohand = InitiatorTwoHand();
-
-
-    mp_graph->anchor = handler_anchor;
-    mp_graph->initiator = handler_initiator;
-    // mp_graph->trigger = handler_trigger;
   }
 
   
@@ -180,7 +134,6 @@ int main(int argc, char** argv) {
     choice_depth,
     choice_resolution);
 
-
   switch (choice_resolution) {
     case 1:
       FLAGS_frame_width = 640;
@@ -193,7 +146,6 @@ int main(int argc, char** argv) {
   } 
 
   std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
-
 
   if (choice_depth) {
     mp_graph->camera = new CameraRealSense(
@@ -209,13 +161,39 @@ int main(int argc, char** argv) {
     );
   }
 
+  switch (choice_initiator) {
+    case 1:
+      mp_graph->initiator = new InitiatorDefault();
+      break;
+    case 2:
+      mp_graph->initiator = new InitiatorTwoHand();
+      break;
+    default:
+      std::cerr << "ERROR main.cc invalid initiator choice\n";
+      return EXIT_FAILURE;
+  }
 
-  mp_graph->initiator._choice = choice_initiator;
-  mp_graph->anchor._choice = choice_anchor;
-  mp_graph->anchor.setDivisions(choice_divisions);
-  // mp_graph->trigger._choice = choice_trigger;
-  // mp_graph->trigger._wait.choice = choice_anchor;
-  
+  switch (choice_anchor) {
+    case 1:
+      mp_graph->anchor = new AnchorDynamic(cv::Scalar(25, 25, 255), cv::Scalar(255, 25, 25));
+      break;
+    case 2:
+      mp_graph->anchor = new AnchorStatic(
+                                  cv::Scalar(25, 25, 255), 
+                                  cv::Scalar(255, 25, 25), 
+                                  "/home/prantoran/work/src/github.com/google/mediapipe/desktop/anchors/Hand.png");
+      break;
+    case 3:
+      // TODO inspect midair
+      // mp_graph->anchor = new ;
+      break;
+    default:
+      std::cerr << "ERROR main.cc invalid anchor choice\n";
+      return EXIT_FAILURE;
+  }
+
+  mp_graph->anchor->setDivisions(choice_divisions);
+    
   std::cerr << "choice_trigger:" << choice_trigger << "\n";
 
   switch (choice_trigger) {
@@ -229,7 +207,8 @@ int main(int argc, char** argv) {
       mp_graph->trigger = new TriggerPinch(FLAGS_frame_width, FLAGS_frame_height);
       break;
     case 4:
-      mp_graph->trigger = new TriggerWait(FLAGS_frame_width, FLAGS_frame_height, -1);
+      mp_graph->trigger =  new TriggerWait(FLAGS_frame_width, FLAGS_frame_height, -1);
+      // mp_graph->trigger->set_anchor_choice(choice_anchor); // TODO inspect, needed by wait trigger
       break;
     case 5:
       mp_graph->trigger = new TriggerTap(FLAGS_frame_width, FLAGS_frame_height);
@@ -259,14 +238,12 @@ int main(int argc, char** argv) {
       return EXIT_FAILURE;
   }
   
-
-  
   choices::eScreenSize ssize = choices::getScreenSize(choice_screensize);
   
   choices::eVisibility _visibility = choices::getVisibility(choice_visibility);
 
-  mp_graph->anchor.setScreenSize(ssize);
-  mp_graph->anchor.setVisibility(_visibility);
+  mp_graph->anchor->setScreenSize(ssize);
+  mp_graph->anchor->setVisibility(_visibility);
 
   if (choice_anchor == 1 && choice_initiator == 2) {
     // throw std::invalid_argument("")
@@ -275,10 +252,11 @@ int main(int argc, char** argv) {
 
   std::cout << "setting up strict: whether or not to look for index pointer from 2nd hand only\n";
   if (choice_trigger == 1 || choice_trigger == 5) {
-    mp_graph->initiator.setStrict(true); // only look for pointer in second hand
+    mp_graph->initiator->strict = true; // only look for pointer in second hand
   } else if (choice_trigger == 6) {
     std::cout << "given dwell trigger, checking choice_anchor\n";
-    if (choice_anchor != 3) {      mp_graph->initiator.setStrict(true); // only look for pointer in second hand
+    if (choice_anchor != 3) {      
+      mp_graph->initiator->strict = true; // only look for pointer in second hand
     }
   }
 
@@ -294,11 +272,10 @@ int main(int argc, char** argv) {
   
   if (!run_status.ok()) {
     LOG(ERROR) << "Failed to run the graph: " << run_status.message();
-    // return EXIT_FAILURE; // probably defined in MediaPipe:ports
+    return EXIT_FAILURE; // probably defined in MediaPipe:ports
   } else {
     LOG(INFO) << "Success!";
   }
-  // }
 
   return EXIT_SUCCESS; // probably defined in MediaPipe:ports
 }
