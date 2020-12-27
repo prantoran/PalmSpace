@@ -237,3 +237,8 @@ bool Anchor::isVisible(const ExtraParameters & params) {
             return false;
     }
 }
+
+
+choices::anchor::types Anchor::type() {
+    return _type;
+}

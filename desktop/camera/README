@@ -1,0 +1,81 @@
+### RealSense
+
+- apply rgb align after post-processing to avoid aliasing distortion
+- adjusting depth scale
+`depth_sensor.set_option(rs.option.depth_units, 0.001)`
+
+
+Tutorials:
+- https://github.com/IntelRealSense/librealsense/blob/master/doc/stepbystep/getting_started_with_openCV.md
+- https://github.com/IntelRealSense/librealsense/issues/3938
+- https://dev.intelrealsense.com/docs/projection-in-intel-realsense-sdk-20
+
+Pixel Coordinates
+- [0, 0] - topleft
+- [w-1, h-1] - bottomright
+
+Point Coordinates
+- 3d space
+- in meters
+
+Intrinsic camera parameters
+- defined in rs2_intrinsics struct
+- size
+    - width, height
+- field of view
+    - The fx and fy fields describe the focal length of the image, as a multiple of pixel width and height
+- The pixels of an image are not necessarily square
+    - The fx and fy fields are allowed to be different (though they are commonly close)
+- The center of projection is not necessarily the center of the image
+    - The ppx and ppy fields describe the pixel coordinates of the principal point (center of projection)
+- The image may contain distortion
+    - The model field describes which of several supported distortion models was 
+        used to calibrate the image, and the coeffs field provides an array of up to 
+        five coefficients describing the distortion model.
+    - Modified Brown-Conrady distortion
+        - used by the D415's color image system
+        - This model provides a closed-form formula to map from undistorted points to distorted points, 
+            while mapping in the other direction requires iteration or lookup tables. 
+        - Therefore, images with Modified Brown-Conrady Distortion are being 
+            undistorted when calling rs2_project_point_to_pixel(...)
+                - O(n)
+mapping operations
+    - Projection
+        - rs2_project_point_to_pixel(...)
+    - Deprojection
+        - rs2_deproject_pixel_to_point(...)
+            - input
+                - 2D pixel location
+                - a depth, in meters
+            - output
+                - a 3D point location within the stream's associated 
+                    3D coordinate space.
+
+depth scale:0.001000
+
+RealSense devices always support 
+    deprojection from depth images, and always 
+    support projection to color images.
+    - always possible to map a 
+        depth image into a set of 3D points (a point cloud)
+    - always possible to discover where a 3D 
+        object would appear on the color image.
+point cloud
+    - a set of 3D points
+
+extrinsic camera parameters
+- The relationship between the separate 3D 
+    coordinate systems of separate streams is described by 
+    their extrinsic parameters, contained 
+    in the rs2_extrinsics struct. 
+
+Depth image formats
+- Depth is stored as one unsigned 16-bit integer per 
+    pixel, mapped linearly to depth in camera-specific units. 
+- The distance, in meters, corresponding to one integer increment in depth values 
+    can be queried via rs2_get_depth_scale(...) or using a rs2::depth_sensor via get_depth_scale()
+
+Adjust depth scale (CAUTION)
+- rs2_set_option(...) with RS2_OPTION_DEPTH_UNITS, which 
+    specifies the number of meters per one increment of depth. 0.001 would indicate 
+    millimeter scale, while 0.01 would indicate centimeter scale.

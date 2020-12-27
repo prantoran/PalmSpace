@@ -148,7 +148,3 @@ void TriggerWait::update(
     }
 
 }
-
-TRIGGER::state TriggerWait::status() {
-    return cur_state;
-}

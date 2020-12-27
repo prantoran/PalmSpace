@@ -50,7 +50,8 @@ void AnchorHandler::calculate(
 
 
 void AnchorHandler::draw(
-        cv::Mat& input, 
+        const cv::Mat& input, 
+        cv::Mat& output, 
         const std::tuple<double, double, double> & palmbase,
         const std::tuple<double, double, double> & indexbase, 
         double scale_ratio, 
@@ -62,6 +63,7 @@ void AnchorHandler::draw(
         case 1:
             _dynamic.draw(
                 input, 
+                output,
                 palmbase, 
                 indexbase, 
                 scale_ratio, 
@@ -70,7 +72,8 @@ void AnchorHandler::draw(
             return;
         case 2:
             _static.draw(
-                input, 
+                input,
+                output, 
                 palmbase, 
                 indexbase, 
                 scale_ratio, 
@@ -79,7 +82,8 @@ void AnchorHandler::draw(
             return;
         case 3:
             _midair.draw(
-                input, 
+                input,
+                output, 
                 palmbase, 
                 indexbase, 
                 scale_ratio, 
@@ -284,5 +288,20 @@ void AnchorHandler::setVisibility(choices::eVisibility _visibility) {
         default:
             std::cout << "ERROR handlers/anchor.cc setVisibility() invalid anchor choice\n";
             return;
+    }
+}
+
+
+choices::anchor::types AnchorHandler::type() {
+    switch (_choice) {
+        case 1:
+            return _dynamic.type();
+        case 2:
+            return _static.type();
+        case 3:
+            return _midair.type();
+        default:
+            std::cout << "ERROR handlers/anchor.cc type() invalid anchor choice\n";
+            return _dynamic.type();
     }
 }

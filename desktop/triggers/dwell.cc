@@ -75,7 +75,3 @@ void TriggerDwell::update(
     selected_i_prv = selected_i;
     selected_j_prv = selected_j;
 }
-
-TRIGGER::state TriggerDwell::status() {
-    return cur_state;
-}

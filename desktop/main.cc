@@ -30,7 +30,9 @@
 #include "desktop/config/config.h";
 
 #include "desktop/config/choices.h";
+#include "desktop/camera/camera.h";
 
+// #include "mediapipe/framework/port/rs.hpp" // Include RealSense Cross Platform API
 
 DEFINE_string(
     calculator_graph_config_file, 
@@ -47,7 +49,7 @@ DEFINE_int32(frame_width, 640, "frame/screen width in pixels.");
 DEFINE_int32(frame_height, 480, "frame/screen height in pixels.");
 DEFINE_int32(fps, 30, "frames per second.");
 DEFINE_int32(debug, 0, "debug mode");
-DEFINE_int32(dev_video, 0, "/dev/video*");
+
 
 std::shared_ptr<MediaPipeMultiHandGPU> mp_graph = NULL;
 
@@ -89,6 +91,8 @@ int main(int argc, char** argv) {
 
   std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
 
+  
+
   if (mp_graph == NULL) {
     mp_graph = std::make_shared<MediaPipeMultiHandGPU>(APP_NAME);
     
@@ -111,23 +115,6 @@ int main(int argc, char** argv) {
                                   "/home/prantoran/work/src/github.com/google/mediapipe/desktop/anchors/Hand.png");
 
     
-
-    TriggerHandler handler_trigger;
-    handler_trigger._thumb = TriggerThumb(FLAGS_frame_width, FLAGS_frame_height);
-    handler_trigger._thumb_other = TriggerThumbOther(FLAGS_frame_width, FLAGS_frame_height);
-    handler_trigger._pinch = TriggerPinch(FLAGS_frame_width, FLAGS_frame_height);
-    handler_trigger._wait = TriggerWait(FLAGS_frame_width, FLAGS_frame_height, -1);
-    // handler_trigger._tap = TriggerTap(FLAGS_frame_width, FLAGS_frame_height);
-    handler_trigger._dwell = TriggerDwell();
-    handler_trigger._tap_depth_area = TriggerTapDepthArea(
-      load_video, 
-      save_video, 
-      FLAGS_dev_video, 
-      FLAGS_fps,
-      FLAGS_frame_width, 
-      FLAGS_frame_height);
-
-
     InitiatorHandler handler_initiator;
     handler_initiator._default = InitiatorDefault();
     handler_initiator._twohand = InitiatorTwoHand();
@@ -135,18 +122,18 @@ int main(int argc, char** argv) {
 
     mp_graph->anchor = handler_anchor;
     mp_graph->initiator = handler_initiator;
-    mp_graph->trigger = handler_trigger;
+    // mp_graph->trigger = handler_trigger;
   }
 
   
   int choice_anchor = 2;
-  int choice_trigger = 6;
+  int choice_trigger = 9;
   int choice_initiator = 1;
   int choice_divisions = 6;
-  int choice_screensize = 1;
-  int choice_debug = FLAGS_debug;
+  int choice_screensize = 2;
+  int choice_debug = 1;
   int choice_visibility = 2;
-
+  int choice_depth = 1;
 
   PalmSpaceUI::Menu menu = PalmSpaceUI::Menu(
     FLAGS_frame_width,
@@ -158,6 +145,7 @@ int main(int argc, char** argv) {
     choice_screensize,
     choice_visibility,
     choice_debug,
+    choice_depth,
     APP_NAME);
 
   menu.run();
@@ -169,14 +157,62 @@ int main(int argc, char** argv) {
     choice_divisions,
     choice_screensize,
     choice_visibility,
-    choice_debug);
+    choice_debug,
+    choice_depth);
+
+  if (choice_depth) {
+    mp_graph->camera = new CameraRealSense();
+  } else {
+    mp_graph->camera = new CameraOpenCV();
+  }
 
 
   mp_graph->initiator._choice = choice_initiator;
   mp_graph->anchor._choice = choice_anchor;
   mp_graph->anchor.setDivisions(choice_divisions);
-  mp_graph->trigger._choice = choice_trigger;
-  mp_graph->trigger._wait.choice = choice_anchor;
+  // mp_graph->trigger._choice = choice_trigger;
+  // mp_graph->trigger._wait.choice = choice_anchor;
+  
+
+  switch (choice_trigger) {
+    case 1:
+      mp_graph->trigger = new TriggerThumb(FLAGS_frame_width, FLAGS_frame_height);
+      break;
+    case 2:
+      mp_graph->trigger = new TriggerThumbOther(FLAGS_frame_width, FLAGS_frame_height);
+      break;
+    case 3:
+      mp_graph->trigger = new TriggerPinch(FLAGS_frame_width, FLAGS_frame_height);
+      break;
+    case 4:
+      mp_graph->trigger = new TriggerWait(FLAGS_frame_width, FLAGS_frame_height, -1);
+      break;
+    case 5:
+      mp_graph->trigger = new TriggerTap(FLAGS_frame_width, FLAGS_frame_height);
+      break;
+    case 6:
+      mp_graph->trigger = new TriggerDwell();
+      break;
+    case 7:
+      mp_graph->trigger = new TriggerTapDepthArea(
+                                load_video, 
+                                save_video, 
+                                FLAGS_fps,
+                                FLAGS_frame_width, 
+                                FLAGS_frame_height);
+      break;
+    case 8:
+      mp_graph->trigger = new TriggerTapDepth();
+      break;
+    case 9:
+      mp_graph->trigger = new TriggerTapDepthSingle();
+      break;
+    default:
+      std::cout << "invalid trigger choice\n";
+      return EXIT_FAILURE;
+  }
+  
+
   
   choices::eScreenSize ssize = choices::getScreenSize(choice_screensize);
   
@@ -207,7 +243,6 @@ int main(int argc, char** argv) {
       FLAGS_frame_height, 
       FLAGS_fps,
       choice_debug,
-      FLAGS_dev_video,
       load_video,
       save_video); 
   

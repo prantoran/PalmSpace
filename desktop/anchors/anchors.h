@@ -14,6 +14,7 @@
 
 #include "desktop/config/colors.h"
 #include "desktop/config/config.h"
+#include "desktop/config/choices.h"
 
 constexpr double alpha = 0.4;
 #define COLORS_floralwhite  cv::Scalar(240,250,255)
@@ -36,8 +37,8 @@ class ScreenSize {
                 min_height = max_height/3;
                 break;
             case choices::LARGE:
-                min_width = (2*max_width)/3;
-                min_height = (2*max_height)/3;
+                min_width = (1*max_width)/2;
+                min_height = (1*max_height)/2;
                 break; 
             case choices::FULL:
                 min_width = max_width;
@@ -66,6 +67,7 @@ class Anchor { // interface via abstract class
     choices::eVisibility visibility;
     
     public:
+    choices::anchor::types _type;
     std::string name;
     int width = 0, height = 0, ws, hs, min_ws, min_hs;
     int gap, xs[11], ys[11], dx, dy;
@@ -97,8 +99,6 @@ class Anchor { // interface via abstract class
     void setConfig(int _width, int _height);
 
     // pure virtual functions
-    virtual std::string type() = 0;
-
     virtual void calculate(
         const cv::Mat& input, 
         const std::tuple<double, double, double> & palmbase,
@@ -108,7 +108,8 @@ class Anchor { // interface via abstract class
         ExtraParameters & params) = 0;
     
     virtual void draw(
-        cv::Mat& input, 
+        const cv::Mat& input, 
+        cv::Mat& output,  
         const std::tuple<double, double, double> & palmbase,
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
@@ -142,6 +143,8 @@ class Anchor { // interface via abstract class
     void setVisibility(const choices::eVisibility & _visibility);
     choices::eVisibility getVisibility();
     bool isVisible(const ExtraParameters & params);
+
+    choices::anchor::types type();
 };
 
 
@@ -152,9 +155,10 @@ class AnchorDynamic: public Anchor {
     public:
     ~AnchorDynamic();
     AnchorDynamic();
-    AnchorDynamic(cv::Scalar red, cv::Scalar blue);
-    std::string type();
-    
+    AnchorDynamic(
+        const cv::Scalar & red, 
+        const cv::Scalar & blue);
+        
     void calculate(
         const cv::Mat& input, 
         const std::tuple<double, double, double> & palmbase,
@@ -164,7 +168,8 @@ class AnchorDynamic: public Anchor {
         ExtraParameters & params);
 
     void draw(
-        cv::Mat& input, 
+        const cv::Mat& input, 
+        cv::Mat& output, 
         const std::tuple<double, double, double> & palmbase,
         const std::tuple<double, double, double> & indexbase,  
         double area, 
@@ -181,8 +186,10 @@ class AnchorStatic: public Anchor {
     public:
     ~AnchorStatic();
     AnchorStatic();
-    AnchorStatic(cv::Scalar red, cv::Scalar blue, std::string imagePath);
-    std::string type();
+    AnchorStatic(
+        const cv::Scalar & red, 
+        const cv::Scalar & blue, 
+        const std::string & imagePath);
 
     cv::Mat image_palm, mask;
 
@@ -198,7 +205,8 @@ class AnchorStatic: public Anchor {
         ExtraParameters & params);
 
     void draw(
-        cv::Mat& input, 
+        const cv::Mat& input, 
+        cv::Mat& output, 
         const std::tuple<double, double, double> & palmbase,
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
@@ -212,6 +220,7 @@ class AnchorStatic: public Anchor {
         const std::tuple<double, double, double> & palmbase);
     
     void ensureMarkedCellWithinPalm(int & marked_row_i, int & marked_col_j);
+    
 };
 
 
@@ -219,9 +228,10 @@ class AnchorMidAir: public Anchor {
     public:
     ~AnchorMidAir();
     AnchorMidAir();
-    AnchorMidAir(cv::Scalar red, cv::Scalar blue);
-    std::string type();
-
+    AnchorMidAir(
+        const cv::Scalar & red, 
+        const cv::Scalar & blue);
+    
     int palmstart_x, palmstart_y;
 
     void calculate(
@@ -233,12 +243,15 @@ class AnchorMidAir: public Anchor {
         ExtraParameters & params);
 
     void draw(
-        cv::Mat& input, 
+        const cv::Mat& input, 
+        cv::Mat& output, 
         const std::tuple<double, double, double> & palmbase,
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
         const ExtraParameters & params);
+    
+    void initiate();
 };
 
 

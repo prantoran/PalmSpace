@@ -1,15 +1,8 @@
-workspace(name = "palmspace")
+workspace(name = "mediapipe")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 
-git_repository(
-    name = "mediapipe",
-    remote = "https://github.com/google/mediapipe.git",
-    branch = "master",
- #   commit = "67bd8a2bf04072b853142e7739466dea218ae007", #v0.7.5
-)
 
 skylib_version = "0.9.0"
 http_archive(
@@ -30,7 +23,7 @@ http_archive(
     ],
     # Remove after https://github.com/abseil/abseil-cpp/issues/326 is solved.
     patches = [
-        "@mediapipe//third_party:com_google_absl_f863b622fe13612433fdf43f76547d5edda0c93001.diff"
+        "@//third_party:com_google_absl_f863b622fe13612433fdf43f76547d5edda0c93001.diff"
     ],
     patch_args = [
         "-p1",
@@ -45,11 +38,46 @@ http_archive(
     urls = ["https://github.com/bazelbuild/rules_cc/archive/master.zip"],
 )
 
-# GoogleTest/GoogleMock framework. Used by most unit-tests.
+# 2020.11.24 also needed in integrating RealSense
+# ref: https://github.com/bazelbuild/rules_foreign_cc
 http_archive(
-     name = "com_google_googletest",
-     urls = ["https://github.com/google/googletest/archive/master.zip"],
-     strip_prefix = "googletest-master",
+   name = "rules_foreign_cc",
+   strip_prefix = "rules_foreign_cc-master",
+   url = "https://github.com/bazelbuild/rules_foreign_cc/archive/master.zip",
+)
+
+load("@rules_foreign_cc//:workspace_definitions.bzl", "rules_foreign_cc_dependencies")
+
+# 2020.11.24 also needed in integrating RealSense
+# ref: https://github.com/bazelbuild/rules_foreign_cc
+# toggle between whichever builds using cmake:
+#rules_foreign_cc_dependencies()
+rules_foreign_cc_dependencies([
+#    "//:built_cmake_toolchain",
+#    "//:my_make_toolchain",
+#    "//:my_cmake_toolchain",
+#    "//:my_ninja_toolchain",
+])
+
+# 2020.11.24 also needed in integrating RealSense
+# ref: https://github.com/bazelbuild/rules_foreign_cc
+# This is used to select all contents of the archives for CMake-based packages to give CMake access to them.
+all_content = """filegroup(name = "all", srcs = glob(["**"]), visibility = ["//visibility:public"])"""
+
+# GoogleTest/GoogleMock framework. Used by most unit-tests.
+# Last updated 2020-06-30.
+http_archive(
+    name = "com_google_googletest",
+    urls = ["https://github.com/google/googletest/archive/aee0f9d9b5b87796ee8a0ab26b7587ec30e8858e.zip"],
+    patches = [
+        # fix for https://github.com/google/googletest/issues/2817
+        "@//third_party:com_google_googletest_9d580ea80592189e6d44fa35bcf9cdea8bf620d6.diff"
+    ],
+    patch_args = [
+        "-p1",
+    ],
+    strip_prefix = "googletest-aee0f9d9b5b87796ee8a0ab26b7587ec30e8858e",
+    sha256 = "04a1751f94244307cebe695a69cc945f9387a80b0ef1af21394a490697c5c895",
 )
 
 # Google Benchmark library.
@@ -57,7 +85,7 @@ http_archive(
     name = "com_google_benchmark",
     urls = ["https://github.com/google/benchmark/archive/master.zip"],
     strip_prefix = "benchmark-master",
-    build_file = "@mediapipe//third_party:benchmark.BUILD",
+    build_file = "@//third_party:benchmark.BUILD",
 )
 
 # gflags needed by glog
@@ -68,29 +96,28 @@ http_archive(
     url = "https://github.com/gflags/gflags/archive/v2.2.2.zip",
 )
 
-# glog v0.3.5
-# TODO: Migrate MediaPipe to use com_github_glog_glog on all platforms.
+# 2020-08-21
 http_archive(
-    name = "com_github_glog_glog_v_0_3_5",
-    url = "https://github.com/google/glog/archive/v0.3.5.zip",
-    sha256 = "267103f8a1e9578978aa1dc256001e6529ef593e5aea38193d31c2872ee025e8",
-    strip_prefix = "glog-0.3.5",
-    build_file = "@mediapipe//third_party:glog.BUILD",
+    name = "com_github_glog_glog",
+    strip_prefix = "glog-0a2e5931bd5ff22fd3bf8999eb8ce776f159cda6",
+    sha256 = "58c9b3b6aaa4dd8b836c0fd8f65d0f941441fb95e27212c5eeb9979cfd3592ab",
+    urls = [
+        "https://github.com/google/glog/archive/0a2e5931bd5ff22fd3bf8999eb8ce776f159cda6.zip",
+    ],
+)
+http_archive(
+    name = "com_github_glog_glog_no_gflags",
+    strip_prefix = "glog-0a2e5931bd5ff22fd3bf8999eb8ce776f159cda6",
+    sha256 = "58c9b3b6aaa4dd8b836c0fd8f65d0f941441fb95e27212c5eeb9979cfd3592ab",
+    build_file = "@//third_party:glog_no_gflags.BUILD",
+    urls = [
+        "https://github.com/google/glog/archive/0a2e5931bd5ff22fd3bf8999eb8ce776f159cda6.zip",
+    ],
     patches = [
-        "@mediapipe//third_party:com_github_glog_glog_9779e5ea6ef59562b030248947f787d1256132ae.diff"
+        "@//third_party:com_github_glog_glog_9779e5ea6ef59562b030248947f787d1256132ae.diff"
     ],
     patch_args = [
         "-p1",
-    ],
-)
-
-# 2020-02-16
-http_archive(
-    name = "com_github_glog_glog",
-    strip_prefix = "glog-3ba8976592274bc1f907c402ce22558011d6fc5e",
-    sha256 = "feca3c7e29a693cab7887409756d89d342d4a992d54d7c5599bebeae8f7b50be",
-    urls = [
-        "https://github.com/google/glog/archive/3ba8976592274bc1f907c402ce22558011d6fc5e.zip",
     ],
 )
 
@@ -99,14 +126,14 @@ http_archive(
     name = "easyexif",
     url = "https://github.com/mayanklahiri/easyexif/archive/master.zip",
     strip_prefix = "easyexif-master",
-    build_file = "@mediapipe//third_party:easyexif.BUILD",
+    build_file = "@//third_party:easyexif.BUILD",
 )
 
 # libyuv
 http_archive(
     name = "libyuv",
     urls = ["https://chromium.googlesource.com/libyuv/libyuv/+archive/refs/heads/master.tar.gz"],
-    build_file = "@mediapipe//third_party:libyuv.BUILD",
+    build_file = "@//third_party:libyuv.BUILD",
 )
 
 # Note: protobuf-javalite is no longer released as a separate download, it's included in the main Java download.
@@ -124,7 +151,7 @@ http_archive(
     strip_prefix = "protobuf-3.11.4",
     urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.11.4.tar.gz"],
     patches = [
-        "@mediapipe//third_party:com_google_protobuf_fixes.diff"
+        "@//third_party:com_google_protobuf_fixes.diff"
     ],
     patch_args = [
         "-p1",
@@ -137,11 +164,30 @@ http_archive(
     urls = ["https://github.com/google/multichannel-audio-tools/archive/master.zip"],
 )
 
+# 2020-07-09
+http_archive(
+    name = "pybind11_bazel",
+    strip_prefix = "pybind11_bazel-203508e14aab7309892a1c5f7dd05debda22d9a5",
+    urls = ["https://github.com/pybind/pybind11_bazel/archive/203508e14aab7309892a1c5f7dd05debda22d9a5.zip"],
+    sha256 = "75922da3a1bdb417d820398eb03d4e9bd067c4905a4246d35a44c01d62154d91",
+)
+
+http_archive(
+    name = "pybind11",
+    urls = [
+        "https://storage.googleapis.com/mirror.tensorflow.org/github.com/pybind/pybind11/archive/v2.4.3.tar.gz",
+        "https://github.com/pybind/pybind11/archive/v2.4.3.tar.gz",
+    ],
+    sha256 = "1eed57bc6863190e35637290f97a20c81cfe4d9090ac0a24f3bbf08f265eb71d",
+    strip_prefix = "pybind11-2.4.3",
+    build_file = "@pybind11_bazel//:pybind11.BUILD",
+)
+
 http_archive(
     name = "ceres_solver",
     url = "https://github.com/ceres-solver/ceres-solver/archive/1.14.0.zip",
     patches = [
-        "@mediapipe//third_party:ceres_solver_compatibility_fixes.diff"
+        "@//third_party:ceres_solver_compatibility_fixes.diff"
     ],
     patch_args = [
         "-p1",
@@ -150,39 +196,58 @@ http_archive(
     sha256 = "5ba6d0db4e784621fda44a50c58bb23b0892684692f0c623e2063f9c19f192f1"
 )
 
+http_archive(
+    name = "opencv",
+    build_file_content = all_content,
+    strip_prefix = "opencv-3.4.10",
+    urls = ["https://github.com/opencv/opencv/archive/3.4.10.tar.gz"],
+)
+
 new_local_repository(
     name = "linux_opencv",
     build_file = "@//third_party:opencv_linux.BUILD",
     path = "/usr/local",
 )
 
+# 2020-11-25
+# integrating librealsense in ubuntu 20.04 lts
+# srcs refer to shared objects from /usr/local/lib
+# hdrs refere to header files from /usr/local/include
+# copying from linux_opencv
+new_local_repository(
+    name = "linux_realsense",
+    build_file = "@//third_party:realsense_linux.BUILD",
+    path = "/usr/local",
+)
+
+
 new_local_repository(
     name = "linux_ffmpeg",
-    build_file = "@mediapipe//third_party:ffmpeg_linux.BUILD",
+    build_file = "@//third_party:ffmpeg_linux.BUILD",
     path = "/usr"
 )
 
 new_local_repository(
     name = "macos_opencv",
-    build_file = "@mediapipe//third_party:opencv_macos.BUILD",
-    path = "/usr",
+    build_file = "@//third_party:opencv_macos.BUILD",
+    path = "/usr/local/opt/opencv@3",
 )
 
 new_local_repository(
     name = "macos_ffmpeg",
-    build_file = "@mediapipe//third_party:ffmpeg_macos.BUILD",
-    path = "/usr",
+    build_file = "@//third_party:ffmpeg_macos.BUILD",
+    path = "/usr/local/opt/ffmpeg",
 )
 
 new_local_repository(
     name = "windows_opencv",
-    build_file = "@mediapipe//third_party:opencv_windows.BUILD",
+    build_file = "@//third_party:opencv_windows.BUILD",
     path = "C:\\opencv\\build",
 )
 
 http_archive(
     name = "android_opencv",
-    build_file = "@mediapipe//third_party:opencv_android.BUILD",
+    build_file = "@//third_party:opencv_android.BUILD",
     strip_prefix = "OpenCV-android-sdk",
     type = "zip",
     url = "https://github.com/opencv/opencv/releases/download/3.4.3/opencv-3.4.3-android-sdk.zip",
@@ -195,7 +260,7 @@ http_archive(
 http_archive(
     name = "ios_opencv",
     sha256 = "7dd536d06f59e6e1156b546bd581523d8df92ce83440002885ec5abc06558de2",
-    build_file = "@mediapipe//third_party:opencv_ios.BUILD",
+    build_file = "@//third_party:opencv_ios.BUILD",
     type = "zip",
     url = "https://github.com/opencv/opencv/releases/download/3.2.0/opencv-3.2.0-ios-framework.zip",
 )
@@ -203,10 +268,12 @@ http_archive(
 # You may run setup_android.sh to install Android SDK and NDK.
 android_ndk_repository(
     name = "androidndk",
+    path = "/root/Android/Sdk/ndk-bundle/android-ndk-r18b",
 )
 
 android_sdk_repository(
     name = "androidsdk",
+    path = "/root/Android/Sdk",
 )
 
 # iOS basic build deps.
@@ -217,7 +284,7 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_apple/releases/download/0.19.0/rules_apple.0.19.0.tar.gz",
     patches = [
         # Bypass checking ios unit test runner when building MP ios applications.
-        "@mediapipe//third_party:build_bazel_rules_apple_bypass_test_runner_check.diff"
+        "@//third_party:build_bazel_rules_apple_bypass_test_runner_check.diff"
     ],
     patch_args = [
         "-p1",
@@ -261,7 +328,7 @@ http_archive(
     url = "https://github.com/google/google-toolbox-for-mac/archive/v2.2.1.zip",
     sha256 = "e3ac053813c989a88703556df4dc4466e424e30d32108433ed6beaec76ba4fdc",
     strip_prefix = "google-toolbox-for-mac-2.2.1",
-    build_file = "@mediapipe//third_party:google_toolbox_for_mac.BUILD",
+    build_file = "@//third_party:google_toolbox_for_mac.BUILD",
 )
 
 # Maven dependencies.
@@ -282,9 +349,6 @@ load("@rules_jvm_external//:defs.bzl", "maven_install")
 maven_install(
     name = "maven",
     artifacts = [
-        "junit:junit:4.12",
-        "androidx.test.espresso:espresso-core:3.1.1",
-        "org.hamcrest:hamcrest-library:1.3",
         "androidx.concurrent:concurrent-futures:1.0.0-alpha03",
         "androidx.lifecycle:lifecycle-common:2.2.0",
         "androidx.annotation:annotation:aar:1.1.0",
@@ -295,11 +359,15 @@ maven_install(
         "androidx.core:core:aar:1.1.0-rc03",
         "androidx.legacy:legacy-support-v4:aar:1.0.0",
         "androidx.recyclerview:recyclerview:aar:1.1.0-beta02",
+        "androidx.test.espresso:espresso-core:3.1.1",
+        "com.github.bumptech.glide:glide:4.11.0",
         "com.google.android.material:material:aar:1.0.0-rc01",
         "com.google.code.findbugs:jsr305:3.0.2",
         "com.google.flogger:flogger-system-backend:0.3.1",
         "com.google.flogger:flogger:0.3.1",
         "com.google.guava:guava:27.0.1-android",
+        "junit:junit:4.12",
+        "org.hamcrest:hamcrest-library:1.3",
     ],
     repositories = [
         "https://jcenter.bintray.com",
@@ -323,17 +391,16 @@ http_archive(
 )
 
 #Tensorflow repo should always go after the other external dependencies.
-# 2020-05-11
-_TENSORFLOW_GIT_COMMIT = "7c09d15f9fcc14343343c247ebf5b8e0afe3e4aa"
-_TENSORFLOW_SHA256= "673d00cbd2676ae43df1993e0d28c10b5ffbe96d9e2ab29f88a77b43c0211299"
+# 2020-08-30
+_TENSORFLOW_GIT_COMMIT = "57b009e31e59bd1a7ae85ef8c0232ed86c9b71db"
+_TENSORFLOW_SHA256= "de7f5f06204e057383028c7e53f3b352cdf85b3a40981b1a770c9a415a792c0e"
 http_archive(
     name = "org_tensorflow",
     urls = [
-      "https://mirror.bazel.build/github.com/tensorflow/tensorflow/archive/%s.tar.gz" % _TENSORFLOW_GIT_COMMIT,
       "https://github.com/tensorflow/tensorflow/archive/%s.tar.gz" % _TENSORFLOW_GIT_COMMIT,
     ],
     patches = [
-        "@mediapipe//third_party:org_tensorflow_compatibility_fixes.diff",
+        "@//third_party:org_tensorflow_compatibility_fixes.diff",
     ],
     patch_args = [
         "-p1",
@@ -344,10 +411,3 @@ http_archive(
 
 load("@org_tensorflow//tensorflow:workspace.bzl", "tf_workspace")
 tf_workspace(tf_repo_name = "org_tensorflow")
-
-git_repository(
-    name = "mediapipe",
-    remote = "https://github.com/google/mediapipe.git",
-    branch = "master",
-    commit = "5d028d923b52fd95bd49642a9a4a162f57ae260e", #v0.63
-)

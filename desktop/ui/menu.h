@@ -17,13 +17,14 @@ namespace PalmSpaceUI {
         int width, height;
         std::string _window_name;
         bool _debug;
+        bool _depth;
 
         cv::Mat frame;
         int low_threshold, high_threshold;
         int cellcnt;
         bool onehand, twohand;
         bool ancdyn, ancstat, ancmid; 
-        bool trigpalmbase, trigpalmfree, trigpinch, trigwait, trigtap, trigdwell;
+        bool trigpalmbase, trigpalmfree, trigpinch, trigwait, trigtap, trigdwell, trigtapdepth, trigtapdepthsingle;
 
         // eScreenSize screen_size;
 
@@ -49,6 +50,7 @@ namespace PalmSpaceUI {
             int screensize,
             int visibility,
             bool debug, 
+            bool use_depth,
             std::string window_name
         );
 
@@ -61,8 +63,12 @@ namespace PalmSpaceUI {
             int & divisions,
             int & screensize,
             int & visibility,
-            int & debug);
+            int & debug,
+            int & depth);
     };
+
+
+    void button(cv::Mat & frame, const std::string & label, bool & state);
 };
 
 

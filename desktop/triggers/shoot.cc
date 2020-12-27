@@ -6,35 +6,41 @@
 const int index_bottom = 5;
 const int thumb_top = 4;
 
-TriggerThumb::TriggerThumb() {}
+TriggerThumbOther::TriggerThumbOther() {}
 
-TriggerThumb::TriggerThumb(int _width, int _height) {
+TriggerThumbOther::TriggerThumbOther(int _width, int _height) {
     width = _width;
     height = _height;
     cur_state = TRIGGER::OPEN;
 }
 
-void TriggerThumb::update(
+void TriggerThumbOther::update(
     const cv::Mat & input_image,
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
     ExtraParameters & params) {
 
-    std::vector<double> & extra_params = params.extra_params;
 
+    int hdx = params.total_hands_detected() - 1;
 
-
-    if (points[0].size() <= index_bottom) {
-        std::cout << "trigger thumb update: not enough points\n";
-        cur_state = TRIGGER::OPEN;
+    if (hdx < 0) {
+        std::cout << "ERROR triggers/shoot.cc no hands detected\n";
         return;
     }
-    
-    
-    double dx = std::get<0>(points[0][index_bottom]) - std::get<0>(points[0][thumb_top]);
-    double dy = std::get<1>(points[0][index_bottom]) - std::get<1>(points[0][thumb_top]);
+
+
+    if (points[hdx].size() < 6) {
+        std::cout << "ERROR triggers/shoot.cc trigger_shoot=not enough points for free palm\n";
+        return;
+    }
+
+    double dx = std::get<0>(points[hdx][index_bottom]) - std::get<0>(points[hdx][thumb_top]);
+    double dy = std::get<1>(points[hdx][index_bottom]) - std::get<1>(points[hdx][thumb_top]);
 
     dx *= width;
     dy *= height;
+
+    // double dx = std::get<0>(points[0]) - std::get<0>(points[hdx]);
+    // double dy = std::get<1>(points[0]) - std::get<1>(points[hdx]);
 
     double d = 10*(dx*dx + dy*dy);
 
@@ -53,10 +59,11 @@ void TriggerThumb::update(
             // do nothing
         } else if (cur_state == TRIGGER::PRESSED) {
             cur_state = TRIGGER::RELEASED;
+            std::cout << "trigger released\n";
         } else if (cur_state == TRIGGER::RELEASED) {
             cur_state = TRIGGER::OPEN;
         } else {
-            std::cout << "thumb trigger update state invalid, distance:" << d << " cur_state:" << state_str() << "\n";
+            std::cout << "thumb trigger update state invalid, distance:" << d << "\n";
         }
     }
 }

@@ -17,6 +17,7 @@ namespace PalmSpaceUI {
 			int screensize,
 			int visibility,
 			bool debug, 
+			bool depth,
 			std::string window_name
 		) {
 		
@@ -47,7 +48,7 @@ namespace PalmSpaceUI {
 			ancmid = true;
 		}
 
-		trigpalmbase = false, trigpalmfree = false, trigpinch = false, trigwait = false, trigtap = false, trigdwell = true;
+		trigpalmbase = false, trigpalmfree = false, trigpinch = false, trigwait = false, trigtap = false, trigdwell = true, trigtapdepth = false, trigtapdepthsingle = false;
 		switch (trigger) {
 			case 1:
 				trigdwell = false;
@@ -69,6 +70,12 @@ namespace PalmSpaceUI {
 				trigdwell = false;
 				trigtap = true;
 				break;
+			case 8:
+				trigdwell = false;
+				trigtapdepth = true;
+			case 9:
+				trigdwell = false;
+				trigtapdepthsingle = true;
 			default:
 				break;
 		}
@@ -82,7 +89,7 @@ namespace PalmSpaceUI {
 
 		_debug = debug;
 
-
+		_depth = depth;
 
 		screen_small = 1, screen_large = 0, screen_full = 0;
 		if (screensize == 2) {
@@ -103,12 +110,14 @@ namespace PalmSpaceUI {
 
 
 	void Menu::run() {
+		// TODO map enter keypress to next button
 		while(true) {
 			// clear the frame
 			frame = cv::Scalar(79,79,79);
 			// render a message in the frame at position (10, 15)
 
 			cvui::checkbox(frame, width - 120, height - 100, "Debug", &_debug);
+			cvui::checkbox(frame, width - 120, height - 130, "Depth", &_depth);
 
 			cvui::window(frame, scalex + 10, scaley + 10, 100, 80, "Initiator");
 			cvui::checkbox(frame, scalex + 15, scaley + 30, "One Hand", &onehand);
@@ -121,18 +130,20 @@ namespace PalmSpaceUI {
 			cvui::checkbox(frame, scalex + 15, scaley + 170, "MidAir", &ancmid);
 
 
-			cvui::window(frame, scalex + 120, scaley + 10, 200, 150, "Trigger");
+			cvui::window(frame, scalex + 120, scaley + 10, 200, 180, "Trigger");
 			cvui::checkbox(frame, scalex + 125, scaley + 30, "Thumb of base palm", &trigpalmbase);
 			cvui::checkbox(frame, scalex + 125, scaley + 50, "Shoot", &trigpalmfree); // "Thumb of free palm"
 			cvui::checkbox(frame, scalex + 125, scaley + 70, "Pinch with free palm", &trigpinch);
 			cvui::checkbox(frame, scalex + 125, scaley + 90, "Wait to select", &trigwait);
 			cvui::checkbox(frame, scalex + 125, scaley + 110, "Tap", &trigtap);
 			cvui::checkbox(frame, scalex + 125, scaley + 130, "Dwell", &trigdwell);
+			cvui::checkbox(frame, scalex + 125, scaley + 150, "Tap Depth", &trigtapdepth);
+			cvui::checkbox(frame, scalex + 125, scaley + 170, "Tap Depth Single", &trigtapdepthsingle);
 
 			if (cellcnt < 3) cellcnt = 3;
 			if (cellcnt > 10) cellcnt = 10;
-			cvui::window(frame, scalex + 120, scaley + 170, 200, 50, "Number of cells per row/col");
-			cvui::counter(frame, scalex + 175, scaley + 195, &cellcnt);
+			cvui::window(frame, scalex + 120, scaley + 200, 200, 50, "Number of cells per row/col");
+			cvui::counter(frame, scalex + 175, scaley + 225, &cellcnt);
 			
 			cvui::window(frame, scalex + 330, scaley + 10, 100, 80, "Screen Size");
 			cvui::checkbox(frame, scalex + 330, scaley + 30, "Small", &screen_small);
@@ -173,6 +184,8 @@ namespace PalmSpaceUI {
 					if (trigwait) cnt ++;
 					if (trigtap) cnt ++;
 					if (trigdwell) cnt ++;
+					if (trigtapdepth) cnt ++;
+					if (trigtapdepthsingle) cnt ++;
 					if (cnt != 1) {
 						valid = 0;
 						errormsg = "Select exactly 1 trigger.";
@@ -198,6 +211,12 @@ namespace PalmSpaceUI {
 						valid = 0;
 						errormsg = "Select exactly 1 visibility.";
 					}
+				}
+
+
+				if (trigtapdepth && !_depth) {
+					valid = 0;
+					errormsg = "depth camera should be used for depth based tap";
 				}
 
 				if (valid) {
@@ -228,7 +247,8 @@ namespace PalmSpaceUI {
 		int & divisions,
 		int & screensize,
 		int & visibility,
-		int & debug) {
+		int & debug,
+		int & depth) {
 
 		if (onehand) initiator = 1;
 		if (twohand) initiator = 2;
@@ -243,6 +263,7 @@ namespace PalmSpaceUI {
 		if (trigwait) trigger = 4;
 		if (trigtap) trigger = 5;
 		if (trigdwell) trigger = 6;
+		if (trigtapdepth) trigger = 8;
 
 
 		if (screen_small) screensize = 1;
@@ -256,6 +277,17 @@ namespace PalmSpaceUI {
 		divisions = cellcnt;
 
 		debug = _debug;
+
+		depth = _depth;
+	}
+
+
+	void button(cv::Mat & frame, const std::string & label, bool & state) {
+		if (cvui::button(frame, frame.rows - 120, frame.cols - 50, 100, 30, label)) {
+			state = !state;
+		} else {
+			std::cerr << "could draw button for label:" << label << "\n";
+		}
 	}
 
 }

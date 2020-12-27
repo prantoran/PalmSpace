@@ -5,6 +5,15 @@ package(default_visibility = [
     "//visibility:public",
 ])
 
+load("@rules_foreign_cc//for_workspace:cmake_build.bzl", "cmake_tool")
+
+load("@rules_foreign_cc//for_workspace:make_build.bzl", "make_tool")
+
+toolchain(
+    name = "built_cmake_toolchain",
+    toolchain = "@rules_foreign_cc//tools/build_defs/native_tools:built_cmake",
+    toolchain_type = "@rules_foreign_cc//tools/build_defs:cmake_toolchain",
+)
 
 # Linux only.
 # Must have a GPU with EGL support:
@@ -22,6 +31,7 @@ cc_library(
         "initiators/*.h", "initiators/*.cc",
         "config/*.h", "config/*.cc",
         "ui/*.h", "ui/*.cc",
+        "camera/*.h", "camera/*.cc",
     ]),
 
     deps = [
@@ -41,7 +51,7 @@ cc_library(
 	    "//mediapipe/framework/formats:landmark_cc_proto",
         "//mediapipe/framework/formats:detection_cc_proto",
         "//mediapipe/framework/formats:rect_cc_proto",
-        # "@taxi_code_socialworkout_webrtc_linux//:rtc",
+        "//third_party:realsense",
 	],
 )
 

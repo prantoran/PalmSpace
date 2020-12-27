@@ -59,8 +59,3 @@ void TriggerPinch::update(
         }
     }
 }
-
-
-TRIGGER::state TriggerPinch::status() {
-    return cur_state;
-}

@@ -7,6 +7,7 @@
 #include "desktop/initiators/initiators.h"
 #include "desktop/config/config.h"
 #include "desktop/config/choices.h"
+#include "desktop/camera/camera.h"
 
 #include <tuple>
 #include <vector>
@@ -30,7 +31,8 @@ class AnchorHandler{
         ExtraParameters & params); 
 
     void draw(
-        cv::Mat& input, 
+        const cv::Mat& input, 
+        cv::Mat& output, 
         const std::tuple<double, double, double> & palmbase,
         const std::tuple<double, double, double> & indexbase, 
         double scale_ratio, 
@@ -51,28 +53,8 @@ class AnchorHandler{
 
     void setScreenSize(choices::eScreenSize size);
     void setVisibility(choices::eVisibility _visibility);
-};
 
-class TriggerHandler {
-    public:
-
-    TriggerThumb _thumb;
-    TriggerThumbOther _thumb_other;
-    TriggerPinch _pinch;
-    TriggerWait _wait;
-    TriggerTap _tap;
-    TriggerTapPalm _tappalm;
-    TriggerDwell _dwell;
-    TriggerTapDepthArea _tap_depth_area;
-    
-    int _choice;
-
-    void update(
-        const cv::Mat & input_image,
-        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        ExtraParameters & params);
-        
-    TRIGGER::state status();
+    choices::anchor::types type();
 };
 
 
@@ -96,12 +78,22 @@ class InitiatorHandler {
 class MediaPipeMultiHandGPU {
     public:
     AnchorHandler anchor;
-    TriggerHandler trigger;
+    // TriggerHandler trigger;
     InitiatorHandler initiator;
+    Camera *camera;
+    Trigger *trigger;
     // int curImageID;
-    std::string window_name;
+    std::string m_window_name;
+
+    bool m_grab_frames;
+
+    cv::Mat m_primary_output, m_combined_output;
+    cv::Mat m_combined_output_left, m_combined_output_right;
+    cv::Mat m_depth_map;
+    
 
     MediaPipeMultiHandGPU(const std::string & _window_name);
+    ~MediaPipeMultiHandGPU();
 
     ::mediapipe::Status run(
         const std::string& calculator_graph_config_file,
@@ -111,9 +103,18 @@ class MediaPipeMultiHandGPU {
         const int frame_height,
         const int fps,
         const int debug_mode,
-        const int dev_video,
         const bool load_video,
         const bool save_video); 
+    
+    void debug(
+        cv::Mat & output_frame_mat, 
+        std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        ExtraParameters & params);
+
+    void combine_output_frames();
+    void check_keypress();
+    void save_output();
 };
+
 
 #endif
