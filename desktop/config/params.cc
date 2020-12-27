@@ -3,83 +3,60 @@
 #include <iostream>
 #include <vector>
 
-ExtraParameters::~ExtraParameters() {
-    std::cout << "extraparameters killed\n";
+Parameters::~Parameters() {
+    std::cout << "Parameters killed\n";
 }
 
 
-ExtraParameters::ExtraParameters() {
-    extra_params = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-    psize = extra_params.size();
-
+Parameters::Parameters() {
     reset();
 }
 
-ExtraParameters::ExtraParameters(int _frame_width, int _frame_height, bool _load_video, Camera * _camera) {
+Parameters::Parameters(int _frame_width, int _frame_height, bool _load_video, Camera * _camera) {
     
     m_frame_height = _frame_height;
     m_frame_width = _frame_width;
 
     if (_camera == nullptr) {
-        std::cout << "ExtraParameters _camera not found\n";
+        std::cout << "Parameters _camera not found\n";
         // TODO create error package and throw custom error
         return;
     }
 
     m_camera = _camera;
 
-    extra_params = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-    psize = extra_params.size();
-
     reset();
     init(_load_video);
 }
 
 
-void ExtraParameters::reset() {
-    for (int i = 0; i < psize; i ++) {
-        extra_params[i] = -1;
-    }
-
+void Parameters::reset() {
     m_indexbase = std::make_tuple(-1, -1, -1);
     
     is_static_display = false;
     load_video = false;
+
+    m_progress_bar = -1;
 }
 
 
-void ExtraParameters::init(bool _load_video) {
+void Parameters::init(bool _load_video) {
     load_video = _load_video;
-}
-
-void ExtraParameters::set(int i, double v) {
-    extra_params[i] = v;
+    m_show_depth_txt = false;
 }
 
 
-void ExtraParameters::set(const std::vector<double> & p) {
-    for (int i = 0; i < psize; i ++) {
-        extra_params[i] = p[i];
-    }
-}
-
-
-double ExtraParameters::at(int i) {
-    return extra_params[i];
-}
-
-
-void ExtraParameters::set_palmbase(const std::tuple<double, double, double> & p) {
+void Parameters::set_palmbase(const std::tuple<double, double, double> & p) {
     m_palmbase = p;
 }
 
 
-void ExtraParameters::set_palmbase(double x, double y) {
+void Parameters::set_palmbase(double x, double y) {
     m_palmbase = std::make_tuple(x, y, 0);
 }
 
 
-void ExtraParameters::get_palmbase(double &x, double &y) {
+void Parameters::get_palmbase(double &x, double &y) {
     x = std::get<0>(m_palmbase);
     y = std::get<1>(m_palmbase);
 
@@ -90,7 +67,7 @@ void ExtraParameters::get_palmbase(double &x, double &y) {
 }
 
 
-void ExtraParameters::get_palmbase(std::tuple<double, double, double> & p) {
+void Parameters::get_palmbase(std::tuple<double, double, double> & p) {
     double x = std::get<0>(m_palmbase);
     double y = std::get<1>(m_palmbase);
 
@@ -103,43 +80,38 @@ void ExtraParameters::get_palmbase(std::tuple<double, double, double> & p) {
 }
 
 
-void ExtraParameters::set_indexbase(const std::tuple<double, double, double> & p) {
+void Parameters::set_indexbase(const std::tuple<double, double, double> & p) {
     m_indexbase = p;
 }
 
 
-void ExtraParameters::set_indexbase(double x, double y) {
+void Parameters::set_indexbase(double x, double y) {
     m_indexbase = std::make_tuple(x, y, 0);
 }
 
 
-void ExtraParameters::get_indexbase(double &x, double &y) {
+void Parameters::get_indexbase(double &x, double &y) {
     x = std::get<0>(m_indexbase);
     y = std::get<1>(m_indexbase);
 }
 
 
-void ExtraParameters::get_indexbase_cv_indices(index_t & rowi, index_t & colj) {
+void Parameters::get_indexbase_cv_indices(index_t & rowi, index_t & colj) {
     rowi = (int)(std::get<0>(m_indexbase) * m_frame_width);
     colj = (int)(std::get<1>(m_indexbase) * m_frame_height);
 }
 
 
-void ExtraParameters::get_indexbase(std::tuple<double, double, double> & p) {
+void Parameters::get_indexbase(std::tuple<double, double, double> & p) {
 
     double x = std::get<0>(m_indexbase);
     double y = std::get<1>(m_indexbase);
-
-    // for adjusting topleft pos of grid, since pointing 
-    // to top-left grids with other palm's index finger is hard
-    // x += 0.03;
-    // y += 0.09;
 
     p = std::make_tuple(x, y, 0);
 }
 
 
-void ExtraParameters::get_palmbase_middle_cv_indices(index_t &x_col, index_t &y_row) {
+void Parameters::get_palmbase_middle_cv_indices(index_t &x_col, index_t &y_row) {
     double _x = std::get<0>(m_palmbase);
     double _y = (std::get<1>(m_palmbase) + std::get<1>(m_indexbase)) / 2;
     x_col = _x * m_frame_width;
@@ -147,51 +119,50 @@ void ExtraParameters::get_palmbase_middle_cv_indices(index_t &x_col, index_t &y_
 }
 
 
-void ExtraParameters::set_is_static(bool s) {
+void Parameters::set_is_static(bool s) {
     is_static_display = s;
 }
 
 
-bool ExtraParameters::is_static() {
+bool Parameters::is_static() {
     return is_static_display;
 }
 
 
 // the const makes the promise that the func will not change state
-int ExtraParameters::total_hands_detected() const {
+int Parameters::total_hands_detected() const {
     return total_hands;
 }
 
 
-void ExtraParameters::set_total_hands(int hands) {
+void Parameters::set_total_hands(int hands) {
     total_hands = hands;
 }
 
 
-void ExtraParameters::get_selected_cell(int &row_i, int &col_j) {
+void Parameters::get_selected_cell(int &row_i, int &col_j) {
     row_i = std::get<0>(selected_cell);
     col_j = std::get<1>(selected_cell);
 }
 
-void ExtraParameters::set_selected_cell(index_t row_i, index_t col_j) {
+void Parameters::set_selected_cell(index_t row_i, index_t col_j) {
     selected_cell = std::make_tuple(row_i, col_j);
 }
 
 
-void ExtraParameters::set_depth_map(cv::Mat * _mat) {
+void Parameters::set_depth_map(cv::Mat * _mat) {
     depth_mat = _mat;
 }
 
 
 // TODO remove if not needed
-void ExtraParameters::get_depth_at(const std::vector<int> & rows, const std::vector<int> & cols, double & value) {
+void Parameters::get_depth_at(const std::vector<int> & rows, const std::vector<int> & cols, double & value) {
     // expect rows and cols to contain pixel locations in the range [0, W] and [0, H], NOT ratios in [0, 1]
     // depth_math in BGR?
     
     value = 0;
     
     int n = rows.size();
-    // std::cerr << "n:" << n << "\n";
 
     for (int i = 0; i < n; i ++) {
         if (rows[i] < 10 || rows[i] > 620 || cols[i] < 10 || cols[i] > 440) {
@@ -199,8 +170,6 @@ void ExtraParameters::get_depth_at(const std::vector<int> & rows, const std::vec
         }
     }
 
-    
-    // std::vector<uchar> medians (9*n);
     int mi = 0;
     for (int k = 0; k < n; k ++) {
         int row = rows[k];
@@ -221,70 +190,89 @@ void ExtraParameters::get_depth_at(const std::vector<int> & rows, const std::vec
         }
     }
 
-    // std::cout << "mi:" << mi << "\n";
-
     std::sort(medians, medians+mi);
-    
-
-    // for (int i = 0; i < mi; i ++) std::cerr << medians[i] << " ";
-    // std::cerr << "\n";
 
     value = (double) medians[mi/2];
-    // cv::Mat roi(*depth_mat, cv::Rect(row-5, col-5, 10, 10));
-    // std::cerr << "pass roi init\n";
-    // // std::cerr << "roi.x:" << roi.x << " roi.y:" << roi.y << " roi.width:" << roi.width << " roi.height:" << roi.height << "\n";
-    // cv::Scalar m = cv::mean(roi);
-
-    // value = (int)m[0]; // depth_mat is 1 channel
 }
 
 
-void ExtraParameters::get_primary_cursor(double & x, double & y) {
+void Parameters::get_primary_cursor(double & x, double & y) {
     x = std::get<0>(m_primary_cursor);
     y = std::get<1>(m_primary_cursor);
 }
 
 
-void ExtraParameters::set_primary_cursor(const std::tuple<double, double, double> & p) {
+void Parameters::set_primary_cursor(const std::tuple<double, double, double> & p) {
     m_primary_cursor = p;
 }
 
 
-void ExtraParameters::set_primary_cursor(double x, double y) {
+void Parameters::set_primary_cursor(double x, double y) {
     m_primary_cursor = std::make_tuple(x, y, 0);
 }
 
 
-void ExtraParameters::get_primary_cursor_cv_indices(index_t & x_col, index_t & y_row) {
+void Parameters::get_primary_cursor_cv_indices(index_t & x_col, index_t & y_row) {
     get_cv_indices(m_primary_cursor, x_col, y_row);
 }
 
 
-bool ExtraParameters::is_set_primary_cursor() {
+bool Parameters::is_set_primary_cursor() {
     return std::get<0>(m_primary_cursor) > 0.01;
 }
 
 
 // TODO clean if not used
-float ExtraParameters::get_depth(int x_col, int y_row) {
+float Parameters::get_depth(int x_col, int y_row) {
     return m_camera->get_depth(x_col, y_row);
 }
 
 
-void ExtraParameters::set_primary_cursor_middlefinger_base(const std::tuple<double, double, double> & p) {
+void Parameters::set_primary_cursor_middlefinger_base(const std::tuple<double, double, double> & p) {
     m_primary_cursor_middlefinger_base = p;
 }
 
 
-void ExtraParameters::get_primary_cursor_middlefinger_base_cv_indices(index_t & x_col, index_t & y_row) {
+void Parameters::get_primary_cursor_middlefinger_base_cv_indices(index_t & x_col, index_t & y_row) {
     get_cv_indices(m_primary_cursor_middlefinger_base, x_col, y_row);
 }
 
 
-void ExtraParameters::get_cv_indices(
+void Parameters::get_cv_indices(
     const std::tuple<double, double, double> & point, 
     index_t & x_col, index_t & y_row) {
 
     x_col = (int)(std::get<0>(point) * m_frame_width);
     y_row = (int)(std::get<1>(point) * m_frame_height);
+}
+
+
+void Parameters::get_raw_dimensions(double & _width, double _height) {
+    _width = m_raw_dimensions.first;
+    _height = m_raw_dimensions.second;
+}
+
+
+void Parameters::set_raw_dimensions(double _width, double _height) {
+    m_raw_dimensions.first = _width;
+    m_raw_dimensions.second = _height;
+}
+
+
+void Parameters::set_progress_bar(double _progress) {
+    m_progress_bar = _progress;
+}
+
+
+void Parameters::get_progress_bar(double & _progress) {
+    _progress = m_progress_bar;
+}
+
+
+void Parameters::set_other_index() { // TODO need more inspection
+}
+
+
+void Parameters::get_other_index_z_value(double _z) {
+    _z = std::get<2>(m_other_index);
 }

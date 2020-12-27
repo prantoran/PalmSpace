@@ -37,7 +37,7 @@ void SupportPoints::backup_prev() {
 void SupportPoints::update_support(
     int indices[], 
     const std::vector<std::tuple<double, double, double>> & coords,
-    const ExtraParameters & params
+    const Parameters & params
 ) {
     // std::cerr << "update_support begin\n";
     for (int i = 0; i < m_support_pts_size; i ++) {
@@ -119,7 +119,7 @@ TriggerTapDepth::TriggerTapDepth() {
 void TriggerTapDepth::update(
     const cv::Mat & input_image,
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-    ExtraParameters & params) {
+    Parameters & params) {
 
     m_base_pts.backup_prev();   
     m_base_pts.update_support(m_base_indices, points[0], params);
@@ -186,7 +186,7 @@ void TriggerTapDepth::update(
 }
 
 
-void TriggerTapDepth::palm_rect_fill(ExtraParameters & params, int & cnt) {
+void TriggerTapDepth::palm_rect_fill(Parameters & params, int & cnt) {
     int x_col_palmid, y_row_palmid;
     params.get_palmbase_middle_cv_indices(x_col_palmid, y_row_palmid);
     // std::cerr << "x_col_palmid:" << x_col_palmid << "\ty_row_palmid:" << y_row_palmid << "\n";
@@ -287,7 +287,7 @@ void TriggerTapDepth::palm_rect_fill(ExtraParameters & params, int & cnt) {
 }
 
 
-void TriggerTapDepth::process_depths(ExtraParameters & params) {
+void TriggerTapDepth::process_depths(Parameters & params) {
 
     m_depth_base_prev = m_depth_base;
     m_depth_cursor_prev = m_depth_cursor;
@@ -336,7 +336,7 @@ void TriggerTapDepth::get_channel_medians(cv::Mat * mat, int col_x, int row_y) {
 }
 
 
-void TriggerTapDepth::flood_fill(ExtraParameters & params, int & cnt) {
+void TriggerTapDepth::flood_fill(Parameters & params, int & cnt) {
     // use cursor x, y as the seed and top-mid position of the filling rectangular region
     // modifies the params.depth_mat
     int cursor_x, cursor_y;

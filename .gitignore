@@ -8,3 +8,5 @@ mediapipe/MediaPipe.xcodeproj
 mediapipe/MediaPipe.tulsiproj/*.tulsiconf-user
 .vscode
 bazel-PalmSpace
+demo
+

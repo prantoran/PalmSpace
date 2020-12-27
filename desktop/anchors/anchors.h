@@ -20,7 +20,7 @@ constexpr double alpha = 0.4;
 #define COLORS_floralwhite  cv::Scalar(240,250,255)
 
 // forward declaration, defined in config/config.h
-// class ExtraParameters;
+// class Parameters;
 
 class ScreenSize {
     public:
@@ -65,7 +65,8 @@ class ScreenSize {
 
 class Anchor { // interface via abstract class
     choices::eVisibility visibility;
-    
+    double m_progress_bar;
+
     public:
     choices::anchor::types _type;
     std::string name;
@@ -105,7 +106,7 @@ class Anchor { // interface via abstract class
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        ExtraParameters & params) = 0;
+        Parameters & params) = 0;
     
     virtual void draw(
         const cv::Mat& input, 
@@ -114,14 +115,14 @@ class Anchor { // interface via abstract class
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        const ExtraParameters & params) = 0;
+        Parameters & params) = 0;
 
     std::tuple<int, int> selectedIndexes();
 
     void highlightSelected();
     void setDivisions(int _divisions);
     int getDivisions();
-    void drawProgressBar(cv::Mat & _image, double _progress);
+    void drawProgressBar(cv::Mat & _image, Parameters & params);
 
     void setupGrid(double enlarged_topleft_x, double enlarged_topleft_y);
     void setupSelection(int index_pointer_x, int index_pointer_y, 
@@ -142,7 +143,7 @@ class Anchor { // interface via abstract class
 
     void setVisibility(const choices::eVisibility & _visibility);
     choices::eVisibility getVisibility();
-    bool isVisible(const ExtraParameters & params);
+    bool isVisible(const Parameters & params);
 
     choices::anchor::types type();
 };
@@ -165,7 +166,7 @@ class AnchorDynamic: public Anchor {
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        ExtraParameters & params);
+        Parameters & params);
 
     void draw(
         const cv::Mat& input, 
@@ -174,7 +175,7 @@ class AnchorDynamic: public Anchor {
         const std::tuple<double, double, double> & indexbase,  
         double area, 
         int pointer_x, int pointer_y,
-        const ExtraParameters & params);
+        Parameters & params);
 
     void updatePalmBase(const std::tuple<double, double, double> & palmbase);
     void updateIndexBase(const std::tuple<double, double, double> & indexbase);
@@ -202,7 +203,7 @@ class AnchorStatic: public Anchor {
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        ExtraParameters & params);
+        Parameters & params);
 
     void draw(
         const cv::Mat& input, 
@@ -211,7 +212,7 @@ class AnchorStatic: public Anchor {
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        const ExtraParameters & params);
+        Parameters & params);
     
     void initiate();
     void setup_palmiamge(std::string imagePath);
@@ -225,6 +226,7 @@ class AnchorStatic: public Anchor {
 
 
 class AnchorMidAir: public Anchor {
+
     public:
     ~AnchorMidAir();
     AnchorMidAir();
@@ -240,7 +242,7 @@ class AnchorMidAir: public Anchor {
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        ExtraParameters & params);
+        Parameters & params);
 
     void draw(
         const cv::Mat& input, 
@@ -249,7 +251,7 @@ class AnchorMidAir: public Anchor {
         const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        const ExtraParameters & params);
+        Parameters & params);
     
     void initiate();
 };

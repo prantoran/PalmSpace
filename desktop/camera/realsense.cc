@@ -3,28 +3,20 @@
 // #include <opencv2/photo.hpp>
 
 
-CameraRealSense::CameraRealSense() {
-  m_width = 640;
-  m_height = 480;
-  m_fps = 30; // frame_rate, 15 and 30 seems to work, setting 60 distorts color image
+CameraRealSense::CameraRealSense(int _width, int _height, int _fps) {
+  m_width = _width;
+  m_height = _height;
+  m_fps = _fps; // frame_rate, 15 and 30 seems to work, setting 60 distorts color image
   // increasing frame_rate increases depth quality but decrease color image quality
   // decreasing frame_rate opposite effect
 
   try {
     rs2::config cfg;
 
-    // cfg.enable_stream(RS2_STREAM_DEPTH);
-    // cfg.enable_stream(RS2_STREAM_COLOR);
     cfg.enable_stream(RS2_STREAM_DEPTH, m_width, m_height, RS2_FORMAT_Z16, m_fps); // setting frame_rate without datatype does not work
-    // cfg.enable_stream(RS2_STREAM_DEPTH, m_width, m_height, m_fps); 
 
     // having RS2_FORMAT_BGR8 is important or else the color of OpenCV matrix is bluish
-
-    // cfg.enable_stream(RS2_STREAM_COLOR, m_width, m_height, RS2_FORMAT_BGR8); 
     cfg.enable_stream(RS2_STREAM_COLOR, m_width, m_height, RS2_FORMAT_BGR8, m_fps); 
-
-    std::cerr << "enable stream configured\n";
-
 
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     // Start streaming with default recommended configuration

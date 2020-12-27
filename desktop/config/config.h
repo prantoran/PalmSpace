@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <tuple>
+#include <utility>
 
 // opencv
 #include "mediapipe/framework/port/opencv_imgproc_inc.h"
@@ -42,8 +43,7 @@ class Range{
 
 
 
-// TODO refactor to cache
-class ExtraParameters {
+class Parameters {
   // TODO add m_ prefix to all attributes
 
   int total_hands;
@@ -56,6 +56,10 @@ class ExtraParameters {
   Camera * m_camera;
 
 
+  std::pair<double, double> m_raw_dimensions;
+  double m_progress_bar;
+
+  std::tuple<double, double, double> m_other_index;
 
   public:
   using index_t = int;
@@ -64,10 +68,6 @@ class ExtraParameters {
 
   int m_frame_width, m_frame_height;
   
-  // TODO safely remove extra_params vector
-  std::vector<double> extra_params;
-  int psize;
-
   // these are tuples from MediaPipe, NOT OpenCV Mat indices
 
   bool load_video; // used by trigger tap_depth_area
@@ -82,6 +82,7 @@ class ExtraParameters {
   cv::Mat* depth_mat;
   float medians[25];
   /*
+    LEGACY extra_params
     0: min_ws
     1: min_hs
     2: palmbase_x
@@ -91,25 +92,24 @@ class ExtraParameters {
     6: otherindex_z
     7: selected_i / row
     8: selected_j / col
-    9: progress_bar% [0-100]
   */
 
   int m_row, m_col;
 
   Range m_flood_width, m_flood_height;
+
+  bool m_show_depth_txt;
+  std::string m_depth_txt;
   
-  ExtraParameters();
-  // TODO add camera argument in constructor
-  ExtraParameters(int _frame_width, int _frame_height, bool _load_video, Camera * _camera);
-  ~ExtraParameters();
+  void get_raw_dimensions(double & _width, double _height);
+  void set_raw_dimensions(double _width, double _height);
+  
+  Parameters();
+  Parameters(int _frame_width, int _frame_height, bool _load_video, Camera * _camera);
+  ~Parameters();
 
   void init(bool _load_video);
   void reset();
-
-  void set(int i, double v);
-  void set(const std::vector<double> & p);
-
-  double at(int i);
 
   void get_palmbase(double &x, double &y);
   void get_palmbase(std::tuple<double, double, double> & p);
@@ -153,6 +153,13 @@ class ExtraParameters {
   void get_cv_indices(
     const std::tuple<double, double, double> & point, 
     index_t & x_col, index_t & y_row);
+
+  void set_progress_bar(double _progress);
+  void get_progress_bar(double & _progress);
+
+
+  void set_other_index(); // TODO need more inspection
+  void get_other_index_z_value(double _z);
 
 };
 

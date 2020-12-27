@@ -36,10 +36,8 @@ TriggerWait::TriggerWait(int _width, int _height, int anchor_choice) {
 void TriggerWait::update(
     const cv::Mat & input_image,
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-    ExtraParameters & params) {
+    Parameters & params) {
     
-    std::vector<double> & extra_params = params.extra_params;
-
     ctime = cur_time();
 
     pointer_x = (int)std::get<0>(points[2][0]);

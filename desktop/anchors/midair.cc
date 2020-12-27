@@ -56,7 +56,7 @@ void AnchorMidAir::calculate(
     const std::tuple<double, double, double> & indexbase, 
     double scale_ratio, 
     int pointer_x, int pointer_y,
-    ExtraParameters & params) {
+    Parameters & params) {
 
     if (!width || !height) {
         setConfig(input.size().width, input.size().height);
@@ -124,7 +124,7 @@ void AnchorMidAir::draw(
     const std::tuple<double, double, double> & indexbase, 
     double scale_ratio, 
     int pointer_x, int pointer_y,
-    const ExtraParameters & params) {
+    Parameters & params) {
     
     cv::Mat overlay;
     // input.copyTo(overlay);
@@ -171,7 +171,7 @@ void AnchorMidAir::draw(
     drawTextHighlighted(overlay);
     drawTextSelected(overlay);
 
-    drawProgressBar(overlay, params.extra_params[9]);
+    drawProgressBar(overlay, params);
 
     cv::addWeighted(overlay, 0.7, input, 1-0.7, 0, output);
 }

@@ -95,7 +95,7 @@ TriggerTapDepthArea::TriggerTapDepthArea(
 void TriggerTapDepthArea::update(
     const cv::Mat & input_image,
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-    ExtraParameters & params) {
+    Parameters & params) {
 
 
     cv::cvtColor(input_image, hsv, cv::COLOR_BGR2RGB);

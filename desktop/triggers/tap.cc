@@ -21,10 +21,7 @@ TriggerTap::TriggerTap(int _width, int _height) {
 void TriggerTap::update(
     const cv::Mat & input_image,
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-    ExtraParameters & params) {
-
-    std::vector<double> & extra_params = params.extra_params;
-
+    Parameters & params) {
 
     if (points.size() < 0) {
         std::cout << "trigger_tap: less than two hands, resetting trigger\n";
@@ -45,8 +42,10 @@ void TriggerTap::update(
     }
 
     
+    params.get_other_index_z_value(m_zvalue);
+
     if (params.is_set_primary_cursor()) { // other hand index x axis is set (0-1]
-        zvalue = 0.5*prev_zvalue + 0.5*extra_params[6]*100;
+        zvalue = 0.5*prev_zvalue + 0.5*m_zvalue*100;
         std::cout << "trigger_tap getting from extra params\n";
     } else {
         if (prev_handID != hand_ID) {

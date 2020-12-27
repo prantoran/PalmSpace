@@ -36,11 +36,12 @@ int Anchor::getDivisions() {
 }
 
 
-void Anchor::drawProgressBar(cv::Mat & _image, double _progress) {
+void Anchor::drawProgressBar(cv::Mat & _image, Parameters & params) {
+    params.get_progress_bar(m_progress_bar);
     // modifies _image with a progress bar with _progress
-    if (_progress >= 0) {
+    if (m_progress_bar >= 0) {
 
-        double pwidth = _progress * (progress_maxwidth);
+        double pwidth = m_progress_bar * (progress_maxwidth);
 
         // double npwidth = progress_maxwidth - pwidth;
         cv::rectangle(
@@ -226,7 +227,7 @@ choices::eVisibility Anchor::getVisibility() {
 }
 
 
-bool Anchor::isVisible(const ExtraParameters & params) {
+bool Anchor::isVisible(const Parameters & params) {
     switch (visibility) {
         case choices::FIXED:
             return true;

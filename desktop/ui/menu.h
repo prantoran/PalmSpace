@@ -24,7 +24,7 @@ namespace PalmSpaceUI {
         int cellcnt;
         bool onehand, twohand;
         bool ancdyn, ancstat, ancmid; 
-        bool trigpalmbase, trigpalmfree, trigpinch, trigwait, trigtap, trigdwell, trigtapdepth, trigtapdepthsingle;
+        bool trigpalmbase, trigpalmfree, trigpinch, trigtap, trigdwell, trigtapdepth, trigtapdepthsingle, trigdepthdistance;
 
         // eScreenSize screen_size;
 
@@ -37,6 +37,8 @@ namespace PalmSpaceUI {
         bool valid;
 
         bool visibility_fixed, visibility_conditional;
+
+        bool resolution_640, resolution_1280;
 
         public:
         
@@ -51,6 +53,7 @@ namespace PalmSpaceUI {
             int visibility,
             bool debug, 
             bool use_depth,
+            int resolution,
             std::string window_name
         );
 
@@ -64,7 +67,8 @@ namespace PalmSpaceUI {
             int & screensize,
             int & visibility,
             int & debug,
-            int & depth);
+            int & depth,
+            int & resolution);
     };
 
 

@@ -26,7 +26,6 @@ const double SMALLAREA_THRESHOLD = 0.01;
 class Initiator {
     public:
     std::string name;
-    std::vector<double> extra_params;
     bool show_display;
     bool strict;
     
@@ -42,7 +41,7 @@ class Initiator {
         std::vector<std::vector<std::tuple<double, double, double>>> & points) = 0;
     virtual void params(
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        ExtraParameters & parameters) = 0;
+        Parameters & parameters) = 0;
 };
 
 class InitiatorDefault: public Initiator {
@@ -55,7 +54,7 @@ class InitiatorDefault: public Initiator {
         std::vector<std::vector<std::tuple<double, double, double>>> & points);
     void params(
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        ExtraParameters & parameters);
+        Parameters & parameters);
 };
 
 class InitiatorTwoHand: public Initiator {
@@ -72,7 +71,7 @@ class InitiatorTwoHand: public Initiator {
         std::vector<std::vector<std::tuple<double, double, double>>> & points);
     void params(
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        ExtraParameters & parameters);
+        Parameters & parameters);
 };
 
 

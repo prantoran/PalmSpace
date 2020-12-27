@@ -13,6 +13,7 @@
 #include <thread>
 #include <vector>
 #include <unordered_map>
+#include <ctime> // for unique video file name
 
 #include "mediapipe/framework/port/commandlineflags.h"
 #include "mediapipe/framework/port/status.h"
@@ -41,17 +42,31 @@ DEFINE_string(
 DEFINE_string(input_video_path, "",
               "Full path of video to load. "
               "If not provided, attempt to use a webcam.");
-DEFINE_string(output_video_path, "",
+DEFINE_string(output_video_path, 
+              "demo/",
               "Full path of where to save result (.mp4 only). "
               "If not provided, show result in a window.");
 
-DEFINE_int32(frame_width, 640, "frame/screen width in pixels.");
-DEFINE_int32(frame_height, 480, "frame/screen height in pixels.");
+DEFINE_int32(frame_width, 1280, "frame/screen width in pixels."); // 640 // 1280
+DEFINE_int32(frame_height, 720, "frame/screen height in pixels."); // 480 // 720
 DEFINE_int32(fps, 30, "frames per second.");
 DEFINE_int32(debug, 0, "debug mode");
 
 
 std::shared_ptr<MediaPipeMultiHandGPU> mp_graph = NULL;
+
+
+std::string current_time() {
+  time_t rawtime;
+  struct tm * timeinfo;
+  char buffer[80];
+
+  time (&rawtime);
+  timeinfo = localtime(&rawtime);
+
+  strftime(buffer,sizeof(buffer),"%d_%m_%Y_%H_%M_%S",timeinfo);
+  return std::string(buffer);
+}
 
 
 void checkOpenCVHardwareSupport() {
@@ -69,6 +84,7 @@ void checkOpenCVHardwareSupport() {
     {CV_CPU_AVX, "CV_CPU_AVX"},
     {CV_CPU_AVX2, "CV_CPU_AVX2"}
   };
+  // AVX2 is faster than SSE3 cpu instruction set
 
   for (const auto& f: features) {
     std::cout << f << ". " << names[f] << " " << (cv::checkHardwareSupport(f)? "enabled": "disabled") << "\n";
@@ -89,12 +105,13 @@ int main(int argc, char** argv) {
   const bool load_video = !FLAGS_input_video_path.empty();
   const bool save_video = !FLAGS_output_video_path.empty();
 
-  std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
 
   
 
   if (mp_graph == NULL) {
-    mp_graph = std::make_shared<MediaPipeMultiHandGPU>(APP_NAME);
+    mp_graph = std::make_shared<MediaPipeMultiHandGPU>(
+      APP_NAME, 
+      FLAGS_output_video_path + "/video" + current_time() + ".mp4");
     
     try {
       auto tst = cv::Scalar(25,25,25);
@@ -127,13 +144,14 @@ int main(int argc, char** argv) {
 
   
   int choice_anchor = 2;
-  int choice_trigger = 9;
+  int choice_trigger = 10;
   int choice_initiator = 1;
   int choice_divisions = 6;
   int choice_screensize = 2;
   int choice_debug = 1;
   int choice_visibility = 2;
   int choice_depth = 1;
+  int choice_resolution = 1;
 
   PalmSpaceUI::Menu menu = PalmSpaceUI::Menu(
     FLAGS_frame_width,
@@ -146,6 +164,7 @@ int main(int argc, char** argv) {
     choice_visibility,
     choice_debug,
     choice_depth,
+    choice_resolution,
     APP_NAME);
 
   menu.run();
@@ -158,12 +177,36 @@ int main(int argc, char** argv) {
     choice_screensize,
     choice_visibility,
     choice_debug,
-    choice_depth);
+    choice_depth,
+    choice_resolution);
+
+
+  switch (choice_resolution) {
+    case 1:
+      FLAGS_frame_width = 640;
+      FLAGS_frame_height = 480;
+      break;
+    case 2:
+      FLAGS_frame_width = 1280;
+      FLAGS_frame_height = 720;
+      break;
+  } 
+
+  std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
+
 
   if (choice_depth) {
-    mp_graph->camera = new CameraRealSense();
+    mp_graph->camera = new CameraRealSense(
+      FLAGS_frame_width,
+      FLAGS_frame_height,
+      FLAGS_fps
+    );
   } else {
-    mp_graph->camera = new CameraOpenCV();
+    mp_graph->camera = new CameraOpenCV(
+      FLAGS_frame_width,
+      FLAGS_frame_height,
+      FLAGS_fps
+    );
   }
 
 
@@ -173,6 +216,7 @@ int main(int argc, char** argv) {
   // mp_graph->trigger._choice = choice_trigger;
   // mp_graph->trigger._wait.choice = choice_anchor;
   
+  std::cerr << "choice_trigger:" << choice_trigger << "\n";
 
   switch (choice_trigger) {
     case 1:
@@ -207,6 +251,9 @@ int main(int argc, char** argv) {
     case 9:
       mp_graph->trigger = new TriggerTapDepthSingle();
       break;
+    case 10:
+      mp_graph->trigger = new TriggerTapDepthDistance();
+      break;
     default:
       std::cout << "invalid trigger choice\n";
       return EXIT_FAILURE;
@@ -238,7 +285,6 @@ int main(int argc, char** argv) {
   ::mediapipe::Status run_status = mp_graph->run(
       FLAGS_calculator_graph_config_file, 
       FLAGS_input_video_path, 
-      FLAGS_output_video_path, 
       FLAGS_frame_width, 
       FLAGS_frame_height, 
       FLAGS_fps,

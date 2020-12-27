@@ -63,7 +63,7 @@ bool InitiatorDefault::inspect(
 
 void InitiatorDefault::params(
   const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-  ExtraParameters & parameters) {
+  Parameters & parameters) {
   
   // params() to be called if inspect() returns true
 

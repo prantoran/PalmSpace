@@ -28,13 +28,13 @@ TriggerDwell::TriggerDwell() {
 void TriggerDwell::update(
     const cv::Mat & input_image,
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-    ExtraParameters & params) {
+    Parameters & params) {
 
     ctime = cur_time();
     
     params.get_selected_cell(selected_i, selected_j);
 
-    params.extra_params[9] = -1; // reset progress for drawing progress bar in anchor
+    params.set_progress_bar(-1); // reset progress for drawing progress bar in anchor
 
     if (selected_i != -1) {
         if (selected_i_prv != -1) {
@@ -49,7 +49,7 @@ void TriggerDwell::update(
                 }
 
                 // set progress for drawing progress bar in anchor
-                params.extra_params[9] = (double)d/DWELLWAIT_MS;
+                params.set_progress_bar((double)d/DWELLWAIT_MS);
 
             } else {
 

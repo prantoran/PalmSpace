@@ -17,7 +17,7 @@ TriggerThumbOther::TriggerThumbOther(int _width, int _height) {
 void TriggerThumbOther::update(
     const cv::Mat & input_image,
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-    ExtraParameters & params) {
+    Parameters & params) {
 
 
     int hdx = params.total_hands_detected() - 1;

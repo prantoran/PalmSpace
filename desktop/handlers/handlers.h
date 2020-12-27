@@ -28,7 +28,7 @@ class AnchorHandler{
         const std::tuple<double, double, double> & indexbase, 
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        ExtraParameters & params); 
+        Parameters & params); 
 
     void draw(
         const cv::Mat& input, 
@@ -37,7 +37,7 @@ class AnchorHandler{
         const std::tuple<double, double, double> & indexbase, 
         double scale_ratio, 
         int pointer_x, int pointer_y,
-        const ExtraParameters & params);
+        Parameters & params);
     
     void reset_palmbase();
     void reset_indexbase();
@@ -69,7 +69,7 @@ class InitiatorHandler {
         std::vector<std::vector<std::tuple<double, double, double>>> & points);
     void params(
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        ExtraParameters & parameters);
+        Parameters & parameters);
     void setStrict(bool _strict);
 };
 
@@ -80,7 +80,7 @@ class MediaPipeMultiHandGPU {
     AnchorHandler anchor;
     // TriggerHandler trigger;
     InitiatorHandler initiator;
-    Camera *camera;
+    Camera *camera; // TODO add m_
     Trigger *trigger;
     // int curImageID;
     std::string m_window_name;
@@ -91,14 +91,15 @@ class MediaPipeMultiHandGPU {
     cv::Mat m_combined_output_left, m_combined_output_right;
     cv::Mat m_depth_map;
     
+    cv::VideoWriter m_writer;
+    std::string m_output_video_path;
 
-    MediaPipeMultiHandGPU(const std::string & _window_name);
+    MediaPipeMultiHandGPU(const std::string & _window_name, const std::string & _output_video_path);
     ~MediaPipeMultiHandGPU();
 
     ::mediapipe::Status run(
         const std::string& calculator_graph_config_file,
         const std::string& input_video_path,
-        const std::string& output_video_path,
         const int frame_width,
         const int frame_height,
         const int fps,
@@ -109,11 +110,10 @@ class MediaPipeMultiHandGPU {
     void debug(
         cv::Mat & output_frame_mat, 
         std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        ExtraParameters & params);
+        Parameters & params);
 
     void combine_output_frames();
     void check_keypress();
-    void save_output();
 };
 
 

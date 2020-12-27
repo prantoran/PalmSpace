@@ -145,9 +145,6 @@ If you do want to have full control over instantiating the WASM to reduce the bu
  bash javascript/scripts/build-wasm.sh && npm run build:copy",
 ```
 
-width:640 height:480
-
-
 
 
 ```

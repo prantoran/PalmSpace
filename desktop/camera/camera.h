@@ -10,6 +10,7 @@
 #include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
 #include <iostream>
 
+
 class Camera {
     public:
     int m_width, m_height;
@@ -29,7 +30,7 @@ class Camera {
 class CameraOpenCV: public Camera {
     cv::VideoCapture m_capture;
     public:
-    CameraOpenCV();
+    CameraOpenCV(int _width, int _height, int _fps);
     ~CameraOpenCV();
     void get_frames();
     void rgb(cv::Mat & dst);
@@ -58,7 +59,7 @@ class CameraRealSense: public Camera {
     cv::Mat m_depth_mat;
 
     public:
-    CameraRealSense();
+    CameraRealSense(int _width, int _height, int _fps);
     ~CameraRealSense();
     void get_frames();
     void rgb(cv::Mat & dst);
