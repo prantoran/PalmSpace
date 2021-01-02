@@ -107,17 +107,23 @@ void InitiatorDefault::params(
   }
 
   parameters.m_cursor_id = -1;
+  
+
   if (idx >= 0) {
-    
+
     if (areas[idx] > SMALLAREA_THRESHOLD) {
       if (points[idx].size() > INDEXTOP_IDX) {
         parameters.m_cursor_id = idx;      
         parameters.set_primary_cursor(points[idx][INDEXTOP_IDX]);
+      } else {
+        parameters.m_primary_cursor.reset();
       }
 
       if (points[idx].size() > MIDDLEFINGERBASE) {
         parameters.m_cursor_middlebase_id = idx;      
-        parameters.set_primary_cursor_middlefinger_base(points[idx][MIDDLEFINGERBASE]);
+        // parameters.set_primary_cursor_middlefinger_base(points[idx][MIDDLEFINGERBASE]);
+      } else {
+        parameters.m_primary_cursor_middlefinger_base.reset();
       }
     }
   }

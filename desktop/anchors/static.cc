@@ -34,10 +34,8 @@ void AnchorStatic::initiate() {
 
     width = 0;
     height = 0;
-    gap = 5;
-
-    ws = 0;
-    hs = 0;
+ 
+    m_grid.reset_dimensions();
 
     color_red = COLORS_red;
     color_blue = COLORS_blue;
@@ -93,7 +91,9 @@ void AnchorStatic::calculate(
     if (!width || !height) {
         setConfig(input.size().width, input.size().height);
                 
-        screen.setMinWidthHeight(min_ws, min_hs, width, height);
+        screen.setMinWidthHeight(
+            m_grid.m_width_min, m_grid.m_height_min, 
+            width, height);
     }
 
     if (!static_display) {
@@ -111,15 +111,15 @@ void AnchorStatic::calculate(
                 indexbase_y = 0;
             } else if (screen.isCentered()){
                 // fixing at center
-                indexbase_x = ((double)(width - min_ws) / 2) / width;
-                indexbase_y = ((double)(height - min_hs) / 2) / height;
+                indexbase_x = ((double)(width - m_grid.m_width_min) / 2) / width;
+                indexbase_y = ((double)(height - m_grid.m_height_min) / 2) / height;
             } else {
-                if (indexbase_x*width + min_ws >= width) {
-                    indexbase_x = (double)(width-min_ws)/width;
+                if (indexbase_x*width + m_grid.m_width_min >= width) {
+                    indexbase_x = (double)(width-m_grid.m_width_min)/width;
                 }
 
-                if (indexbase_y*height + min_hs >= height) {
-                    indexbase_y = (double)(height-min_hs)/height;
+                if (indexbase_y*height + m_grid.m_height_min >= height) {
+                    indexbase_y = (double)(height-m_grid.m_height_min)/height;
                 }
             }
         }
@@ -146,8 +146,8 @@ void AnchorStatic::calculate(
 
 
 void AnchorStatic::ensureMarkedCellWithinPalm(int & marked_row_i, int & marked_col_j) {
-    double gdx = xs[marked_row_i] - palmstart_x;
-    double gdy = ys[marked_col_j] - palmstart_y;
+    double gdx = m_grid.m_x_cols[marked_row_i] - palmstart_x;
+    double gdy = m_grid.m_y_rows[marked_col_j] - palmstart_y;
     if (gdx < 50 || gdx > 250 || gdy < 50 || gdy > 250) {
     // invalidating pointer_x for pointers outside the palm image
         marked_row_i = -1;
@@ -255,8 +255,8 @@ void AnchorStatic::draw(
         cv::LINE_8,
         0);
 
-    for (int i = 1; i <= divisions; i ++ ) {
-        for (int j = 1; j <= divisions; j ++) {
+    for (int i = 1; i <= m_grid.m_divisions; i ++ ) {
+        for (int j = 1; j <= m_grid.m_divisions; j ++) {
           color_cur = color_red;
           if (i == green_i && j == green_j) {
             color_cur = color_green;
@@ -266,7 +266,7 @@ void AnchorStatic::draw(
 
           cv::rectangle(
             overlay, 
-            cv::Point(xs[i], ys[j]), cv::Point(xs[i]+dx, ys[j]+dy), 
+            m_grid.get_cell(i, j), 
             color_cur,
             -1, 
             cv::LINE_8,

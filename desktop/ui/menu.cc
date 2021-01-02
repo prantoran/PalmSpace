@@ -18,7 +18,7 @@ namespace PalmSpaceUI {
 			int visibility,
 			bool debug, 
 			bool depth,
-			int resolution,
+			int trial_start_btn_location,
 			std::string window_name
 		) {
 		
@@ -70,34 +70,34 @@ namespace PalmSpaceUI {
 			case 8:
 				trigdwell = false;
 				trigtapdepth = true;
+				break;
 			case 9:
 				trigdwell = false;
 				trigtapdepthsingle = true;
+				break;
 			case 10:
 				trigdwell = false;
 				trigdepthdistance = true;
-			default:
-				break;
-		}
-
-
-		resolution_1280 = true;
-		resolution_640 = false;
-		switch (resolution) {
-			case 1:
-				resolution_1280 = false;
-				resolution_640 = true;
 				break;
 			default:
 				break;
 		}
 
 
+		trial_start_btn_location_left = true;
+		trial_start_btn_location_center = false;
+		switch (trial_start_btn_location) {
+			case 2:
+				trial_start_btn_location_left = false;
+				trial_start_btn_location_center = true;
+				break;
+			default:
+				break;
+		}
 
-		scalex = width/2 - width/5, scaley = height/2 - height/4;
+		scalex = width/8, scaley = height/8;
 
 		errormsg = "";
-		valid = true;
 
 		_debug = debug;
 
@@ -168,107 +168,33 @@ namespace PalmSpaceUI {
 			cvui::checkbox(frame, scalex + 330, scaley + 120, "Fixed", &visibility_fixed);
 			cvui::checkbox(frame, scalex + 330, scaley + 140, "Conditional", &visibility_conditional);
 
-			cvui::window(frame, scalex + 330, scaley + 180, 100, 70, "Resolution");
-			cvui::checkbox(frame, scalex + 330, scaley + 200, " 640x480", &resolution_640);
-			cvui::checkbox(frame, scalex + 330, scaley + 220, "1280x720", &resolution_1280);
-
-
+			cvui::window(frame, scalex + 330, scaley + 180, 100, 70, "Trial Start Button");
+			cvui::checkbox(frame, scalex + 330, scaley + 200, " Left", &trial_start_btn_location_left);
+			cvui::checkbox(frame, scalex + 330, scaley + 220, "Center", &trial_start_btn_location_center);
 
 			if (cvui::button(frame, width - 120, height - 50, 100, 30, "Next")) {
-				int cnt = 0;
-				valid = true;
-				if (onehand) cnt ++;
-				if (twohand) cnt ++;
-				if (cnt != 1) {
-					valid = 0;
-					errormsg = "Select exactly 1 initiator.";
-				}
-
-				if (valid) {
-					cnt = 0;
-					if (ancdyn) cnt ++;
-					if (ancstat) cnt ++;
-					if (ancmid) cnt ++;
-					if (cnt != 1) {
-						valid = 0;
-						errormsg = "Select exactly 1 anchor.";
-					}
-				}
-
-				if (valid) {
-					cnt = 0;
-					if (trigpalmbase) cnt ++;
-					if (trigpalmfree) cnt ++;
-					if (trigpinch) cnt ++;
-					if (trigtap) cnt ++;
-					if (trigdwell) cnt ++;
-					if (trigtapdepth) cnt ++;
-					if (trigtapdepthsingle) cnt ++;
-					if (trigdepthdistance) cnt ++;
-					if (cnt != 1) {
-						valid = 0;
-						errormsg = "Select exactly 1 trigger.";
-					}
-				}
-
-				if (valid) {
-					cnt = 0;
-					if (screen_large) cnt ++;
-					if (screen_small) cnt ++;
-					if (screen_full) cnt ++;
-					if (cnt != 1) {
-						valid = 0;
-						errormsg = "Select exactly 1 screen size.";
-					}
-				}
-
-				if (valid) {
-					cnt = 0;
-					if (visibility_conditional) cnt ++;
-					if (visibility_fixed) cnt ++;
-					if (cnt != 1) {
-						valid = 0;
-						errormsg = "Select exactly 1 visibility.";
-					}
-				}
-
-
-				if (valid) {
-					cnt = 0;
-					if (resolution_1280) cnt ++;
-					if (resolution_640) cnt ++;
-					if (cnt != 1) {
-						valid = 0;
-						errormsg = "Select exactly 1 resolution.";
-					}
-				}
-
-
-				if (resolution_1280 && !_depth) {
-					valid = 0;
-					errormsg = "Normal camera does not support 1280x720.";
-				}
-
-				if ((trigtapdepth || trigdepthdistance) && !_depth) {
-					valid = 0;
-					errormsg = "depth camera should be used for depth based tap.";
-				}
-
-				if (valid) {
+				if (is_valid()) {
 					cv::destroyWindow(_window_name);
 					break;
 				}
 			}
 
+			cvui::text(frame, 10, height-50, errormsg, 0.5, 0xFEFEFE);
 
-			if (!valid) {
-				cvui::text(frame, 10, height-50, errormsg, 0.5, 0xFEFEFE);
-			}
 			// Show window content
 			cvui::imshow(_window_name, frame);
 
-			// your app logic here
-			if (cv::waitKey(20) == 27) {
+			int wait_return = cv::waitKey(20);
+			
+			if (wait_return == 13) { // enter key pressed
+				if (is_valid()) {
+					cv::destroyWindow(_window_name);
+					break;
+				}
+			}
+
+			if (wait_return == 27) {
+				cv::destroyWindow(_window_name);
 				break;
 			}
 		}
@@ -284,7 +210,7 @@ namespace PalmSpaceUI {
 		int & visibility,
 		int & debug,
 		int & depth,
-		int & resolution) {
+		int & trial_start_btn_location) {
 
 		if (onehand) initiator = 1;
 		if (twohand) initiator = 2;
@@ -317,8 +243,8 @@ namespace PalmSpaceUI {
 
 		depth = _depth;
 
-		if (resolution_640) resolution = 1;
-		else if (resolution_1280) resolution = 2;
+		if (trial_start_btn_location_left) trial_start_btn_location = 1;
+		else if (trial_start_btn_location_center) trial_start_btn_location = 2;
 	}
 
 
@@ -330,4 +256,86 @@ namespace PalmSpaceUI {
 		}
 	}
 
+
+	bool Menu::is_valid() {
+		int cnt = 0;
+		bool valid = true;
+
+		if (onehand) cnt ++;
+		if (twohand) cnt ++;
+		if (cnt != 1) {
+			valid = 0;
+			errormsg = "Select exactly 1 initiator.";
+		}
+
+		if (valid) {
+			cnt = 0;
+			if (ancdyn) cnt ++;
+			if (ancstat) cnt ++;
+			if (ancmid) cnt ++;
+			if (cnt != 1) {
+				valid = 0;
+				errormsg = "Select exactly 1 anchor.";
+			}
+		}
+
+		if (valid) {
+			cnt = 0;
+			if (trigpalmbase) cnt ++;
+			if (trigpalmfree) cnt ++;
+			if (trigpinch) cnt ++;
+			if (trigtap) cnt ++;
+			if (trigdwell) cnt ++;
+			if (trigtapdepth) cnt ++;
+			if (trigtapdepthsingle) cnt ++;
+			if (trigdepthdistance) cnt ++;
+			if (cnt != 1) {
+				valid = 0;
+				errormsg = "Select exactly 1 trigger.";
+			}
+		}
+
+		if (valid) {
+			cnt = 0;
+			if (screen_large) cnt ++;
+			if (screen_small) cnt ++;
+			if (screen_full) cnt ++;
+			if (cnt != 1) {
+				valid = 0;
+				errormsg = "Select exactly 1 screen size.";
+			}
+		}
+
+		if (valid) {
+			cnt = 0;
+			if (visibility_conditional) cnt ++;
+			if (visibility_fixed) cnt ++;
+			if (cnt != 1) {
+				valid = 0;
+				errormsg = "Select exactly 1 visibility.";
+			}
+		}
+
+
+		if (valid) {
+			cnt = 0;
+			if (trial_start_btn_location_left) cnt ++;
+			if (trial_start_btn_location_center) cnt ++;
+			if (cnt != 1) {
+				valid = 0;
+				errormsg = "Select exactly 1 location for trial start button.";
+			}
+		}
+
+
+		if ((trigtapdepth || trigdepthdistance) && !_depth) {
+			valid = 0;
+			errormsg = "depth camera should be used for depth based tap.";
+		}
+
+		return valid;
+	}
 }
+
+
+

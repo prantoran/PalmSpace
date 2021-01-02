@@ -258,14 +258,6 @@ void TriggerTapDepth::palm_rect_fill(Parameters & params, int & cnt) {
                     // depth pixel index cursor area
                     cv::Vec3b dp_cursor = (*params.depth_mat).at<cv::Vec3b>(cursor_midfinger_y+j, cursor_midfinger_x+i); 
 
-                    // cv::circle(
-                    //     (*params.depth_mat),
-                    //     cv::Point(cursor_midfinger_y+j, cursor_x+i),
-                    //     10,
-                    //     cv::Scalar(192, 192, 192),
-                    //     cv::FILLED,
-                    //     cv::LINE_8
-                    // );
 
                     for (int ch = 0; ch < 3; ch ++) {
                         int diff = std::abs(dp_cursor[ch] - dp_palmrect[ch]);

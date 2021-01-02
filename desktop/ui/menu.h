@@ -34,11 +34,9 @@ namespace PalmSpaceUI {
 
         std::string errormsg;
 
-        bool valid;
-
         bool visibility_fixed, visibility_conditional;
 
-        bool resolution_640, resolution_1280;
+        bool trial_start_btn_location_left, trial_start_btn_location_center;
 
         public:
         
@@ -53,7 +51,7 @@ namespace PalmSpaceUI {
             int visibility,
             bool debug, 
             bool use_depth,
-            int resolution,
+            int trial_start_btn_location,
             std::string window_name
         );
 
@@ -68,7 +66,9 @@ namespace PalmSpaceUI {
             int & visibility,
             int & debug,
             int & depth,
-            int & resolution);
+            int & trial_start_btn_location);
+
+        bool is_valid();
     };
 
 

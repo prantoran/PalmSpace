@@ -24,15 +24,15 @@ void Anchor::highlightSelected() {
     green_i = selected_i;
     green_j = selected_j;
 
-    message_selected = "Selected: " + std::to_string(divisions*(green_j-1) + green_i);
+    message_selected = "Selected: " + std::to_string(m_grid.m_divisions*(green_j-1) + green_i);
 }
 
 void Anchor::setDivisions(int _divisions) {
-    divisions = _divisions;
+    m_grid.m_divisions = _divisions;
 }
 
 int Anchor::getDivisions() {
-    return divisions;
+    return m_grid.m_divisions;
 }
 
 
@@ -81,23 +81,7 @@ void Anchor::setupGrid(double enlarged_topleft_x, double enlarged_topleft_y) {
     // setup tile coords
 
     // enlarged means topleft coords are received after multiplying ratios by width and height
-    ws = min_ws;
-    hs = min_hs;
-
-    dx = (ws - (divisions+1)*gap)/divisions;
-    dy = (hs - (divisions+1)*gap)/divisions;
-
-    xs[0] = enlarged_topleft_x;
-    xs[1] = xs[0]+gap;
-    for (int i = 2; i <= divisions; i ++) {
-      xs[i] = xs[i-1]+dx+gap;
-    }
-
-    ys[0] = enlarged_topleft_y;
-    ys[1] = ys[0]+gap;
-    for (int i = 2; i <= divisions; i ++) {
-      ys[i] = ys[i-1]+dy+gap;
-    }
+    m_grid.align(enlarged_topleft_x, enlarged_topleft_y);
 }
 
 
@@ -111,22 +95,8 @@ void Anchor::setupSelection(
         selected_i_prv = selected_row_i;
         selected_j_prv = selected_col_j;
 
-        selected_row_i = -1;
-        selected_col_j = -1;
-
-        for (int i = 1;i <= divisions; i ++) {
-          if (index_pointer_x > xs[i] && index_pointer_x < xs[i] + dx) {
-            selected_row_i = i;
-            break;
-          }     
-        }
-
-        for (int j = 1;j <= divisions; j ++) {
-          if (index_pointer_y > ys[j] && index_pointer_y < ys[j] + dy) {
-            selected_col_j = j;
-            break;
-          }
-        }
+        selected_row_i = m_grid.arg_x(index_pointer_x);
+        selected_col_j = m_grid.arg_y(index_pointer_y);
 
         if (selected_row_i == -1 || selected_col_j == -1) {
             selected_row_i = -1;
@@ -136,7 +106,7 @@ void Anchor::setupSelection(
         if (selected_row_i != -1) {
             if (selected_row_i != selected_i_prv || selected_col_j != selected_j_prv) {
                 message = "Highlighted: ";
-                message += std::to_string((selected_col_j-1)*divisions + selected_row_i);
+                message += std::to_string((selected_col_j-1)*m_grid.m_divisions + selected_row_i);
             }
         } else {
             selected_row_i = selected_i_prv;
@@ -177,39 +147,36 @@ void Anchor::drawTextSelected(cv::Mat & overlay) {
 void Anchor::reset_palmbase() {
     palmbase_x = -1;
     palmbase_y = -1;
-    ws = 0;
-    hs = 0;
+    // TODO check whether logical to reset grid dimensions
+    m_grid.m_width = 0;
+    m_grid.m_height = 0;
 }
 
 
 void Anchor::reset_indexbase() {
     indexbase_x = -1;
     indexbase_y = -1;
-    ws = 0;
-    hs = 0;
+    // TODO check whether logical to reset grid dimensions
+    m_grid.m_width = 0;
+    m_grid.m_height = 0;
 }
 
 void Anchor::reset_grid() {
-
-    int len = (sizeof(xs)/sizeof(*xs));
-    for (int i = 0; i < len; i ++) {
-        xs[i] = 0;
-        ys[i] = 0;
-    }
+    m_grid.reset();
 }
 
 
 cv::Rect Anchor::getGrid() {
-    return cv::Rect(cv::Point(xs[0], ys[0]), cv::Point(xs[0]+ws, ys[0]+hs));
+    return m_grid.get_bound_rect();
 }
 
 cv::Point Anchor::getGridTopLeft() {
-    return cv::Point(xs[0], ys[0]);
+    return m_grid.get_top_left();
 }
 
 
 cv::Point Anchor::getGridBottomRight() {
-    return cv::Point(xs[0]+ws, ys[0]+hs);
+    return m_grid.get_bottom_right();
 }
 
 

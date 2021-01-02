@@ -70,12 +70,12 @@ class Anchor { // interface via abstract class
     public:
     choices::anchor::types _type;
     std::string name;
-    int width = 0, height = 0, ws, hs, min_ws, min_hs;
-    int gap, xs[11], ys[11], dx, dy;
+    int width = 0, height = 0;
+    Grid m_grid;
+
     double palmbase_x, palmbase_y;
     double indexbase_x, indexbase_y;
 
-    double momentum;
     cv::Scalar color_red, color_blue, color_green, color_cur;
 
     int selected_i, selected_j, selected_i_prv, selected_j_prv; 
@@ -86,8 +86,6 @@ class Anchor { // interface via abstract class
     std::string message, message_selected;
 
     bool static_display; // if true then keep on showing display
-
-    int divisions;
 
     int progress_maxwidth, progress_maxheight; // progress bar
     int pwidth, npwidth;
@@ -150,9 +148,6 @@ class Anchor { // interface via abstract class
 
 
 class AnchorDynamic: public Anchor {
-    double palmbase_x_prv, palmbase_y_prv;
-    double indexbase_x_prv, indexbase_y_prv;
-
     public:
     ~AnchorDynamic();
     AnchorDynamic();
@@ -185,6 +180,11 @@ class AnchorDynamic: public Anchor {
 
 class AnchorStatic: public Anchor {
     public:
+    cv::Mat image_palm, mask;
+
+    int palm_ubx, palm_uby;
+    int palmstart_x, palmstart_y;
+
     ~AnchorStatic();
     AnchorStatic();
     AnchorStatic(
@@ -192,10 +192,6 @@ class AnchorStatic: public Anchor {
         const cv::Scalar & blue, 
         const std::string & imagePath);
 
-    cv::Mat image_palm, mask;
-
-    int palm_ubx, palm_uby;
-    int palmstart_x, palmstart_y;
 
     void calculate(
         const cv::Mat& input, 
@@ -228,13 +224,14 @@ class AnchorStatic: public Anchor {
 class AnchorMidAir: public Anchor {
 
     public:
+    int palmstart_x, palmstart_y;
+    
     ~AnchorMidAir();
     AnchorMidAir();
     AnchorMidAir(
         const cv::Scalar & red, 
         const cv::Scalar & blue);
     
-    int palmstart_x, palmstart_y;
 
     void calculate(
         const cv::Mat& input, 

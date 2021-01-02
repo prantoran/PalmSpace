@@ -8,6 +8,8 @@
 #include "desktop/config/config.h"
 #include "desktop/config/choices.h"
 #include "desktop/camera/camera.h"
+#include "desktop/userstudies/trial.h"
+
 
 #include <tuple>
 #include <vector>
@@ -31,6 +33,8 @@ class MediaPipeMultiHandGPU {
     
     cv::VideoWriter m_writer;
     std::string m_output_video_path;
+
+    userstudies::Trial * trial;
 
     MediaPipeMultiHandGPU(const std::string & _window_name, const std::string & _output_video_path);
     ~MediaPipeMultiHandGPU();

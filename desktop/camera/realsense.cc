@@ -18,11 +18,14 @@ CameraRealSense::CameraRealSense(int _width, int _height, int _fps) {
     // having RS2_FORMAT_BGR8 is important or else the color of OpenCV matrix is bluish
     cfg.enable_stream(RS2_STREAM_COLOR, m_width, m_height, RS2_FORMAT_BGR8, m_fps); 
 
+    std::cerr << "config set\n";
+    
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     // Start streaming with default recommended configuration
     
     // m_pipe.start();
     m_profile = m_pipe.start(cfg); // this is important or else the camera inputs become combined
+    std::cerr << "pipeline started\n";
 
     auto sensor = m_profile.get_device().first<rs2::depth_sensor>();
     m_depth_scale =  sensor.get_depth_scale();
