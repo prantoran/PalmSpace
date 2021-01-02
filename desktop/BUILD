@@ -32,6 +32,7 @@ cc_library(
         "config/*.h", "config/*.cc",
         "ui/*.h", "ui/*.cc",
         "camera/*.h", "camera/*.cc",
+        "userstudies/*.h", "userstudies/*.cc",
     ]),
 
     deps = [

@@ -90,60 +90,44 @@ void MediaPipeMultiHandGPU::debug(
   std::vector<std::vector<std::tuple<double, double, double>>> & points,
   Parameters & params) {
     
-  // // drawing landmarks of hand 0
-  // for (int i = 0; i < points[0].size(); i ++) {
-  //   cv::putText(m_primary_output, //target image
-  //     std::to_string(i), //text
-  //     cv::Point(std::get<0>(
-  //       points[0][i])*params.m_frame_width, 
-  //       std::get<1>(points[0][i])*params.m_frame_height),
-  //     cv::FONT_HERSHEY_DUPLEX,
-  //     1.0,
-  //     CV_RGB(0, 0, 0), //font color
-  //     2);
-  // }
+  // drawing landmarks of hand 0
+  for (int i = 0; i < points[0].size(); i ++) {
+    cv::putText(m_primary_output, //target image
+      std::to_string(i), //text
+      cv::Point(std::get<0>(
+        points[0][i])*params.m_frame_width, 
+        std::get<1>(points[0][i])*params.m_frame_height),
+      cv::FONT_HERSHEY_DUPLEX,
+      1.0,
+      CV_RGB(0, 0, 0), //font color
+      2);
+  }
 
-  // // drawing landmarks of hand 1
-  // for (int i = 0; i < points[1].size(); i ++) {
-  //   cv::putText(m_primary_output, //target image
-  //     std::to_string(i), //text
-  //     cv::Point(
-  //       std::get<0>(points[1][i])*params.m_frame_width, 
-  //       std::get<1>(points[1][i])*params.m_frame_height
-  //       ),
-  //     cv::FONT_HERSHEY_DUPLEX,
-  //     1.0,
-  //     CV_RGB(0, 0, 0), //font color
-  //     2);
-  // }
+  // drawing landmarks of hand 1
+  for (int i = 0; i < points[1].size(); i ++) {
+    cv::putText(m_primary_output, //target image
+      std::to_string(i), //text
+      cv::Point(
+        std::get<0>(points[1][i])*params.m_frame_width, 
+        std::get<1>(points[1][i])*params.m_frame_height
+        ),
+      cv::FONT_HERSHEY_DUPLEX,
+      1.0,
+      CV_RGB(0, 0, 0), //font color
+      2);
+  }
 
-  int row_base, col_base;
-  params.get_indexbase_cv_indices(row_base, col_base);
-
-  int row_cursor, col_cursor;
-  params.get_primary_cursor_cv_indices(row_cursor, col_cursor);
+  int x_col, y_row;
+  params.get_primary_cursor_cv_indices(x_col, y_row);
 
   cv::circle(
     m_primary_output,
-    cv::Point(row_cursor, col_cursor),
+    cv::Point(x_col, y_row), // cv::Point takex x(col) axis, y(row) axis
     10,
     cv::Scalar(0, 255, 0),
     cv::FILLED,
     cv::LINE_8
   );
-
-  // for (int k = 0, i = 10; i < 15; i += 4, k ++) {
-  //       cv::circle(
-  //         m_primary_output,
-  //         cv::Point(
-  //           params.m_frame_width * std::get<0>(points[0][i]), 
-  //           params.m_frame_height * std::get<1>(points[0][i])),
-  //         10,
-  //         cv::Scalar(240,255,240),
-  //         cv::FILLED,
-  //         cv::LINE_8
-  //       );
-  // }
 
   cv::rectangle(
     m_primary_output,
@@ -154,27 +138,6 @@ void MediaPipeMultiHandGPU::debug(
     8, 
     0
   );
-
-  cv::circle(
-          m_primary_output,
-          cv::Point(params.m_row, params.m_col),
-          10,
-          cv::Scalar(0,215,255),
-          cv::FILLED,
-          cv::LINE_8
-        );
-  
-  // int xcol_palmid, yrow_palmid;
-  // params.get_primary_cursor_middlefinger_base_cv_indices(xcol_palmid, yrow_palmid); 
-
-  // cv::circle(
-  //         m_primary_output,
-  //         cv::Point(xcol_palmid, yrow_palmid),
-  //         30,
-  //         cv::Scalar(0,215,255),
-  //         cv::FILLED,
-  //         cv::LINE_8
-  //       );
 
   if (!m_depth_map.empty()) { 
     cv::rectangle(
@@ -266,38 +229,29 @@ void MediaPipeMultiHandGPU::debug(
 
   int indexfinger_x = -1, indexfinger_y = -1;
   
-  std::tuple<double, double, double> palmbase = std::make_tuple(-1, -1, -1);
-  std::tuple<double, double, double> indexbase = std::make_tuple(-1, -1, -1);
+  // for storing key values to be passed among handlers
+  Parameters params = Parameters(frame_width, frame_height, load_video, camera);
+  params.set_depth_map(&m_depth_map);
+
+  std::tuple<double, double, double> palmbase, indexbase;
 
   double interface_scaling_factor = 1;
   // used for smoothing
-  double otherindex_x = -1, otherindex_y = -1, otherindex_x_prv, otherindex_y_prv;
-  double otherindex_momentum = 0.8;
-  double points_ratio = -1; // ratio of areas of 2 blobs represented by pixels of 2 different color ranges
-
-  int width = 0, height = 0;
 
   cv::Scalar color_cur;
   
   std::string trig_msg = "";
 
-  std::tuple<int, int> selected;
-
   const int divisions = anchor->getDivisions();
   
   cv::Mat camera_frame;
-  // for storing key values to be passed among handlers
-  Parameters params = Parameters(frame_width, frame_height, load_video, camera);
-  params.set_depth_map(&m_depth_map);
   
-  std::vector<std::vector<std::tuple<double, double, double>>> points(3); 
+  std::vector<std::vector<std::tuple<double, double, double>>> points(2); 
   
   for (int i = 0; i < 2; i ++) {
     points[i] = std::vector<std::tuple<double, double, double>> (21);
   }
   
-  points[2].push_back(std::make_tuple(-1, -1, 0));
-
   bool isDone = false;
 
   while (!isDone && m_grab_frames) {
@@ -312,8 +266,10 @@ void MediaPipeMultiHandGPU::debug(
     // m_depth_map.convertTo(m_depth_map, CV_8UC1, 255.0/1000);
     camera->rgb(camera_frame);
 
-    if (camera_frame.empty()) break;  // End of video.
-
+    if (camera_frame.empty()) {
+      std::cout << "camera frame empty\n"; 
+      break;  // End of video.
+    } 
     // Converts an image from one color space to another.
     // cv::cvtColor(camera_frame, hsv, CV_BGR2HSV);
 
@@ -329,8 +285,12 @@ void MediaPipeMultiHandGPU::debug(
     auto input_frame = absl::make_unique<mediapipe::ImageFrame>(
         mediapipe::ImageFormat::SRGB, camera_frame.cols, camera_frame.rows,
         mediapipe::ImageFrame::kGlDefaultAlignmentBoundary);
-    cv::Mat input_frame_mat = mediapipe::formats::MatView(input_frame.get());
-    camera_frame.copyTo(input_frame_mat);
+    
+    {
+      // this code has effect, if commented out then landmarks are misaligned
+      cv::Mat input_frame_mat = mediapipe::formats::MatView(input_frame.get());
+      camera_frame.copyTo(input_frame_mat);
+    }
 
     // Prepare and add graph input packet.
     size_t frame_timestamp_us =
@@ -361,28 +321,41 @@ void MediaPipeMultiHandGPU::debug(
       if (!poller.Next(&packet)) break;
 
       // Convert GpuBuffer to ImageFrame.
-      MP_RETURN_IF_ERROR(gpu_helper.RunInGlContext(
+      MP_RETURN_IF_ERROR(
+        gpu_helper.RunInGlContext(
           [&packet, &output_frame, &gpu_helper]() -> ::mediapipe::Status {
             auto& gpu_frame = packet.Get<mediapipe::GpuBuffer>();
             auto texture = gpu_helper.CreateSourceTexture(gpu_frame);
             output_frame = absl::make_unique<mediapipe::ImageFrame>(
-                mediapipe::ImageFormatForGpuBufferFormat(gpu_frame.format()),
-                gpu_frame.width(), gpu_frame.height(),
-                mediapipe::ImageFrame::kGlDefaultAlignmentBoundary);
+              mediapipe::ImageFormatForGpuBufferFormat(gpu_frame.format()),
+              gpu_frame.width(), gpu_frame.height(),
+              mediapipe::ImageFrame::kGlDefaultAlignmentBoundary
+            );
             gpu_helper.BindFramebuffer(texture);
             const auto info =
                 mediapipe::GlTextureInfoForGpuBufferFormat(gpu_frame.format(), 0);
-            glReadPixels(0, 0, texture.width(), texture.height(), info.gl_format,
-                        info.gl_type, output_frame->MutablePixelData());
+            glReadPixels(
+              0, 0, 
+              texture.width(), texture.height(), 
+              info.gl_format,
+              info.gl_type, 
+              output_frame->MutablePixelData()
+            );
             glFlush();
             texture.Release();
             return ::mediapipe::OkStatus();
-          }));
+          }
+        )
+      );
     }
     
     mediapipe::Packet multi_hand_landmarks_packet;
     // check if landmarks exist from graph
-    if (!multi_hand_landmarks_poller.Next(&multi_hand_landmarks_packet)) break;
+    if (!multi_hand_landmarks_poller.Next(&multi_hand_landmarks_packet)) {
+      std::cout << "handler/MediaPipeMultiHandGPU::run() landmarks cannot be polled\n";
+      break;
+    }
+
     const auto& multi_hand_landmarks = multi_hand_landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
 
     // resetting points
@@ -401,15 +374,17 @@ void MediaPipeMultiHandGPU::debug(
 
         int j = 0;        
         for (const auto& landmark : hand_landmarks.landmark()) {
-          points[hand_id][j] = std::make_tuple(landmark.x(), landmark.y(), landmark.z());
+          points[hand_id][j] = std::make_tuple(
+            landmark.x(), 
+            landmark.y(), 
+            landmark.z()
+          );
           ++ j;
         }
 
         ++hand_id;
       }
     }
-
-    points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0);
 
     initiator->params(points, params);
 
@@ -437,8 +412,8 @@ void MediaPipeMultiHandGPU::debug(
     if (anchor->type() == choices::anchor::MIDAIR) {
       try {
         m_primary_output = cv::Mat(
-            camera_frame.rows, 
-            camera_frame.cols, 
+            frame_height, 
+            frame_width, 
             CV_8UC3, 
             cv::Scalar(0, 0, 0));
 
@@ -448,36 +423,12 @@ void MediaPipeMultiHandGPU::debug(
     } else {
       m_primary_output = camera_frame;
     }
-    
-    
-    if (!width) {
-        width = camera_frame.size().width;
-        height = camera_frame.size().height;
-    }
 
-    {
-      if (params.is_set_primary_cursor()) {
-        otherindex_x_prv = otherindex_x;
-        otherindex_y_prv = otherindex_y;
-        
-        params.get_primary_cursor(otherindex_x, otherindex_y);
-
-        if (otherindex_x_prv == -1) {
-          otherindex_x_prv = otherindex_x;
-        }
-
-        if (otherindex_y_prv == -1) {
-          otherindex_y_prv = otherindex_y;
-        }
-
-        if (otherindex_x != -1 && otherindex_y != -1) {
-          otherindex_x = (1-otherindex_momentum)*otherindex_x + otherindex_momentum*otherindex_x_prv;
-          otherindex_y = (1-otherindex_momentum)*otherindex_y + otherindex_momentum*otherindex_y_prv;
-
-          indexfinger_x = otherindex_x*width;
-          indexfinger_y = otherindex_y*height;
-        }   
-      }
+    if (params.is_set_primary_cursor()) {
+      params.get_primary_cursor_cv_indices(indexfinger_x, indexfinger_y);
+    } else {
+      indexfinger_x = -1;
+      indexfinger_y = -1;
     }
     
     anchor->calculate(
@@ -491,7 +442,6 @@ void MediaPipeMultiHandGPU::debug(
 
     if (show_display || anchor->static_display) {
 
-      points[2][0] = std::make_tuple(indexfinger_x, indexfinger_y, 0); // putting (indexfinger_x, indexfinger_y) if in case trigger is wait
       trigger->update(camera_frame, points, params);
 
       if (trigger->status() == TRIGGER::RELEASED) {

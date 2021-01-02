@@ -5,12 +5,14 @@
 #include "desktop/anchors/anchors.h"
 #include "desktop/triggers/triggers.h"
 #include "desktop/initiators/initiators.h"
-#include "desktop/handlers/handlers.h";
+#include "desktop/handlers/handlers.h" 
 #include "desktop/ui/menu.h"
-#include "desktop/config/config.h";
+#include "desktop/config/config.h"
 
-#include "desktop/config/choices.h";
-#include "desktop/camera/camera.h";
+#include "desktop/config/choices.h"
+#include "desktop/camera/camera.h"
+
+#include "desktop/userstudies/trial.h"
 
 // #include "mediapipe/framework/port/rs.hpp" // Include RealSense Cross Platform API
 
@@ -26,8 +28,8 @@ DEFINE_string(output_video_path,
               "Full path of where to save result (.mp4 only). "
               "If not provided, show result in a window.");
 
-DEFINE_int32(frame_width, 1280, "frame/screen width in pixels."); // 640 // 1280
-DEFINE_int32(frame_height, 720, "frame/screen height in pixels."); // 480 // 720
+DEFINE_int32(frame_width, 640, "frame/screen width in pixels."); // 640 // 1280
+DEFINE_int32(frame_height, 480, "frame/screen height in pixels."); // 480 // 720
 DEFINE_int32(fps, 30, "frames per second.");
 DEFINE_int32(debug, 0, "debug mode");
 
@@ -89,6 +91,8 @@ int main(int argc, char** argv) {
       APP_NAME, 
       FLAGS_output_video_path + "/video" + current_time() + ".mp4");
     
+    mp_graph->trial = new userstudies::Trial();
+    
     try {
       auto tst = cv::Scalar(25,25,25);
     } catch (const std::exception& e) {
@@ -98,14 +102,14 @@ int main(int argc, char** argv) {
 
   
   int choice_anchor = 2;
-  int choice_trigger = 10;
+  int choice_trigger = 8;
   int choice_initiator = 1;
   int choice_divisions = 6;
   int choice_screensize = 2;
   int choice_debug = 1;
   int choice_visibility = 2;
   int choice_depth = 1;
-  int choice_resolution = 1;
+  int choice_trial_start_btn_location = 1;
 
   PalmSpaceUI::Menu menu = PalmSpaceUI::Menu(
     FLAGS_frame_width,
@@ -118,7 +122,7 @@ int main(int argc, char** argv) {
     choice_visibility,
     choice_debug,
     choice_depth,
-    choice_resolution,
+    choice_trial_start_btn_location,
     APP_NAME);
 
   menu.run();
@@ -132,16 +136,14 @@ int main(int argc, char** argv) {
     choice_visibility,
     choice_debug,
     choice_depth,
-    choice_resolution);
+    choice_trial_start_btn_location);
 
-  switch (choice_resolution) {
+  switch (choice_trial_start_btn_location) {
     case 1:
-      FLAGS_frame_width = 640;
-      FLAGS_frame_height = 480;
+      mp_graph->trial->m_start_btn_loc = userstudies::Location::LEFT;
       break;
     case 2:
-      FLAGS_frame_width = 1280;
-      FLAGS_frame_height = 720;
+      mp_graph->trial->m_start_btn_loc = userstudies::Location::CENTER;
       break;
   } 
 

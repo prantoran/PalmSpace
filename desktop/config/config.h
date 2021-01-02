@@ -42,6 +42,25 @@ class Range{
 };
 
 
+class SmoothCoord {
+  using type_t = double;
+  std::tuple<type_t, type_t, type_t> m_cur, m_prev;
+  double m_decay;
+  std::string m_name;
+  public:
+
+  SmoothCoord();
+  SmoothCoord(std::string _name, double _decay);
+  void reset();
+  void set(const std::tuple<type_t, type_t, type_t> & _new_point);
+  void set(const type_t & _x_col, const type_t & _y_row) ;
+  void get(std::tuple<type_t, type_t, type_t> & _point);
+  void get(type_t & x_col, type_t & y_row);
+  void get(type_t & x_col, type_t & y_row, type_t &z_depth);
+  void set_decay(double _decay);
+  bool is_set();
+};
+
 
 class Parameters {
   // TODO add m_ prefix to all attributes
@@ -51,8 +70,8 @@ class Parameters {
   // stores the indexes of the grid's cell which is currently selected
   // mainly used by trigger::dwell and anchors
   std::tuple<int, int> selected_cell;
-  std::tuple<double, double, double> m_indexbase, m_palmbase;
-  std::tuple<double, double, double> m_primary_cursor, m_primary_cursor_middlefinger_base;
+
+  
   Camera * m_camera;
 
 
@@ -62,6 +81,9 @@ class Parameters {
   std::tuple<double, double, double> m_other_index;
 
   public:
+  SmoothCoord m_indexbase, m_palmbase;
+  SmoothCoord m_primary_cursor, m_primary_cursor_middlefinger_base;
+  
   using index_t = int;
 
   index_t m_cursor_id, m_cursor_middlebase_id;
@@ -94,7 +116,7 @@ class Parameters {
     8: selected_j / col
   */
 
-  int m_row, m_col;
+  // int m_row, m_col;
 
   Range m_flood_width, m_flood_height;
 
@@ -111,16 +133,15 @@ class Parameters {
   void init(bool _load_video);
   void reset();
 
-  void get_palmbase(double &x, double &y);
+  void get_palmbase(double &x_col, double &y_row);
   void get_palmbase(std::tuple<double, double, double> & p);
   void set_palmbase(const std::tuple<double, double, double> & p);
-  void set_palmbase(double x, double y);
+  void set_palmbase(double x_col, double y_row);
 
-  void get_indexbase(double &x, double &y);
+  void get_indexbase(double &x_col, double &y_row);
   void get_indexbase(std::tuple<double, double, double> & p);
-  void get_indexbase_cv_indices(index_t & rowi, index_t & colj);
   void set_indexbase(const std::tuple<double, double, double> & p);
-  void set_indexbase(double x, double y);
+  void set_indexbase(double x_col, double y_row);
 
   void get_palmbase_middle_cv_indices(index_t &x_col, index_t &y_row);
 
@@ -151,7 +172,7 @@ class Parameters {
   float get_depth(int x_col, int y_row);
 
   void get_cv_indices(
-    const std::tuple<double, double, double> & point, 
+    SmoothCoord & point, 
     index_t & x_col, index_t & y_row);
 
   void set_progress_bar(double _progress);
@@ -161,6 +182,24 @@ class Parameters {
   void set_other_index(); // TODO need more inspection
   void get_other_index_z_value(double _z);
 
+};
+
+
+class Grid {
+  public:
+  int m_divisions;
+  int m_width, m_height, m_width_min, m_height_min;
+  int m_gap, m_x_cols[11], m_y_rows[11], m_dx_col, m_dy_row;
+  Grid();
+  void reset_dimensions();
+  cv::Point get_bottom_right();
+  cv::Point get_top_left();
+  cv::Rect get_bound_rect();
+  void reset();
+  int arg_x(int pointer_x);
+  int arg_y(int pointer_y);
+  void align(double topleft_x, double topleft_y);
+  cv::Rect get_cell(int i, int j);
 };
 
 #endif

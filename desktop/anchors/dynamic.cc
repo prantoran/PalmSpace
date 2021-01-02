@@ -29,11 +29,9 @@ void AnchorDynamic::initiate() {
   
   width = 0;
   height = 0;
-  momentum = 0.9;
-  gap = 5;
 
-  ws = 0;
-  hs = 0;
+  m_grid.m_width = 0;
+  m_grid.m_height = 0;
   
   color_green = COLORS_darkgreen;
 
@@ -48,7 +46,6 @@ void AnchorDynamic::initiate() {
 
   indexbase_x = 0;
   indexbase_y = 0;
-
 
   reset_grid();
   reset_palmbase();
@@ -66,7 +63,9 @@ void AnchorDynamic::calculate(
     
     if (!width || !height) {
       setConfig(input.size().width, input.size().height);
-      screen.setMinWidthHeight(min_ws, min_hs, width, height);
+      screen.setMinWidthHeight(
+        m_grid.m_width_min, m_grid.m_height_min, 
+        width, height);
     }
 
     updatePalmBase(palmbase);
@@ -84,36 +83,14 @@ void AnchorDynamic::calculate(
 }
 
 void AnchorDynamic::updatePalmBase(const std::tuple<double, double, double> & palmbase) {
-  palmbase_x_prv = palmbase_x;
-  palmbase_y_prv = palmbase_y;
-
   palmbase_x = std::get<0>(palmbase);
   palmbase_y = std::get<1>(palmbase);
-  
-  if (palmbase_x_prv > 0) {
-    palmbase_x = (1-momentum)*palmbase_x + momentum*palmbase_x_prv;
-  }
-  
-  if (palmbase_y_prv > 0) {
-    palmbase_y = (1-momentum)*palmbase_y + momentum*palmbase_y_prv;
-  }
 }
 
 
 void AnchorDynamic::updateIndexBase(const std::tuple<double, double, double> & indexbase) {
-  indexbase_x_prv = indexbase_x;
-  indexbase_y_prv = indexbase_y;
-
   indexbase_x = std::get<0>(indexbase);
   indexbase_y = std::get<1>(indexbase);
-  
-  if (indexbase_x_prv > 0) {
-    indexbase_x = (1-momentum)*indexbase_x + momentum*indexbase_x_prv;
-  }
-  
-  if (indexbase_y_prv > 0) {
-    indexbase_y = (1-momentum)*indexbase_y + momentum*indexbase_y_prv;
-  }
 }
 
 
@@ -138,8 +115,8 @@ void AnchorDynamic::draw(
         0);
     
 
-    for (int i = 1; i <= divisions; i ++ ) {
-        for (int j = 1; j <= divisions; j ++) {
+    for (int i = 1; i <= m_grid.m_divisions; i ++ ) {
+        for (int j = 1; j <= m_grid.m_divisions; j ++) {
           color_cur = color_red;
           if (i == green_i && j == green_j) {
             color_cur = color_green;
@@ -149,7 +126,7 @@ void AnchorDynamic::draw(
 
           cv::rectangle(
             overlay, 
-            cv::Point(xs[i], ys[j]), cv::Point(xs[i]+dx, ys[j]+dy), 
+            m_grid.get_cell(i, j),
             color_cur,
             -1, 
             cv::LINE_8,

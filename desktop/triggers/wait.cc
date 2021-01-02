@@ -40,8 +40,7 @@ void TriggerWait::update(
     
     ctime = cur_time();
 
-    pointer_x = (int)std::get<0>(points[2][0]);
-    pointer_y = (int)std::get<1>(points[2][0]);
+    params.get_primary_cursor_cv_indices(pointer_x, pointer_y);
 
     {
         // ws = (1-palmbase_momentum)*ws + palmbase_momentum*(2*area*width);

@@ -25,17 +25,25 @@ Parameters::Parameters(int _frame_width, int _frame_height, bool _load_video, Ca
 
     m_camera = _camera;
 
+    m_indexbase = SmoothCoord("indexbase", 0.3);
+    m_palmbase = SmoothCoord("palmbase", 0.3);
+    m_primary_cursor = SmoothCoord("primary_cursor", 0.3);
+    m_primary_cursor_middlefinger_base = SmoothCoord("primary_cursor_middlefinger_base", 0.3);
+
     reset();
     init(_load_video);
 }
 
 
 void Parameters::reset() {
-    m_indexbase = std::make_tuple(-1, -1, -1);
+    m_indexbase.reset();
+    m_palmbase.reset();
+    m_primary_cursor.reset();
+    m_primary_cursor_middlefinger_base.reset();
     
+    // m_palmbase.reset();
     is_static_display = false;
     load_video = false;
-
     m_progress_bar = -1;
 }
 
@@ -47,75 +55,51 @@ void Parameters::init(bool _load_video) {
 
 
 void Parameters::set_palmbase(const std::tuple<double, double, double> & p) {
-    m_palmbase = p;
+    m_palmbase.set(p);
 }
 
 
-void Parameters::set_palmbase(double x, double y) {
-    m_palmbase = std::make_tuple(x, y, 0);
+void Parameters::set_palmbase(double x_col, double y_row) {
+    m_palmbase.set(x_col, y_row);
 }
 
 
-void Parameters::get_palmbase(double &x, double &y) {
-    x = std::get<0>(m_palmbase);
-    y = std::get<1>(m_palmbase);
-
-    // for adjusting topleft pos of grid, since pointing 
-    // to top-left grids with other palm's index finger is hard
-    x += 0.11;
-    y += 0.16;
+void Parameters::get_palmbase(double &x_col, double &y_row) {
+    m_palmbase.get(x_col, y_row);
 }
 
 
 void Parameters::get_palmbase(std::tuple<double, double, double> & p) {
-    double x = std::get<0>(m_palmbase);
-    double y = std::get<1>(m_palmbase);
-
-    // for adjusting topleft pos of grid, since pointing 
-    // to top-left grids with other palm's index finger is hard
-    x += 0.11;
-    y += 0.16;
-
-    p = std::make_tuple(x, y, 0);
+    m_palmbase.get(p);
 }
 
 
 void Parameters::set_indexbase(const std::tuple<double, double, double> & p) {
-    m_indexbase = p;
+    m_indexbase.set(p);
 }
 
 
-void Parameters::set_indexbase(double x, double y) {
-    m_indexbase = std::make_tuple(x, y, 0);
+void Parameters::set_indexbase(double x_col, double y_row) {
+    m_indexbase.set(x_col, y_row);
 }
 
 
-void Parameters::get_indexbase(double &x, double &y) {
-    x = std::get<0>(m_indexbase);
-    y = std::get<1>(m_indexbase);
-}
-
-
-void Parameters::get_indexbase_cv_indices(index_t & rowi, index_t & colj) {
-    rowi = (int)(std::get<0>(m_indexbase) * m_frame_width);
-    colj = (int)(std::get<1>(m_indexbase) * m_frame_height);
+void Parameters::get_indexbase(double &x_col, double &y_row) {
+    m_indexbase.get(x_col, y_row);
 }
 
 
 void Parameters::get_indexbase(std::tuple<double, double, double> & p) {
-
-    double x = std::get<0>(m_indexbase);
-    double y = std::get<1>(m_indexbase);
-
-    p = std::make_tuple(x, y, 0);
+    m_indexbase.get(p);
 }
 
 
 void Parameters::get_palmbase_middle_cv_indices(index_t &x_col, index_t &y_row) {
-    double _x = std::get<0>(m_palmbase);
-    double _y = (std::get<1>(m_palmbase) + std::get<1>(m_indexbase)) / 2;
-    x_col = _x * m_frame_width;
-    y_row = _y * m_frame_height;
+    double _x1, _y1, _x2, _y2;
+    m_palmbase.get(_x1, _y1);
+    m_indexbase.get(_x2, _y2);
+    x_col = _x1 * m_frame_width;
+    y_row = ((_y1 + _y2)/2) * m_frame_height;
 }
 
 
@@ -175,8 +159,6 @@ void Parameters::get_depth_at(const std::vector<int> & rows, const std::vector<i
         int row = rows[k];
         int col = cols[k];
 
-        m_row = row;
-        m_col = col;
         float curd;
 
         for (int i = row-1; i < row+2; i ++) {
@@ -197,18 +179,17 @@ void Parameters::get_depth_at(const std::vector<int> & rows, const std::vector<i
 
 
 void Parameters::get_primary_cursor(double & x, double & y) {
-    x = std::get<0>(m_primary_cursor);
-    y = std::get<1>(m_primary_cursor);
+    m_primary_cursor.get(x, y);
 }
 
 
 void Parameters::set_primary_cursor(const std::tuple<double, double, double> & p) {
-    m_primary_cursor = p;
+    m_primary_cursor.set(p);
 }
 
 
 void Parameters::set_primary_cursor(double x, double y) {
-    m_primary_cursor = std::make_tuple(x, y, 0);
+    m_primary_cursor.set(x, y);
 }
 
 
@@ -218,7 +199,7 @@ void Parameters::get_primary_cursor_cv_indices(index_t & x_col, index_t & y_row)
 
 
 bool Parameters::is_set_primary_cursor() {
-    return std::get<0>(m_primary_cursor) > 0.01;
+    return m_primary_cursor.is_set();
 }
 
 
@@ -229,7 +210,7 @@ float Parameters::get_depth(int x_col, int y_row) {
 
 
 void Parameters::set_primary_cursor_middlefinger_base(const std::tuple<double, double, double> & p) {
-    m_primary_cursor_middlefinger_base = p;
+    m_primary_cursor_middlefinger_base.set(p);
 }
 
 
@@ -239,11 +220,13 @@ void Parameters::get_primary_cursor_middlefinger_base_cv_indices(index_t & x_col
 
 
 void Parameters::get_cv_indices(
-    const std::tuple<double, double, double> & point, 
+    SmoothCoord & point, 
     index_t & x_col, index_t & y_row) {
-
-    x_col = (int)(std::get<0>(point) * m_frame_width);
-    y_row = (int)(std::get<1>(point) * m_frame_height);
+    
+    double _x, _y;
+    point.get(_x, _y);
+    x_col = (int)(_x * m_frame_width);
+    y_row = (int)(_y * m_frame_height);
 }
 
 
