@@ -21,6 +21,8 @@
 #include "mediapipe/framework/formats/rect.pb.h"
 #include "mediapipe/framework/formats/detection.pb.h"
 
+#include "desktop/ui/cvui.h"
+
 
 // constexpr allows compiler to run statement/function at compile time.
 constexpr char kInputStream[] = "input_video";
@@ -255,6 +257,11 @@ void MediaPipeMultiHandGPU::debug(
   bool isDone = false;
 
   while (!isDone && m_grab_frames) {
+
+    if (trial && trial->done()) {
+      break;
+    }
+
     camera->get_frames();
 
     if (!camera->is_valid()) {
@@ -444,8 +451,24 @@ void MediaPipeMultiHandGPU::debug(
 
       trigger->update(camera_frame, points, params);
 
+      if (trial) {
+        if (trial->started()) {
+            trial->draw_target(m_primary_output, anchor->m_grid);
+
+        }
+      }
       if (trigger->status() == TRIGGER::RELEASED) {
-        anchor->highlightSelected();
+        if (!trial || trial->started()) {
+          anchor->highlightSelected();
+        }
+
+        if (trial) {
+          trial->process_is_button_clicked(indexfinger_x, indexfinger_y);
+          
+          if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
+            trial->process_correct_selection();
+          }
+        }
       }
           
       anchor->draw(
@@ -456,6 +479,9 @@ void MediaPipeMultiHandGPU::debug(
           interface_scaling_factor,
           indexfinger_x, indexfinger_y, params);
 
+      trial->update_start_button_loc(anchor->m_grid);
+      trial->draw_start_button(m_primary_output);
+      
       if (params.is_set_primary_cursor()) {
         cv::circle(
           m_primary_output,
@@ -488,6 +514,47 @@ void MediaPipeMultiHandGPU::debug(
       }
 
       m_writer.write(m_combined_output);
+    }
+  }
+
+
+  if (trial) {
+    std::cerr << "time taken:\n";
+    for (int i =  0 ; i < trial->m_target_sequence_size; i ++) {
+      std::cerr << "target " << i << ": " << trial->m_time_taken[i].count() << "\n";
+    }
+
+    m_primary_output = cv::Scalar(79,79,79);
+    for (int i = 0; i < trial->m_target_sequence_size; i ++) {
+      std::string str = "target " + std::to_string(i) + ": " + std::to_string(trial->m_time_taken[i].count());
+      std::cerr << "str:" << str << "\n";
+      cvui::text(
+        m_primary_output,
+        20,
+        i*20 + 20,
+        str,
+        0.5
+      );
+    }
+
+    combine_output_frames();
+
+    cv::imshow(m_window_name, m_combined_output);
+    const int pressed_key = cv::waitKey(2000);
+    if (pressed_key >= 0 && pressed_key != 255) m_grab_frames = false;
+
+    if (save_video) {
+      if (!m_writer.isOpened()) {
+        LOG(INFO) << "Prepare video writer.";
+        m_writer.open(m_output_video_path,
+          mediapipe::fourcc('a', 'v', 'c', '1'),  // .mp4
+          std::min(15, camera->get_fps()), m_combined_output.size());
+        RET_CHECK(m_writer.isOpened());
+      }
+      for (int i = 0; i < 100; i ++) {
+        m_writer.write(m_combined_output);
+
+      }
     }
   }
 

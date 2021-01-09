@@ -77,6 +77,8 @@ void checkOpenCVHardwareSupport() {
 }
 
 int main(int argc, char** argv) {
+  /* initialize random seed: */
+  srand (time(NULL));
 
   checkOpenCVHardwareSupport();
 
@@ -89,10 +91,7 @@ int main(int argc, char** argv) {
   if (mp_graph == NULL) {
     mp_graph = std::make_shared<MediaPipeMultiHandGPU>(
       APP_NAME, 
-      FLAGS_output_video_path + "/video" + current_time() + ".mp4");
-    
-    mp_graph->trial = new userstudies::Trial();
-    
+      FLAGS_output_video_path + "/video" + current_time() + ".mp4");    
     try {
       auto tst = cv::Scalar(25,25,25);
     } catch (const std::exception& e) {
@@ -109,7 +108,9 @@ int main(int argc, char** argv) {
   int choice_debug = 1;
   int choice_visibility = 2;
   int choice_depth = 1;
-  int choice_trial_start_btn_location = 1;
+  int choice_trial_start_btn_location = 3;
+  bool choice_trial_pause_before_each_target = true;
+  bool choice_trial_show_button_during_trial = false;
 
   PalmSpaceUI::Menu menu = PalmSpaceUI::Menu(
     FLAGS_frame_width,
@@ -123,6 +124,8 @@ int main(int argc, char** argv) {
     choice_debug,
     choice_depth,
     choice_trial_start_btn_location,
+    choice_trial_pause_before_each_target,
+    choice_trial_show_button_during_trial,
     APP_NAME);
 
   menu.run();
@@ -136,7 +139,12 @@ int main(int argc, char** argv) {
     choice_visibility,
     choice_debug,
     choice_depth,
-    choice_trial_start_btn_location);
+    choice_trial_start_btn_location,
+    choice_trial_pause_before_each_target,
+    choice_trial_show_button_during_trial);
+  
+
+  mp_graph->trial = new userstudies::Trial(choice_divisions);
 
   switch (choice_trial_start_btn_location) {
     case 1:
@@ -145,7 +153,16 @@ int main(int argc, char** argv) {
     case 2:
       mp_graph->trial->m_start_btn_loc = userstudies::Location::CENTER;
       break;
+    case 3:
+      mp_graph->trial->m_start_btn_loc = userstudies::Location::LEFTCENTER;
   } 
+
+  mp_graph->trial->m_trial_pause_before_each_target = choice_trial_pause_before_each_target;
+  mp_graph->trial->m_trial_show_button_during_trial = choice_trial_show_button_during_trial;
+
+
+  mp_graph->trial->generate_sample_space();
+  mp_graph->trial->generate_random_target_sequence(5);
 
   std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
 

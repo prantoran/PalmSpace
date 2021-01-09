@@ -78,7 +78,7 @@ class Anchor { // interface via abstract class
 
     cv::Scalar color_red, color_blue, color_green, color_cur;
 
-    int selected_i, selected_j, selected_i_prv, selected_j_prv; 
+    int m_selected_i, m_selected_j, m_selected_i_prv, m_selected_j_prv; 
 
     // TODO 2020/11/07: refactor green to marked
     int green_i, green_j;

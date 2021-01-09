@@ -62,6 +62,7 @@ class SmoothCoord {
 };
 
 
+
 class Parameters {
   // TODO add m_ prefix to all attributes
 
@@ -103,20 +104,6 @@ class Parameters {
 // initialize with nullptr to make your programming intent explicit.
   cv::Mat* depth_mat;
   float medians[25];
-  /*
-    LEGACY extra_params
-    0: min_ws
-    1: min_hs
-    2: palmbase_x
-    3: palmbase_y
-    4: otherindex_x
-    5: otherindex_y
-    6: otherindex_z
-    7: selected_i / row
-    8: selected_j / col
-  */
-
-  // int m_row, m_col;
 
   Range m_flood_width, m_flood_height;
 

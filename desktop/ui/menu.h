@@ -36,7 +36,12 @@ namespace PalmSpaceUI {
 
         bool visibility_fixed, visibility_conditional;
 
-        bool trial_start_btn_location_left, trial_start_btn_location_center;
+        bool trial_start_btn_location_left, trial_start_btn_location_center, trial_start_btn_location_left_center;
+
+        bool m_trial_pause_before_each_target;
+        bool m_trial_show_button_during_trial;
+
+
 
         public:
         
@@ -52,6 +57,8 @@ namespace PalmSpaceUI {
             bool debug, 
             bool use_depth,
             int trial_start_btn_location,
+            bool trial_pause_before_each_target,
+			bool trial_show_button_during_trial,
             std::string window_name
         );
 
@@ -66,7 +73,9 @@ namespace PalmSpaceUI {
             int & visibility,
             int & debug,
             int & depth,
-            int & trial_start_btn_location);
+            int & trial_start_btn_location,
+            bool & trial_pause_before_each_target,
+            bool & trial_show_button_during_trial);
 
         bool is_valid();
     };

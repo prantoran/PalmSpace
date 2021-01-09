@@ -41,8 +41,8 @@ void AnchorStatic::initiate() {
     color_blue = COLORS_blue;
     color_green = COLORS_darkgreen;
 
-    selected_i_prv = -1, selected_j_prv = -1;
-    selected_i = -1, selected_j = -1;
+    m_selected_i_prv = -1, m_selected_j_prv = -1;
+    m_selected_i = -1, m_selected_j = -1;
     green_i = -1, green_j = -1;
 
     static_display = false;
@@ -134,13 +134,13 @@ void AnchorStatic::calculate(
 
         checkSelectionWithinPalm(pointer_x, pointer_y, palmbase);
 
-        setupSelection(pointer_x, pointer_y, selected_i, selected_j); // defined in parent anchor class
+        setupSelection(pointer_x, pointer_y, m_selected_i, m_selected_j); // defined in parent anchor class
         
         if (green_i != -1 && green_j != -1) {
             // ensureMarkedCellWithinPalm(green_i, green_j);
         }
 
-        params.set_selected_cell(selected_i, selected_j);
+        params.set_selected_cell(m_selected_i, m_selected_j);
     }
 }
 
@@ -260,7 +260,7 @@ void AnchorStatic::draw(
           color_cur = color_red;
           if (i == green_i && j == green_j) {
             color_cur = color_green;
-          } else if (i == selected_i && j == selected_j) {
+          } else if (i == m_selected_i && j == m_selected_j) {
             color_cur = color_blue;
           }
 

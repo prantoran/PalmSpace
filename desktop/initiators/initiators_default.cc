@@ -121,7 +121,7 @@ void InitiatorDefault::params(
 
       if (points[idx].size() > MIDDLEFINGERBASE) {
         parameters.m_cursor_middlebase_id = idx;      
-        // parameters.set_primary_cursor_middlefinger_base(points[idx][MIDDLEFINGERBASE]);
+        parameters.set_primary_cursor_middlefinger_base(points[idx][MIDDLEFINGERBASE]);
       } else {
         parameters.m_primary_cursor_middlefinger_base.reset();
       }

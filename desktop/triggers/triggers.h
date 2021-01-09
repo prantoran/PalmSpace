@@ -230,7 +230,7 @@ class TriggerTapDepth: public Trigger {
     int m_medians[5][100];
     int m_median_indices[5];
     int m_ch_medians[5];
-    int floodfill_pixel_variance;
+    int m_floodfill_pixel_variance;
     Range m_flood_width, m_flood_height;
     
     // end
@@ -245,7 +245,6 @@ class TriggerTapDepth: public Trigger {
         Parameters & params);
     
     void get_channel_medians(cv::Mat * mat, int col_x, int row_y);
-    void flood_fill(Parameters & params, int & cnt);
     void process_depths(Parameters & params);
     void palm_rect_fill(Parameters & params, int & cnt);
 };
