@@ -17,12 +17,12 @@ void Anchor::setConfig(int _width, int _height) {
 }
 
 std::tuple<int, int> Anchor::selectedIndexes() {
-    return std::make_tuple(selected_i, selected_j);
+    return std::make_tuple(m_selected_i, m_selected_j);
 }
 
 void Anchor::highlightSelected() {
-    green_i = selected_i;
-    green_j = selected_j;
+    green_i = m_selected_i;
+    green_j = m_selected_j;
 
     message_selected = "Selected: " + std::to_string(m_grid.m_divisions*(green_j-1) + green_i);
 }
@@ -92,8 +92,8 @@ void Anchor::setupSelection(
     // if yes then setup selected i,j and message
 
     if (index_pointer_x != -1 && index_pointer_y != -1) {
-        selected_i_prv = selected_row_i;
-        selected_j_prv = selected_col_j;
+        m_selected_i_prv = selected_row_i;
+        m_selected_j_prv = selected_col_j;
 
         selected_row_i = m_grid.arg_x(index_pointer_x);
         selected_col_j = m_grid.arg_y(index_pointer_y);
@@ -104,20 +104,20 @@ void Anchor::setupSelection(
         }
 
         if (selected_row_i != -1) {
-            if (selected_row_i != selected_i_prv || selected_col_j != selected_j_prv) {
+            if (selected_row_i != m_selected_i_prv || selected_col_j != m_selected_j_prv) {
                 message = "Highlighted: ";
                 message += std::to_string((selected_col_j-1)*m_grid.m_divisions + selected_row_i);
             }
         } else {
-            selected_row_i = selected_i_prv;
-            selected_col_j = selected_j_prv;
+            selected_row_i = m_selected_i_prv;
+            selected_col_j = m_selected_j_prv;
         }
     }
 }
 
 
 void Anchor::drawTextHighlighted(cv::Mat & overlay) {
-    if (selected_i != -1) {
+    if (m_selected_i != -1) {
         cv::putText(overlay, //target image
             message, //text, set in anchors.cc
             cv::Point(5, 40), //top-left position

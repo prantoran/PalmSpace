@@ -16,6 +16,17 @@
 
 // #include "mediapipe/framework/port/rs.hpp" // Include RealSense Cross Platform API
 
+
+#ifdef WINDOWS
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
+#include <unistd.h>
+#define GetCurrentDir getcwd
+#endif
+
+
+
 DEFINE_string(
     calculator_graph_config_file, 
     "mediapipe/graphs/hand_tracking/multi_hand_tracking_mobile.pbtxt",
@@ -50,6 +61,14 @@ std::string current_time() {
 }
 
 
+std::string get_current_dir() {
+   char buff[FILENAME_MAX]; //create string buffer to hold path
+   GetCurrentDir( buff, FILENAME_MAX );
+   std::string current_working_dir(buff);
+   return current_working_dir;
+}
+
+
 void checkOpenCVHardwareSupport() {
   // CV_CPU_SSE4.1, CV_CPU_SSE4.2 not defined OpenCV v3.4
   int features [] = {CV_CPU_MMX, 
@@ -77,6 +96,8 @@ void checkOpenCVHardwareSupport() {
 }
 
 int main(int argc, char** argv) {
+  /* initialize random seed: */
+  srand (time(NULL));
 
   checkOpenCVHardwareSupport();
 
@@ -89,10 +110,7 @@ int main(int argc, char** argv) {
   if (mp_graph == NULL) {
     mp_graph = std::make_shared<MediaPipeMultiHandGPU>(
       APP_NAME, 
-      FLAGS_output_video_path + "/video" + current_time() + ".mp4");
-    
-    mp_graph->trial = new userstudies::Trial();
-    
+      FLAGS_output_video_path + "/video" + current_time() + ".mp4");    
     try {
       auto tst = cv::Scalar(25,25,25);
     } catch (const std::exception& e) {
@@ -104,12 +122,14 @@ int main(int argc, char** argv) {
   int choice_anchor = 2;
   int choice_trigger = 8;
   int choice_initiator = 1;
-  int choice_divisions = 6;
+  int choice_divisions = 5;
   int choice_screensize = 2;
   int choice_debug = 1;
   int choice_visibility = 2;
   int choice_depth = 1;
-  int choice_trial_start_btn_location = 1;
+  int choice_trial_start_btn_location = 3;
+  bool choice_trial_pause_before_each_target = true;
+  bool choice_trial_show_button_during_trial = false;
 
   PalmSpaceUI::Menu menu = PalmSpaceUI::Menu(
     FLAGS_frame_width,
@@ -123,6 +143,8 @@ int main(int argc, char** argv) {
     choice_debug,
     choice_depth,
     choice_trial_start_btn_location,
+    choice_trial_pause_before_each_target,
+    choice_trial_show_button_during_trial,
     APP_NAME);
 
   menu.run();
@@ -136,7 +158,12 @@ int main(int argc, char** argv) {
     choice_visibility,
     choice_debug,
     choice_depth,
-    choice_trial_start_btn_location);
+    choice_trial_start_btn_location,
+    choice_trial_pause_before_each_target,
+    choice_trial_show_button_during_trial);
+  
+
+  mp_graph->trial = new userstudies::Trial(choice_divisions);
 
   switch (choice_trial_start_btn_location) {
     case 1:
@@ -145,7 +172,16 @@ int main(int argc, char** argv) {
     case 2:
       mp_graph->trial->m_start_btn_loc = userstudies::Location::CENTER;
       break;
+    case 3:
+      mp_graph->trial->m_start_btn_loc = userstudies::Location::LEFTCENTER;
   } 
+
+  mp_graph->trial->m_trial_pause_before_each_target = choice_trial_pause_before_each_target;
+  mp_graph->trial->m_trial_show_button_during_trial = choice_trial_show_button_during_trial;
+
+
+  mp_graph->trial->generate_sample_space();
+  mp_graph->trial->generate_random_target_sequence(5);
 
   std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
 
@@ -171,7 +207,7 @@ int main(int argc, char** argv) {
       mp_graph->initiator = new InitiatorTwoHand();
       break;
     default:
-      std::cerr << "ERROR main.cc invalid initiator choice\n";
+      std::cout << "ERROR main.cc invalid initiator choice\n";
       return EXIT_FAILURE;
   }
 
@@ -180,23 +216,24 @@ int main(int argc, char** argv) {
       mp_graph->anchor = new AnchorDynamic(cv::Scalar(25, 25, 255), cv::Scalar(255, 25, 25));
       break;
     case 2:
+      
       mp_graph->anchor = new AnchorStatic(
                                   cv::Scalar(25, 25, 255), 
                                   cv::Scalar(255, 25, 25), 
-                                  "/home/prantoran/work/src/github.com/google/mediapipe/desktop/anchors/Hand.png");
+                                  get_current_dir() + "/desktop/anchors/Hand.png");
       break;
     case 3:
       // TODO inspect midair
       // mp_graph->anchor = new ;
       break;
     default:
-      std::cerr << "ERROR main.cc invalid anchor choice\n";
+      std::cout << "ERROR main.cc invalid anchor choice\n";
       return EXIT_FAILURE;
   }
 
   mp_graph->anchor->setDivisions(choice_divisions);
     
-  std::cerr << "choice_trigger:" << choice_trigger << "\n";
+  std::cout << "choice_trigger:" << choice_trigger << "\n";
 
   switch (choice_trigger) {
     case 1:

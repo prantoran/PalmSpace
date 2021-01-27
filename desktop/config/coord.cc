@@ -26,6 +26,9 @@ void SmoothCoord::set(const std::tuple<type_t, type_t, type_t> & _new_point) {
         std::cout << m_name << ": resetting in set func() NOT expected behaviour\n";
         m_cur = _new_point;
     } else {
+        type_t _x = m_decay*std::get<0>(_new_point) + (1-m_decay)*std::get<0>(m_prev);
+        type_t _y = m_decay*std::get<1>(_new_point) + (1-m_decay)*std::get<1>(m_prev);          
+        type_t _z = m_decay*std::get<2>(_new_point) + (1-m_decay)*std::get<2>(m_prev);
         m_cur =  std::make_tuple(
             m_decay*std::get<0>(_new_point) + (1-m_decay)*std::get<0>(m_prev),
             m_decay*std::get<1>(_new_point) + (1-m_decay)*std::get<1>(m_prev),
@@ -78,4 +81,19 @@ void SmoothCoord::set_decay(double _decay) {
 
 bool SmoothCoord::is_set() {
     return std::get<0>(m_cur) > 0.01;
+}
+
+
+double SmoothCoord::x() const {
+    return std::get<0>(m_cur);
+}
+
+
+double SmoothCoord::y() const {
+    return std::get<1>(m_cur);
+}
+
+
+double SmoothCoord::z() const {
+    return std::get<2>(m_cur);
 }

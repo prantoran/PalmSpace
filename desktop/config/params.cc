@@ -25,10 +25,10 @@ Parameters::Parameters(int _frame_width, int _frame_height, bool _load_video, Ca
 
     m_camera = _camera;
 
-    m_indexbase = SmoothCoord("indexbase", 0.3);
-    m_palmbase = SmoothCoord("palmbase", 0.3);
-    m_primary_cursor = SmoothCoord("primary_cursor", 0.3);
-    m_primary_cursor_middlefinger_base = SmoothCoord("primary_cursor_middlefinger_base", 0.3);
+    m_indexbase = SmoothCoord("indexbase", 0.1);
+    m_palmbase = SmoothCoord("palmbase", 0.1);
+    m_primary_cursor = SmoothCoord("primary_cursor", 0.1);
+    m_primary_cursor_middlefinger_base = SmoothCoord("primary_cursor_middlefinger_base", 0.1);
 
     reset();
     init(_load_video);
@@ -41,26 +41,17 @@ void Parameters::reset() {
     m_primary_cursor.reset();
     m_primary_cursor_middlefinger_base.reset();
     
-    // m_palmbase.reset();
     is_static_display = false;
     load_video = false;
     m_progress_bar = -1;
+
+    m_base_id = 0;
 }
 
 
 void Parameters::init(bool _load_video) {
     load_video = _load_video;
     m_show_depth_txt = false;
-}
-
-
-void Parameters::set_palmbase(const std::tuple<double, double, double> & p) {
-    m_palmbase.set(p);
-}
-
-
-void Parameters::set_palmbase(double x_col, double y_row) {
-    m_palmbase.set(x_col, y_row);
 }
 
 
@@ -74,13 +65,18 @@ void Parameters::get_palmbase(std::tuple<double, double, double> & p) {
 }
 
 
-void Parameters::set_indexbase(const std::tuple<double, double, double> & p) {
-    m_indexbase.set(p);
+void Parameters::set_palmbase(const std::tuple<double, double, double> & p) {
+    m_palmbase.set(p);
 }
 
 
-void Parameters::set_indexbase(double x_col, double y_row) {
-    m_indexbase.set(x_col, y_row);
+// void Parameters::set_palmbase(double x_col, double y_row) {
+//     m_palmbase.set(x_col, y_row);
+// }
+
+
+void Parameters::get_indexbase(std::tuple<double, double, double> & p) {
+    m_indexbase.get(p);
 }
 
 
@@ -89,15 +85,22 @@ void Parameters::get_indexbase(double &x_col, double &y_row) {
 }
 
 
-void Parameters::get_indexbase(std::tuple<double, double, double> & p) {
-    m_indexbase.get(p);
-}
+// void Parameters::set_indexbase(double x_col, double y_row) {
+//     m_indexbase.set(x_col, y_row);
+// }
 
+
+void Parameters::set_indexbase(const std::tuple<double, double, double> & p) {
+    m_indexbase.set(p);
+}
 
 void Parameters::get_palmbase_middle_cv_indices(index_t &x_col, index_t &y_row) {
     double _x1, _y1, _x2, _y2;
     m_palmbase.get(_x1, _y1);
     m_indexbase.get(_x2, _y2);
+
+    // std::cerr << "x1:" << _x1 << "\ty1:" << _y1 << "\tx2:" << _x2 << "\ty2:" << _y2 << "\n";
+
     x_col = _x1 * m_frame_width;
     y_row = ((_y1 + _y2)/2) * m_frame_height;
 }
@@ -115,12 +118,12 @@ bool Parameters::is_static() {
 
 // the const makes the promise that the func will not change state
 int Parameters::total_hands_detected() const {
-    return total_hands;
+    return m_total_hands;
 }
 
 
 void Parameters::set_total_hands(int hands) {
-    total_hands = hands;
+    m_total_hands = hands;
 }
 
 

@@ -19,6 +19,8 @@ namespace PalmSpaceUI {
 			bool debug, 
 			bool depth,
 			int trial_start_btn_location,
+			bool trial_pause_before_each_target,
+			bool trial_show_button_during_trial,
 			std::string window_name
 		) {
 		
@@ -31,6 +33,9 @@ namespace PalmSpaceUI {
 		// bool use_canny = false;
 		low_threshold = 50, high_threshold = 150;
 		cellcnt = divisions;
+		if (!(cellcnt%2)) {
+			cellcnt ++;
+		} 
 
 		onehand = true, twohand = false;
 		if (initiator == 2) {
@@ -86,10 +91,16 @@ namespace PalmSpaceUI {
 
 		trial_start_btn_location_left = true;
 		trial_start_btn_location_center = false;
+		trial_start_btn_location_left_center = false;
+
 		switch (trial_start_btn_location) {
 			case 2:
 				trial_start_btn_location_left = false;
 				trial_start_btn_location_center = true;
+				break;
+			case 3:
+				trial_start_btn_location_left = false;
+				trial_start_btn_location_left_center = true;
 				break;
 			default:
 				break;
@@ -118,6 +129,12 @@ namespace PalmSpaceUI {
 			visibility_fixed = false;
 			visibility_conditional = true;
 		}
+
+		m_trial_pause_before_each_target = false;
+		if (trial_pause_before_each_target) m_trial_pause_before_each_target = true;
+
+		m_trial_show_button_during_trial = false;
+		if (trial_show_button_during_trial) m_trial_show_button_during_trial = true;
 	}
 
 
@@ -144,20 +161,25 @@ namespace PalmSpaceUI {
 			cvui::checkbox(frame, scalex + 15, scaley + 170, "MidAir", &ancmid);
 
 
-			cvui::window(frame, scalex + 120, scaley + 10, 200, 180, "Trigger");
-			cvui::checkbox(frame, scalex + 125, scaley + 30, "Thumb of base palm", &trigpalmbase);
-			cvui::checkbox(frame, scalex + 125, scaley + 50, "Shoot", &trigpalmfree); // "Thumb of free palm"
-			cvui::checkbox(frame, scalex + 125, scaley + 70, "Pinch with free palm", &trigpinch);
-			cvui::checkbox(frame, scalex + 125, scaley + 90, "Tap Depth Distance", &trigdepthdistance);
-			cvui::checkbox(frame, scalex + 125, scaley + 110, "Tap", &trigtap);
-			cvui::checkbox(frame, scalex + 125, scaley + 130, "Dwell", &trigdwell);
-			cvui::checkbox(frame, scalex + 125, scaley + 150, "Tap Depth", &trigtapdepth);
-			cvui::checkbox(frame, scalex + 125, scaley + 170, "Tap Depth Single", &trigtapdepthsingle);
+
+			cvui::window(frame, scalex + 120, scaley + 10, 200, 80, "Trigger");
+			cvui::checkbox(frame, scalex + 125, scaley + 30, "Dwell", &trigdwell);
+			cvui::checkbox(frame, scalex + 125, scaley + 50, "Tap Depth", &trigtapdepth);
+			// cvui::checkbox(frame, scalex + 125, scaley + 30, "Thumb of base palm", &trigpalmbase);
+			// cvui::checkbox(frame, scalex + 125, scaley + 50, "Shoot", &trigpalmfree); // "Thumb of free palm"
+			// cvui::checkbox(frame, scalex + 125, scaley + 70, "Pinch with free palm", &trigpinch);
+			// cvui::checkbox(frame, scalex + 125, scaley + 90, "Tap Depth Distance", &trigdepthdistance);
+			// cvui::checkbox(frame, scalex + 125, scaley + 110, "Tap", &trigtap);
+			// cvui::checkbox(frame, scalex + 125, scaley + 170, "Tap Depth Single", &trigtapdepthsingle);
 
 			if (cellcnt < 3) cellcnt = 3;
-			if (cellcnt > 10) cellcnt = 10;
-			cvui::window(frame, scalex + 120, scaley + 200, 200, 50, "Number of cells per row/col");
-			cvui::counter(frame, scalex + 175, scaley + 225, &cellcnt);
+			if (cellcnt > 9) cellcnt = 9;
+			cvui::window(frame, scalex + 120, scaley + 100, 200, 50, "Number of cells per row/col");
+			cvui::counter(frame, scalex + 175, scaley + 125, &cellcnt, 2);
+			
+			cvui::window(frame, scalex + 120, scaley + 160, 200, 80, "Trial options");
+			cvui::checkbox(frame, scalex + 125, scaley + 190, "Pause before each target", &m_trial_pause_before_each_target);
+			cvui::checkbox(frame, scalex + 125, scaley + 220, "Show button during trial", &m_trial_show_button_during_trial);
 			
 			cvui::window(frame, scalex + 330, scaley + 10, 100, 80, "Screen Size");
 			cvui::checkbox(frame, scalex + 330, scaley + 30, "Small", &screen_small);
@@ -168,9 +190,10 @@ namespace PalmSpaceUI {
 			cvui::checkbox(frame, scalex + 330, scaley + 120, "Fixed", &visibility_fixed);
 			cvui::checkbox(frame, scalex + 330, scaley + 140, "Conditional", &visibility_conditional);
 
-			cvui::window(frame, scalex + 330, scaley + 180, 100, 70, "Trial Start Button");
+			cvui::window(frame, scalex + 330, scaley + 180, 100, 100, "Start Button");
 			cvui::checkbox(frame, scalex + 330, scaley + 200, " Left", &trial_start_btn_location_left);
 			cvui::checkbox(frame, scalex + 330, scaley + 220, "Center", &trial_start_btn_location_center);
+			cvui::checkbox(frame, scalex + 330, scaley + 240, "Left Center", &trial_start_btn_location_left_center);
 
 			if (cvui::button(frame, width - 120, height - 50, 100, 30, "Next")) {
 				if (is_valid()) {
@@ -210,7 +233,9 @@ namespace PalmSpaceUI {
 		int & visibility,
 		int & debug,
 		int & depth,
-		int & trial_start_btn_location) {
+		int & trial_start_btn_location,
+		bool & trial_pause_before_each_target,
+		bool & trial_show_button_during_trial) {
 
 		if (onehand) initiator = 1;
 		if (twohand) initiator = 2;
@@ -245,6 +270,8 @@ namespace PalmSpaceUI {
 
 		if (trial_start_btn_location_left) trial_start_btn_location = 1;
 		else if (trial_start_btn_location_center) trial_start_btn_location = 2;
+		else if (trial_start_btn_location_left_center) trial_start_btn_location = 3;
+
 	}
 
 
@@ -321,6 +348,7 @@ namespace PalmSpaceUI {
 			cnt = 0;
 			if (trial_start_btn_location_left) cnt ++;
 			if (trial_start_btn_location_center) cnt ++;
+			if (trial_start_btn_location_left_center) cnt ++;
 			if (cnt != 1) {
 				valid = 0;
 				errormsg = "Select exactly 1 location for trial start button.";

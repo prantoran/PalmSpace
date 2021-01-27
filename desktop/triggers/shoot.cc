@@ -39,9 +39,6 @@ void TriggerThumbOther::update(
     dx *= width;
     dy *= height;
 
-    // double dx = std::get<0>(points[0]) - std::get<0>(points[hdx]);
-    // double dy = std::get<1>(points[0]) - std::get<1>(points[hdx]);
-
     double d = 10*(dx*dx + dy*dy);
 
     if (d < 30000) {

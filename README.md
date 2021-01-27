@@ -50,3 +50,8 @@ use namespaces wherever possible
 - extern force external linkage, static force internal linkage.
 - const global variables have internal linkage by default, and non-const global variables have external linkage by default.
 
+
+## Debugging
+- OpenGL 3.1 downgrading to 2.0 err
+https://dev.classmethod.jp/articles/mediapipe-process-on-aws-ec2-with-gpu/
+comment out EGL_WINDOW_BIT in EGLint config_attr in mediapipe/gpu/gl_context_egl.cc

@@ -4,6 +4,9 @@
 #include <utility>
 #include <unordered_map>
 
+// #include "mediapipe/framework/port/opencv_highgui_inc.h" // GUI #include "opencv2/highgui/highgui.hpp"
+// #include "mediapipe/framework/port/opencv_imgproc_inc.h"
+// #include "mediapipe/framework/port/opencv_video_inc.h"
 
 SupportPoints::SupportPoints() {}
 
@@ -19,6 +22,7 @@ void SupportPoints::init(int _size) {
         m_xcoords[i] = -1;
         m_ycoords[i] = -1;
     }
+
 }
 
 
@@ -92,21 +96,25 @@ TriggerTapDepth::TriggerTapDepth() {
         m_base_indices[k] = i;
     }
 
+
+    // for (int k = 0, i = 7; i <=8; i++, k ++) {
+    //     m_cursor_indices[k] = i;
+    // }
     for (int k = 0, i = 9; i <=13; i+=4, k ++) {
         m_cursor_indices[k] = i;
     }
+    // m_cursor_indices[2] = 9;
+
 
     // channel medians start
     m_channel_cnt = 3;
-    m_floodfill_pixel_variance = 15;
+    m_floodfill_pixel_variance = 40;
     positive_frames_cnt = 0;
     // end
 
     cur_state = TRIGGER::OPEN;
 
-    m_mean_cnt = 0;
 }
-
 
 void TriggerTapDepth::update(
     const cv::Mat & input_image,
@@ -114,10 +122,16 @@ void TriggerTapDepth::update(
     Parameters & params) {
 
     m_base_pts.backup_prev();   
-    m_base_pts.update_support(m_base_indices, points[params.m_base_id], params);
+    m_base_pts.update_support(m_base_indices, points[0], params);
+    // std::cerr << "trigdepth base_points:\n";
+    // m_base_pts.print();
 
     m_cursor_pts.backup_prev();
-    m_cursor_pts.update_support(m_cursor_indices, points[1-params.m_base_id], params);
+    m_cursor_pts.update_support(m_cursor_indices, points[1], params);
+    // std::cerr << "trigdepth cursor_points:\n";
+    // m_base_pts.print();
+
+    // process_depths();
 
     for (int i = 0; i < m_channel_cnt; i ++) {
         m_ch_medians[i] = 0;
@@ -131,6 +145,7 @@ void TriggerTapDepth::update(
 
     }
 
+    
     for (int i = 0; i < m_channel_cnt; i ++) {
         m_ch_medians[i] =  m_ch_medians[i]/m_channel_cnt + ((m_ch_medians[i]%m_channel_cnt) > 0);
     }
@@ -139,9 +154,8 @@ void TriggerTapDepth::update(
     int cnt = 0;
     // flood_fill(params, cnt);
     palm_rect_fill(params, cnt);
-    m_mean_cnt = 0.9*m_mean_cnt + (1-0.9)*cnt;
 
-    if (cnt > (int)(m_mean_cnt + 700)) {
+    if (cnt > 2500) {
         positive_frames_cnt ++;
         if (positive_frames_cnt > 3) 
             positive_frames_cnt = 3;
@@ -150,7 +164,7 @@ void TriggerTapDepth::update(
         if (positive_frames_cnt < 0) 
             positive_frames_cnt = 0;
     }
-    std::cerr << "cnt:" << cnt << "\tpositive_frames_cnt:" << positive_frames_cnt << "\tm_mean_cnt:" << m_mean_cnt << "\n";
+    std::cerr << "cnt:" << cnt << " positive_frames_cnt:" << positive_frames_cnt << "\n";
 
     if (positive_frames_cnt > 1) {
         if (cur_state == TRIGGER::OPEN) {
@@ -178,12 +192,12 @@ void TriggerTapDepth::palm_rect_fill(Parameters & params, int & cnt) {
     // std::cerr << "x_col_palmid:" << x_col_palmid << "\ty_row_palmid:" << y_row_palmid << "\n";
 
     m_flood_width = Range(
-        std::max(0, x_col_palmid - 40), 
-        std::min(x_col_palmid + 40, params.m_frame_height-1));
+        std::max(0, x_col_palmid - 50), 
+        std::min(x_col_palmid + 50, params.m_frame_height-1));
 
     m_flood_height = Range(
-        std::max(0, y_row_palmid-40), 
-        std::min(y_row_palmid + 40, params.m_frame_height-1));
+        std::max(0, y_row_palmid-50), 
+        std::min(y_row_palmid + 50, params.m_frame_height-1));
     
     params.m_flood_height = m_flood_height;
     params.m_flood_width = m_flood_width;
@@ -205,15 +219,14 @@ void TriggerTapDepth::palm_rect_fill(Parameters & params, int & cnt) {
 
             // depth_pixel palm area
             cv::Vec3b dp_palmrect = (*params.depth_mat).at<cv::Vec3b>(y_row, x_col); 
-            
-            int _col_mark = 255;
+
             for (int j = -1;j < 2; j ++) {
 
                 if (cursor_y < j) continue;
                 if (cursor_y + j >= params.m_frame_height) continue;
                 
                 
-                for (int i = -1, _local_cnt = 0;i < 2; i ++) {
+                for (int i = -1;i < 2; i ++) {
                     if (cursor_x < i) continue;
                     if (cursor_x + i >= params.m_frame_width) continue;
                     // depth pixel index cursor area
@@ -224,7 +237,7 @@ void TriggerTapDepth::palm_rect_fill(Parameters & params, int & cnt) {
                         (*params.depth_mat),
                         cv::Point(cursor_x+i, cursor_y+j),
                         10,
-                        cv::Scalar(0, 140, 255),
+                        cv::Scalar(192, 192, 192),
                         cv::FILLED,
                         cv::LINE_8
                     );
@@ -232,49 +245,62 @@ void TriggerTapDepth::palm_rect_fill(Parameters & params, int & cnt) {
                     for (int ch = 0; ch < 3; ch ++) {
                         int diff = std::abs(dp_cursor[ch] - dp_palmrect[ch]);
                         if (diff < m_floodfill_pixel_variance) {
-                            _local_cnt ++;
-
+                            inRangeCnt ++;
                         }
                     }
-
-                    if (_local_cnt > 1) inRangeCnt ++;
                 }
 
-            }
-
-            if (inRangeCnt < 5) {
-                _col_mark = 50;
-                for (int j = -1;j < 2; j ++) {
-                    if (cursor_midfinger_y < j) continue;
-                    if (cursor_midfinger_y + j >= params.m_frame_height) continue;
-                    for (int i = -1, _local_cnt = 0; i < 2; i ++) {
-                        if (cursor_midfinger_x < i) continue;
-                        if (cursor_midfinger_x + i >= params.m_frame_width) continue;
-                        // depth pixel index cursor area
-                        cv::Vec3b dp_cursor = (*params.depth_mat).at<cv::Vec3b>(cursor_midfinger_y+j, cursor_midfinger_x+i); 
-
-
-                        for (int ch = 0; ch < 3; ch ++) {
-                            int diff = std::abs(dp_cursor[ch] - dp_palmrect[ch]);
-                            if (diff < m_floodfill_pixel_variance) {
-                                _local_cnt ++;
-                            }
-                        }
-
-                        if (_local_cnt > 1) inRangeCnt ++;
-                    }
-                }
             }
 
             
-            if (inRangeCnt > 8) {
+            for (int j = -1;j < 2; j ++) {
+                if (cursor_midfinger_y < j) continue;
+                if (cursor_midfinger_y + j >= params.m_frame_height) continue;
+                for (int i = -1;i < 2; i ++) {
+                    if (cursor_midfinger_x < i) continue;
+                    if (cursor_midfinger_x + i >= params.m_frame_width) continue;
+                    // depth pixel index cursor area
+                    cv::Vec3b dp_cursor = (*params.depth_mat).at<cv::Vec3b>(cursor_midfinger_y+j, cursor_midfinger_x+i); 
+
+
+                    for (int ch = 0; ch < 3; ch ++) {
+                        int diff = std::abs(dp_cursor[ch] - dp_palmrect[ch]);
+                        if (diff < m_floodfill_pixel_variance) {
+                            inRangeCnt ++;
+                        }
+                    }
+                }
+            }
+            
+            if (inRangeCnt > 36) {
                 cnt ++;
                 dp_palmrect[0] = dp_palmrect[1] = 0;
-                dp_palmrect[2] = _col_mark;
+                dp_palmrect[2] = 255;
                 (*params.depth_mat).at<cv::Vec3b>(y_row, x_col) = dp_palmrect;
             }
         }
     }
+}
+
+
+void TriggerTapDepth::process_depths(Parameters & params) {
+
+    m_depth_base_prev = m_depth_base;
+    m_depth_cursor_prev = m_depth_cursor;
+
+    params.get_depth_at(m_base_pts.m_xcoords, m_base_pts.m_ycoords, m_depth_base);
+    params.get_depth_at(m_cursor_pts.m_xcoords, m_cursor_pts.m_ycoords, m_depth_cursor);
+
+    if (m_depth_base_prev != -1) {
+        m_depth_base   = (1-0.9)*m_depth_base   + (0.9)*m_depth_base_prev;
+    }
+
+    if (m_depth_cursor_prev != -1) {
+        m_depth_cursor = (1-0.9)*m_depth_cursor + (0.9)*m_depth_cursor_prev;
+    }
+
+    std::cerr << "depth depth_base:" << m_depth_base << "m\tdepth_cursor:" << m_depth_cursor << "m\n";
+
 }
 
 
@@ -303,4 +329,96 @@ void TriggerTapDepth::get_channel_medians(cv::Mat * mat, int col_x, int row_y) {
     for (int i = 0; i < m_channel_cnt; i ++) {
         m_ch_medians[i] += m_medians[i][m_median_indices[i]/2];
     }
+}
+
+
+void TriggerTapDepth::flood_fill(Parameters & params, int & cnt) {
+    // use cursor x, y as the seed and top-mid position of the filling rectangular region
+    // modifies the params.depth_mat
+    int cursor_x, cursor_y;
+    params.get_primary_cursor_cv_indices(cursor_x, cursor_y);
+
+    m_flood_width = Range(
+        std::max(0, cursor_x - 50), 
+        std::min(cursor_x + 50, params.m_frame_height-1));
+
+    m_flood_height = Range(
+        cursor_y, 
+        std::min(params.m_frame_height-1, cursor_y+100));
+
+    params.m_flood_height = m_flood_height;
+    params.m_flood_width = m_flood_width;
+
+     
+    int dx[] = {1, -1, 0, 0};
+    int dy[] = {0, 0, 1, -1};
+
+    Range ch[3];
+    cv::Vec3b cursor_pixel = (*params.depth_mat).at<cv::Vec3b>(cursor_y, cursor_x);
+    for (int i = 0; i < 3; i ++) {
+        // int mid_pixel = m_ch_medians[i];
+        int mid_pixel = cursor_pixel[i];
+
+        ch[i] = Range(mid_pixel-m_floodfill_pixel_variance,
+                    mid_pixel+m_floodfill_pixel_variance);
+    }
+
+    cnt = 0;
+
+    std::queue<std::pair<int, int>> q;
+    std::unordered_map<std::pair<int, int>, bool, pair_hash> visited;
+    
+    for (int i = -5; i < 6; i ++) {
+        if (cursor_x < i) continue;
+        for (int j = -5; j < 6; j ++) {
+            if (cursor_y < j) continue;
+            q.push({cursor_x+i, cursor_y+j});
+            visited[{cursor_x+i, cursor_y+j}] = true;
+        }
+    }
+
+    while (!q.empty()) {
+        std::pair<int, int> u = q.front();
+        q.pop();
+
+        int x_col = u.first;
+        int y_row = u.second;
+
+        // first = width, second = height
+        cv::Vec3b u_pixel = (*params.depth_mat).at<cv::Vec3b>(y_row, x_col);
+
+        int inRange = 0;
+        for (int i = 0;i < 3; i ++) {
+            if (ch[i].isInside(u_pixel[i])) 
+                inRange ++;
+        }
+
+        if (inRange > 1) {
+            cnt ++;
+            u_pixel[0] = 255;
+            u_pixel[1] = 255;
+            u_pixel[2] = 0;
+
+            // WARN modifying depth map
+            (*params.depth_mat).at<cv::Vec3b>(y_row, x_col) = u_pixel;
+        } else {
+            continue;
+        }
+
+        for (int i = 0; i < 4; i ++) {
+            int x_new = x_col + dx[i];
+            int y_new = y_row + dy[i];
+
+            if (!m_flood_width.isInside(x_new) || 
+                !m_flood_height.isInside(y_new))
+                continue;
+            
+            if (visited[{x_new, y_new}]) continue;
+
+            visited[{x_new, y_new}] = true;
+
+            q.push({x_new, y_new});
+        }
+    }
+
 }

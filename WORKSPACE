@@ -2,8 +2,6 @@ workspace(name = "mediapipe")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-
-
 skylib_version = "0.9.0"
 http_archive(
     name = "bazel_skylib",
@@ -12,14 +10,14 @@ http_archive(
     sha256 = "1dde365491125a3db70731e25658dfdd3bc5dbdfd11b840b3e987ecf043c7ca0",
 )
 load("@bazel_skylib//lib:versions.bzl", "versions")
-versions.check(minimum_bazel_version = "2.0.0")
+versions.check(minimum_bazel_version = "3.4.0")
 
 
-# ABSL cpp library lts_2020_02_25
+# ABSL cpp library lts_2020_09_23
 http_archive(
     name = "com_google_absl",
     urls = [
-        "https://github.com/abseil/abseil-cpp/archive/20200225.tar.gz",
+        "https://github.com/abseil/abseil-cpp/archive/20200923.tar.gz",
     ],
     # Remove after https://github.com/abseil/abseil-cpp/issues/326 is solved.
     patches = [
@@ -28,8 +26,8 @@ http_archive(
     patch_args = [
         "-p1",
     ],
-    strip_prefix = "abseil-cpp-20200225",
-    sha256 = "728a813291bdec2aa46eab8356ace9f75ac2ed9dfe2df5ab603c4e6c09f1c353"
+    strip_prefix = "abseil-cpp-20200923",
+    sha256 = "b3744a4f7a249d5eaf2309daad597631ce77ea62e0fc6abffbab4b4c3dc0fc08"
 )
 
 http_archive(
@@ -38,8 +36,6 @@ http_archive(
     urls = ["https://github.com/bazelbuild/rules_cc/archive/master.zip"],
 )
 
-# 2020.11.24 also needed in integrating RealSense
-# ref: https://github.com/bazelbuild/rules_foreign_cc
 http_archive(
    name = "rules_foreign_cc",
    strip_prefix = "rules_foreign_cc-master",
@@ -48,19 +44,8 @@ http_archive(
 
 load("@rules_foreign_cc//:workspace_definitions.bzl", "rules_foreign_cc_dependencies")
 
-# 2020.11.24 also needed in integrating RealSense
-# ref: https://github.com/bazelbuild/rules_foreign_cc
-# toggle between whichever builds using cmake:
-#rules_foreign_cc_dependencies()
-rules_foreign_cc_dependencies([
-#    "//:built_cmake_toolchain",
-#    "//:my_make_toolchain",
-#    "//:my_cmake_toolchain",
-#    "//:my_ninja_toolchain",
-])
+rules_foreign_cc_dependencies()
 
-# 2020.11.24 also needed in integrating RealSense
-# ref: https://github.com/bazelbuild/rules_foreign_cc
 # This is used to select all contents of the archives for CMake-based packages to give CMake access to them.
 all_content = """filegroup(name = "all", srcs = glob(["**"]), visibility = ["//visibility:public"])"""
 
@@ -114,7 +99,7 @@ http_archive(
         "https://github.com/google/glog/archive/0a2e5931bd5ff22fd3bf8999eb8ce776f159cda6.zip",
     ],
     patches = [
-        "@//third_party:com_github_glog_glog_9779e5ea6ef59562b030248947f787d1256132ae.diff"
+        "@//third_party:com_github_glog_glog_9779e5ea6ef59562b030248947f787d1256132ae.diff",
     ],
     patch_args = [
         "-p1",
@@ -185,15 +170,15 @@ http_archive(
 
 http_archive(
     name = "ceres_solver",
-    url = "https://github.com/ceres-solver/ceres-solver/archive/1.14.0.zip",
+    url = "https://github.com/ceres-solver/ceres-solver/archive/2.0.0.zip",
     patches = [
         "@//third_party:ceres_solver_compatibility_fixes.diff"
     ],
     patch_args = [
         "-p1",
     ],
-    strip_prefix = "ceres-solver-1.14.0",
-    sha256 = "5ba6d0db4e784621fda44a50c58bb23b0892684692f0c623e2063f9c19f192f1"
+    strip_prefix = "ceres-solver-2.0.0",
+    sha256 = "db12d37b4cebb26353ae5b7746c7985e00877baa8e7b12dc4d3a1512252fff3b"
 )
 
 http_archive(
@@ -208,18 +193,6 @@ new_local_repository(
     build_file = "@//third_party:opencv_linux.BUILD",
     path = "/usr/local",
 )
-
-# 2020-11-25
-# integrating librealsense in ubuntu 20.04 lts
-# srcs refer to shared objects from /usr/local/lib
-# hdrs refere to header files from /usr/local/include
-# copying from linux_opencv
-new_local_repository(
-    name = "linux_realsense",
-    build_file = "@//third_party:realsense_linux.BUILD",
-    path = "/usr/local",
-)
-
 
 new_local_repository(
     name = "linux_ffmpeg",
@@ -268,12 +241,10 @@ http_archive(
 # You may run setup_android.sh to install Android SDK and NDK.
 android_ndk_repository(
     name = "androidndk",
-    path = "/root/Android/Sdk/ndk-bundle/android-ndk-r18b",
 )
 
 android_sdk_repository(
     name = "androidsdk",
-    path = "/root/Android/Sdk",
 )
 
 # iOS basic build deps.
@@ -353,8 +324,9 @@ maven_install(
         "androidx.lifecycle:lifecycle-common:2.2.0",
         "androidx.annotation:annotation:aar:1.1.0",
         "androidx.appcompat:appcompat:aar:1.1.0-rc01",
-        "androidx.camera:camera-core:aar:1.0.0-alpha06",
-        "androidx.camera:camera-camera2:aar:1.0.0-alpha06",
+        "androidx.camera:camera-core:1.0.0-beta10",
+        "androidx.camera:camera-camera2:1.0.0-beta10",
+        "androidx.camera:camera-lifecycle:1.0.0-beta10",
         "androidx.constraintlayout:constraintlayout:aar:1.1.3",
         "androidx.core:core:aar:1.1.0-rc03",
         "androidx.legacy:legacy-support-v4:aar:1.0.0",
@@ -366,6 +338,7 @@ maven_install(
         "com.google.flogger:flogger-system-backend:0.3.1",
         "com.google.flogger:flogger:0.3.1",
         "com.google.guava:guava:27.0.1-android",
+        "com.google.guava:listenablefuture:1.0",
         "junit:junit:4.12",
         "org.hamcrest:hamcrest-library:1.3",
     ],
@@ -391,9 +364,9 @@ http_archive(
 )
 
 #Tensorflow repo should always go after the other external dependencies.
-# 2020-08-30
-_TENSORFLOW_GIT_COMMIT = "57b009e31e59bd1a7ae85ef8c0232ed86c9b71db"
-_TENSORFLOW_SHA256= "de7f5f06204e057383028c7e53f3b352cdf85b3a40981b1a770c9a415a792c0e"
+# 2020-12-09
+_TENSORFLOW_GIT_COMMIT = "0eadbb13cef1226b1bae17c941f7870734d97f8a"
+_TENSORFLOW_SHA256= "4ae06daa5b09c62f31b7bc1f781fd59053f286dd64355830d8c2ac601b795ef0"
 http_archive(
     name = "org_tensorflow",
     urls = [
@@ -401,6 +374,7 @@ http_archive(
     ],
     patches = [
         "@//third_party:org_tensorflow_compatibility_fixes.diff",
+        "@//third_party:org_tensorflow_objc_cxx17.diff",
     ],
     patch_args = [
         "-p1",
@@ -411,3 +385,15 @@ http_archive(
 
 load("@org_tensorflow//tensorflow:workspace.bzl", "tf_workspace")
 tf_workspace(tf_repo_name = "org_tensorflow")
+
+
+# 2020-11-25	
+# integrating librealsense in ubuntu 20.04 lts	
+# srcs refer to shared objects from /usr/local/lib	
+# hdrs refere to header files from /usr/local/include	
+# copying from linux_opencv	
+new_local_repository(	
+    name = "linux_realsense",	
+    build_file = "@//third_party:realsense_linux.BUILD",	
+    path = "/usr/local",	
+)

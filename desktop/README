@@ -2,6 +2,23 @@
 ### Virtual interface for mid-air interaction
 
 TODOS:
+
+
+
+meeting2
+
+1. Add text "Start" to the button
+2. Once the start button is clicked, hide the button and show the next target 
+3. Once a target is selected, do not show the next target. Show the start button again
+4. Check task completion time
+4. Start button position -> move it down
+
+
+
+
+
+
+
 throw exception, modular func, less dependency on shared memory
 read constants from env file using config pkg
 anchor calculate refactor indexfinger x y

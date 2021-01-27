@@ -74,8 +74,8 @@ void TriggerTapDepthSingle::finger_length_ratio(
 
     depth_cursor = 0;
 
-    double dx = params.m_frame_width * (std::get<0>(points[0][8]) - std::get<0>(points[0][5]));
-    double dy = params.m_frame_height * (std::get<1>(points[0][8]) - std::get<1>(points[0][5]));
+    double dx = params.m_frame_width * (std::get<0>(points[params.m_base_id][8]) - std::get<0>(points[params.m_base_id][5]));
+    double dy = params.m_frame_height * (std::get<1>(points[params.m_base_id][8]) - std::get<1>(points[params.m_base_id][5]));
     
     double d2 = (dx*dx) + (dy*dy);
 

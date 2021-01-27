@@ -18,14 +18,14 @@
 
 // data structures for mediapipe graph
 #include "mediapipe/framework/formats/landmark.pb.h"
-#include "mediapipe/framework/formats/rect.pb.h"
-#include "mediapipe/framework/formats/detection.pb.h"
+
+#include "desktop/ui/cvui.h"
 
 
 // constexpr allows compiler to run statement/function at compile time.
 constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
-
+constexpr char kLandmarkOutputStream[] = "hand_landmarks";
 
 // constexpr char kWindowName[] = "PalmSpace";
 constexpr int BLOB_AREA_THRESH = 100;
@@ -94,8 +94,8 @@ void MediaPipeMultiHandGPU::debug(
   for (int i = 0; i < points[0].size(); i ++) {
     cv::putText(m_primary_output, //target image
       std::to_string(i), //text
-      cv::Point(std::get<0>(
-        points[0][i])*params.m_frame_width, 
+      cv::Point(
+        std::get<0>(points[0][i])*params.m_frame_width, 
         std::get<1>(points[0][i])*params.m_frame_height),
       cv::FONT_HERSHEY_DUPLEX,
       1.0,
@@ -113,9 +113,36 @@ void MediaPipeMultiHandGPU::debug(
         ),
       cv::FONT_HERSHEY_DUPLEX,
       1.0,
-      CV_RGB(0, 0, 0), //font color
+      CV_RGB(255, 255, 255), //font color
       2);
   }
+
+
+  cv::putText(
+    m_primary_output,
+    "pbidx",
+    cv::Point(
+      std::get<0>(points[params.m_base_id][0]) * params.m_frame_width,
+      std::get<1>(points[params.m_base_id][0]) * params.m_frame_height
+    ),
+    cv::FONT_HERSHEY_DUPLEX,
+    1.0,
+    cv::Scalar(0, 255, 0),
+    2
+  );
+
+  cv::putText(
+    m_primary_output,
+    "ibidx",
+    cv::Point(
+      std::get<0>(points[params.m_base_id][17]) * params.m_frame_width,
+      std::get<1>(points[params.m_base_id][17]) * params.m_frame_height
+    ),
+    cv::FONT_HERSHEY_DUPLEX,
+    1.0,
+    cv::Scalar(0, 255, 0),
+    2
+  );
 
   int x_col, y_row;
   params.get_primary_cursor_cv_indices(x_col, y_row);
@@ -151,6 +178,50 @@ void MediaPipeMultiHandGPU::debug(
     );
   }
 
+  // std::cerr << "about to print palmbase\n";
+  if (params.m_palmbase.is_set()) {
+    cv::putText(
+      m_primary_output,
+      "palmbs",
+      cv::Point(
+        params.m_palmbase.x() * params.m_frame_width,
+        params.m_palmbase.y() * params.m_frame_height
+      ),
+      cv::FONT_HERSHEY_DUPLEX,
+      1.0,
+      cv::Scalar(139, 0, 139),
+      2
+    );
+  }
+
+
+  // std::cerr << "about to print indexbase\n";
+  if (params.m_indexbase.is_set()) {
+    cv::putText(
+      m_primary_output,
+      "indexbs",
+      cv::Point(
+        params.m_indexbase.x() * params.m_frame_width,
+        params.m_indexbase.y() * params.m_frame_height
+      ),
+      cv::FONT_HERSHEY_DUPLEX,
+      1.0,
+      cv::Scalar(139, 0, 139),
+      2
+    );
+  }
+
+  int xcol, yrow;
+  params.get_primary_cursor_cv_indices(xcol, yrow);
+  cv::putText(
+    m_primary_output,
+    "primary cursor",
+    cv::Point(xcol, yrow),
+    cv::FONT_HERSHEY_DUPLEX,
+    1.0,
+    cv::Scalar(139, 0, 139),
+    2);
+
   if (params.m_show_depth_txt) {
     int xcol, yrow;
     params.get_primary_cursor_cv_indices(xcol, yrow);
@@ -163,6 +234,22 @@ void MediaPipeMultiHandGPU::debug(
       cv::Scalar(139, 0, 139),
       2);
   }
+
+
+  int x_col_palmid, y_row_palmid;
+  params.get_palmbase_middle_cv_indices(x_col_palmid, y_row_palmid);
+  cv::putText(
+    m_primary_output,
+    "palmmid",
+    cv::Point(
+      x_col_palmid,
+      y_row_palmid
+    ),
+    cv::FONT_HERSHEY_DUPLEX,
+    1.0,
+    cv::Scalar(139, 0, 139),
+    2
+  );
 }
 
 
@@ -214,7 +301,7 @@ void MediaPipeMultiHandGPU::debug(
   ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller poller,
                    graph.AddOutputStreamPoller(kOutputStream));
   ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller multi_hand_landmarks_poller,
-                  graph.AddOutputStreamPoller("multi_hand_landmarks"));
+                  graph.AddOutputStreamPoller(kLandmarkOutputStream));
   // ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller multi_hand_palm_detections_poller,
   //                 graph.AddOutputStreamPoller("palm_detections"));
   
@@ -223,7 +310,6 @@ void MediaPipeMultiHandGPU::debug(
 
   MP_RETURN_IF_ERROR(graph.StartRun({}));
 
-  LOG(INFO) << "Start grabbing and processing frames.";
   m_grab_frames = true;
   bool show_display = false;
 
@@ -254,7 +340,14 @@ void MediaPipeMultiHandGPU::debug(
   
   bool isDone = false;
 
+  LOG(INFO) << "Start grabbing and processing frames.";
+
   while (!isDone && m_grab_frames) {
+
+    if (trial && trial->done()) {
+      break;
+    }
+
     camera->get_frames();
 
     if (!camera->is_valid()) {
@@ -273,7 +366,7 @@ void MediaPipeMultiHandGPU::debug(
     // Converts an image from one color space to another.
     // cv::cvtColor(camera_frame, hsv, CV_BGR2HSV);
 
-    cv::cvtColor(camera_frame, camera_frame, cv::COLOR_BGR2RGB);
+    cv::cvtColor(camera_frame, camera_frame, cv::COLOR_BGR2RGBA);
 
 
     if (!params.load_video) {
@@ -281,16 +374,19 @@ void MediaPipeMultiHandGPU::debug(
       cv::flip(m_depth_map, m_depth_map, 1);
     }
 
+
+
     // Wrap Mat into an ImageFrame.
     auto input_frame = absl::make_unique<mediapipe::ImageFrame>(
-        mediapipe::ImageFormat::SRGB, camera_frame.cols, camera_frame.rows,
-        mediapipe::ImageFrame::kGlDefaultAlignmentBoundary);
+        mediapipe::ImageFormat::SRGBA, camera_frame.cols, camera_frame.rows,
+        mediapipe::ImageFrame::kGlDefaultAlignmentBoundary); 
     
     {
       // this code has effect, if commented out then landmarks are misaligned
       cv::Mat input_frame_mat = mediapipe::formats::MatView(input_frame.get());
       camera_frame.copyTo(input_frame_mat);
     }
+
 
     // Prepare and add graph input packet.
     size_t frame_timestamp_us =
@@ -310,7 +406,10 @@ void MediaPipeMultiHandGPU::debug(
           return ::mediapipe::OkStatus();
         }));
 
-    cv::cvtColor(camera_frame, camera_frame, cv::COLOR_RGB2BGR);
+    if (camera_frame.channels() == 4)
+      cv::cvtColor(camera_frame, camera_frame, cv::COLOR_RGBA2BGR);
+    else
+      cv::cvtColor(camera_frame, camera_frame, cv::COLOR_RGB2BGR);
 
     {
       // needed block or else there is memory leak (~30MB)
@@ -318,7 +417,9 @@ void MediaPipeMultiHandGPU::debug(
       // Get the graph result packet, or stop if that fails.
       mediapipe::Packet packet;
       // check if data exist from graph
-      if (!poller.Next(&packet)) break;
+      if (!poller.Next(&packet)) {
+        continue;
+      };
 
       // Convert GpuBuffer to ImageFrame.
       MP_RETURN_IF_ERROR(
@@ -348,15 +449,16 @@ void MediaPipeMultiHandGPU::debug(
         )
       );
     }
+
     
     mediapipe::Packet multi_hand_landmarks_packet;
+    bool _landmarks_found = true;
     // check if landmarks exist from graph
     if (!multi_hand_landmarks_poller.Next(&multi_hand_landmarks_packet)) {
       std::cout << "handler/MediaPipeMultiHandGPU::run() landmarks cannot be polled\n";
-      break;
+      _landmarks_found = false;
     }
 
-    const auto& multi_hand_landmarks = multi_hand_landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
 
     // resetting points
     for (int i = 0; i < 2; i ++) {
@@ -364,9 +466,12 @@ void MediaPipeMultiHandGPU::debug(
       for (int j = 1; j < 21; j ++) {
         points[i][j] = points[i][0];
       }
-    }
+    } 
 
-    {
+    // std::cerr << "reset landmarks\n";
+
+    if (_landmarks_found) {
+      const auto& multi_hand_landmarks = multi_hand_landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
       int hand_id = 0;
 
       for (const auto& hand_landmarks : multi_hand_landmarks) {
@@ -386,7 +491,12 @@ void MediaPipeMultiHandGPU::debug(
       }
     }
 
+
+    // std::cerr << "calling initiator->params(points, params)\n";
+    // std::cerr << "initiator null? " << (initiator == NULL) << "\n";
     initiator->params(points, params);
+
+    // std::cerr << "initiator->params(points, params)\n";
 
     params.get_palmbase(palmbase);
     params.get_indexbase(indexbase);
@@ -395,7 +505,7 @@ void MediaPipeMultiHandGPU::debug(
 
     show_display = false;
 
-    if (initiator->inspect(points)) {
+    if (initiator->inspect(points, params)) {
       show_display = true;
       initiator->params(points, params);
 
@@ -444,8 +554,24 @@ void MediaPipeMultiHandGPU::debug(
 
       trigger->update(camera_frame, points, params);
 
+      if (trial) {
+        if (trial->started()) {
+            trial->draw_target(m_primary_output, anchor->m_grid);
+
+        }
+      }
       if (trigger->status() == TRIGGER::RELEASED) {
-        anchor->highlightSelected();
+        if (!trial || trial->started()) {
+          anchor->highlightSelected();
+        }
+
+        if (trial) {
+          trial->process_is_button_clicked(indexfinger_x, indexfinger_y);
+          
+          if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
+            trial->process_correct_selection();
+          }
+        }
       }
           
       anchor->draw(
@@ -456,6 +582,9 @@ void MediaPipeMultiHandGPU::debug(
           interface_scaling_factor,
           indexfinger_x, indexfinger_y, params);
 
+      trial->update_start_button_loc(anchor->m_grid);
+      trial->draw_start_button(m_primary_output);
+      
       if (params.is_set_primary_cursor()) {
         cv::circle(
           m_primary_output,
@@ -488,6 +617,47 @@ void MediaPipeMultiHandGPU::debug(
       }
 
       m_writer.write(m_combined_output);
+    }
+  }
+
+
+  if (trial) {
+    std::cerr << "time taken:\n";
+    for (int i =  0 ; i < trial->m_target_sequence_size; i ++) {
+      std::cerr << "target " << i << ": " << trial->m_time_taken[i].count() << "\n";
+    }
+
+    m_primary_output = cv::Scalar(79,79,79);
+    for (int i = 0; i < trial->m_target_sequence_size; i ++) {
+      std::string str = "target " + std::to_string(i) + ": " + std::to_string(trial->m_time_taken[i].count());
+      std::cerr << "str:" << str << "\n";
+      cvui::text(
+        m_primary_output,
+        20,
+        i*20 + 20,
+        str,
+        0.5
+      );
+    }
+
+    combine_output_frames();
+
+    cv::imshow(m_window_name, m_combined_output);
+    const int pressed_key = cv::waitKey(2000);
+    if (pressed_key >= 0 && pressed_key != 255) m_grab_frames = false;
+
+    if (save_video) {
+      if (!m_writer.isOpened()) {
+        LOG(INFO) << "Prepare video writer.";
+        m_writer.open(m_output_video_path,
+          mediapipe::fourcc('a', 'v', 'c', '1'),  // .mp4
+          std::min(15, camera->get_fps()), m_combined_output.size());
+        RET_CHECK(m_writer.isOpened());
+      }
+      for (int i = 0; i < 100; i ++) {
+        m_writer.write(m_combined_output);
+
+      }
     }
   }
 

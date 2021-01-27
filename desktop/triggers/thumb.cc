@@ -19,15 +19,15 @@ void TriggerThumb::update(
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
     Parameters & params) {
 
-    if (points[0].size() <= index_bottom) {
+    if (points[params.m_base_id].size() <= index_bottom) {
         std::cout << "trigger thumb update: not enough points\n";
         cur_state = TRIGGER::OPEN;
         return;
     }
     
     
-    double dx = std::get<0>(points[0][index_bottom]) - std::get<0>(points[0][thumb_top]);
-    double dy = std::get<1>(points[0][index_bottom]) - std::get<1>(points[0][thumb_top]);
+    double dx = std::get<0>(points[params.m_base_id][index_bottom]) - std::get<0>(points[params.m_base_id][thumb_top]);
+    double dy = std::get<1>(points[params.m_base_id][index_bottom]) - std::get<1>(points[params.m_base_id][thumb_top]);
 
     dx *= width;
     dy *= height;

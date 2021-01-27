@@ -41,8 +41,8 @@ void AnchorStatic::initiate() {
     color_blue = COLORS_blue;
     color_green = COLORS_darkgreen;
 
-    selected_i_prv = -1, selected_j_prv = -1;
-    selected_i = -1, selected_j = -1;
+    m_selected_i_prv = -1, m_selected_j_prv = -1;
+    m_selected_i = -1, m_selected_j = -1;
     green_i = -1, green_j = -1;
 
     static_display = false;
@@ -55,25 +55,26 @@ void AnchorStatic::initiate() {
 
 void AnchorStatic::setup_palmiamge(std::string imagePath) {
     // only take .png as it has alpha channel for transparency
-    // image_palm = cv::imread("/home/prantoran/work/src/github.com/google/fresh/mediapipe/desktop/anchors/Hand.png", CV_LOAD_IMAGE_COLOR); // ignores alpha transparency channel
-    image_palm = cv::imread(imagePath, CV_LOAD_IMAGE_UNCHANGED);
+    image_palm = cv::imread(imagePath, CV_LOAD_IMAGE_UNCHANGED); 
+    // CV_LOAD_IMAGE_COLOR ignores alpha transparency channel
     // https://docs.opencv.org/3.4/da/d0a/group__imgcodecs__c.html
+
+    if(image_palm.channels() < 4) {
+        return;
+    }
 
     cv::resize(image_palm, image_palm, cv::Size(300,300));
     
     // https://answers.opencv.org/question/174551/how-to-show-transparent-images/
     std::vector<cv::Mat> rgbLayer;
-    if(image_palm.channels() < 4) {
-        return;
-    }
 
     split(image_palm, rgbLayer);
     cv::Mat cs[3] = { rgbLayer[0],rgbLayer[1],rgbLayer[2] };
     cv::merge(cs, 3, image_palm);  // glue together again
     mask = rgbLayer[3];       // png's alpha channel used as mask
 
-    // cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-    // cv::imshow("Display window", mask);                   // Show our image inside it.
+    cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+    cv::imshow("Display window", mask);                   // Show our image inside it.
 
     // cv::waitKey(0);
 }
@@ -134,13 +135,13 @@ void AnchorStatic::calculate(
 
         checkSelectionWithinPalm(pointer_x, pointer_y, palmbase);
 
-        setupSelection(pointer_x, pointer_y, selected_i, selected_j); // defined in parent anchor class
+        setupSelection(pointer_x, pointer_y, m_selected_i, m_selected_j); // defined in parent anchor class
         
         if (green_i != -1 && green_j != -1) {
             // ensureMarkedCellWithinPalm(green_i, green_j);
         }
 
-        params.set_selected_cell(selected_i, selected_j);
+        params.set_selected_cell(m_selected_i, m_selected_j);
     }
 }
 
@@ -260,7 +261,7 @@ void AnchorStatic::draw(
           color_cur = color_red;
           if (i == green_i && j == green_j) {
             color_cur = color_green;
-          } else if (i == selected_i && j == selected_j) {
+          } else if (i == m_selected_i && j == m_selected_j) {
             color_cur = color_blue;
           }
 

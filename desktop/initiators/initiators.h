@@ -19,7 +19,7 @@ const int INDEXBASE_IDX = 17; // adjusted for left hand
 const double MIN_WIDTH = 0.1;
 const double MIN_HEIGHT = 0.1;
 
-const double AREA_THRESHOLD = 0.08;
+const double AREA_THRESHOLD = 0.06;
 const double SMALLAREA_THRESHOLD = 0.01;
 
 
@@ -38,10 +38,11 @@ class Initiator {
 
     // warning: changes the actual arguments
     virtual bool inspect(
-        std::vector<std::vector<std::tuple<double, double, double>>> & points) = 0;
+        std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        Parameters & params) = 0;
     virtual void params(
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        Parameters & parameters) = 0;
+        Parameters & params) = 0;
 };
 
 class InitiatorDefault: public Initiator {
@@ -51,10 +52,11 @@ class InitiatorDefault: public Initiator {
     ~InitiatorDefault();
 
     bool inspect(
-        std::vector<std::vector<std::tuple<double, double, double>>> & points);
+        std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        Parameters & params);
     void params(
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        Parameters & parameters);
+        Parameters & params);
 };
 
 class InitiatorTwoHand: public Initiator {
@@ -68,10 +70,11 @@ class InitiatorTwoHand: public Initiator {
     ~InitiatorTwoHand();
 
     bool inspect(
-        std::vector<std::vector<std::tuple<double, double, double>>> & points);
+        std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        Parameters & params);
     void params(
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        Parameters & parameters);
+        Parameters & params);
 };
 
 
