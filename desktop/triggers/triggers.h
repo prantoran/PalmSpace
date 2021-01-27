@@ -237,6 +237,8 @@ class TriggerTapDepth: public Trigger {
 
     int positive_frames_cnt;
 
+    double m_mean_cnt;
+
     TriggerTapDepth();
     
     void update(

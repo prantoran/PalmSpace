@@ -55,25 +55,26 @@ void AnchorStatic::initiate() {
 
 void AnchorStatic::setup_palmiamge(std::string imagePath) {
     // only take .png as it has alpha channel for transparency
-    // image_palm = cv::imread("/home/prantoran/work/src/github.com/google/fresh/mediapipe/desktop/anchors/Hand.png", CV_LOAD_IMAGE_COLOR); // ignores alpha transparency channel
-    image_palm = cv::imread(imagePath, CV_LOAD_IMAGE_UNCHANGED);
+    image_palm = cv::imread(imagePath, CV_LOAD_IMAGE_UNCHANGED); 
+    // CV_LOAD_IMAGE_COLOR ignores alpha transparency channel
     // https://docs.opencv.org/3.4/da/d0a/group__imgcodecs__c.html
+
+    if(image_palm.channels() < 4) {
+        return;
+    }
 
     cv::resize(image_palm, image_palm, cv::Size(300,300));
     
     // https://answers.opencv.org/question/174551/how-to-show-transparent-images/
     std::vector<cv::Mat> rgbLayer;
-    if(image_palm.channels() < 4) {
-        return;
-    }
 
     split(image_palm, rgbLayer);
     cv::Mat cs[3] = { rgbLayer[0],rgbLayer[1],rgbLayer[2] };
     cv::merge(cs, 3, image_palm);  // glue together again
     mask = rgbLayer[3];       // png's alpha channel used as mask
 
-    // cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-    // cv::imshow("Display window", mask);                   // Show our image inside it.
+    cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+    cv::imshow("Display window", mask);                   // Show our image inside it.
 
     // cv::waitKey(0);
 }

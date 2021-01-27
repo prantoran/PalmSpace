@@ -53,20 +53,22 @@ class SmoothCoord {
   SmoothCoord(std::string _name, double _decay);
   void reset();
   void set(const std::tuple<type_t, type_t, type_t> & _new_point);
-  void set(const type_t & _x_col, const type_t & _y_row) ;
+  void set(const type_t & _x_col, const type_t & _y_row);
   void get(std::tuple<type_t, type_t, type_t> & _point);
   void get(type_t & x_col, type_t & y_row);
   void get(type_t & x_col, type_t & y_row, type_t &z_depth);
   void set_decay(double _decay);
   bool is_set();
+  double x() const;
+  double y() const;
+  double z() const;
 };
-
 
 
 class Parameters {
   // TODO add m_ prefix to all attributes
 
-  int total_hands;
+  int m_total_hands;
 
   // stores the indexes of the grid's cell which is currently selected
   // mainly used by trigger::dwell and anchors
@@ -109,6 +111,8 @@ class Parameters {
 
   bool m_show_depth_txt;
   std::string m_depth_txt;
+
+  int m_base_id; // m_base_hand_id_set_by_initiator;
   
   void get_raw_dimensions(double & _width, double _height);
   void set_raw_dimensions(double _width, double _height);
@@ -119,16 +123,17 @@ class Parameters {
 
   void init(bool _load_video);
   void reset();
-
+  
   void get_palmbase(double &x_col, double &y_row);
   void get_palmbase(std::tuple<double, double, double> & p);
   void set_palmbase(const std::tuple<double, double, double> & p);
-  void set_palmbase(double x_col, double y_row);
+  // void set_palmbase(double x_col, double y_row);
 
   void get_indexbase(double &x_col, double &y_row);
   void get_indexbase(std::tuple<double, double, double> & p);
   void set_indexbase(const std::tuple<double, double, double> & p);
-  void set_indexbase(double x_col, double y_row);
+  // void set_indexbase(double x_col, double y_row);
+
 
   void get_palmbase_middle_cv_indices(index_t &x_col, index_t &y_row);
 
@@ -188,5 +193,6 @@ class Grid {
   void align(double topleft_x, double topleft_y);
   cv::Rect get_cell(int i, int j);
 };
+
 
 #endif

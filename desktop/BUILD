@@ -50,8 +50,6 @@ cc_library(
         "//mediapipe/gpu:gpu_buffer",
         "//mediapipe/gpu:gpu_shared_data_internal",
 	    "//mediapipe/framework/formats:landmark_cc_proto",
-        "//mediapipe/framework/formats:detection_cc_proto",
-        "//mediapipe/framework/formats:rect_cc_proto",
         "//third_party:realsense",
 	],
 )
@@ -62,8 +60,7 @@ cc_binary(
     # copts = ["-fno-rtti"],
 	deps = [
         "main_gpu",
-        "//mediapipe/graphs/hand_tracking:multi_hand_mobile_calculators",
-        # "@taxi_code_socialworkout_webrtc_linux//:rtc",
+        "//mediapipe/graphs/hand_tracking:mobile_calculators",
     ],
 )
 

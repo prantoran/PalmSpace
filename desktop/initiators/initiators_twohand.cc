@@ -19,7 +19,8 @@ InitiatorTwoHand::~InitiatorTwoHand() {
 
 
 bool InitiatorTwoHand::inspect(
-        std::vector<std::vector<std::tuple<double, double, double>>> & points) {
+        std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        Parameters & params) {
     
 
     for (int i = 0; i < 2; i ++) {
@@ -91,30 +92,31 @@ bool InitiatorTwoHand::inspect(
 
 void InitiatorTwoHand::params(
   const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-  Parameters & parameters) {
+  Parameters & params) {
 
-    parameters.set_total_hands(points.size());
+    params.set_total_hands(points.size());
 
-    parameters.set_raw_dimensions(raw_width, raw_height);
+    params.set_raw_dimensions(raw_width, raw_height);
 
-    parameters.set_palmbase(palmbase_x, palmbase_y);
+    params.set_palmbase(
+        std::make_tuple(palmbase_x, palmbase_y, 0));
     
-    parameters.m_cursor_id = -1;
+    params.m_cursor_id = -1;
   
     int idx = 0;
 
     // TODO refactor common code block below
     if (points[idx].size() > INDEXTOP_IDX) {
-        parameters.m_cursor_id = idx;
-        parameters.set_primary_cursor(points[idx][INDEXTOP_IDX]);
+        params.m_cursor_id = idx;
+        params.set_primary_cursor(points[idx][INDEXTOP_IDX]);
     } else {
-        parameters.m_primary_cursor.reset();
+        params.m_primary_cursor.reset();
     }
 
     if (points[idx].size() > MIDDLEFINGERBASE) {
-        parameters.m_cursor_middlebase_id = idx;      
-        parameters.set_primary_cursor_middlefinger_base(points[idx][MIDDLEFINGERBASE]);
+        params.m_cursor_middlebase_id = idx;      
+        params.set_primary_cursor_middlefinger_base(points[idx][MIDDLEFINGERBASE]);
     } else {
-        parameters.m_primary_cursor_middlefinger_base.reset();
+        params.m_primary_cursor_middlefinger_base.reset();
     }
 }

@@ -160,25 +160,26 @@ namespace PalmSpaceUI {
 			cvui::checkbox(frame, scalex + 15, scaley + 150, "Static", &ancstat);
 			cvui::checkbox(frame, scalex + 15, scaley + 170, "MidAir", &ancmid);
 
-			cvui::window(frame, scalex + 120, scaley + 260, 200, 80, "Trial options");
-			cvui::checkbox(frame, scalex + 125, scaley + 290, "Pause before each target", &m_trial_pause_before_each_target);
-			cvui::checkbox(frame, scalex + 125, scaley + 310, "Show button during trial", &m_trial_show_button_during_trial);
 
 
-			cvui::window(frame, scalex + 120, scaley + 10, 200, 180, "Trigger");
-			cvui::checkbox(frame, scalex + 125, scaley + 30, "Thumb of base palm", &trigpalmbase);
-			cvui::checkbox(frame, scalex + 125, scaley + 50, "Shoot", &trigpalmfree); // "Thumb of free palm"
-			cvui::checkbox(frame, scalex + 125, scaley + 70, "Pinch with free palm", &trigpinch);
-			cvui::checkbox(frame, scalex + 125, scaley + 90, "Tap Depth Distance", &trigdepthdistance);
-			cvui::checkbox(frame, scalex + 125, scaley + 110, "Tap", &trigtap);
-			cvui::checkbox(frame, scalex + 125, scaley + 130, "Dwell", &trigdwell);
-			cvui::checkbox(frame, scalex + 125, scaley + 150, "Tap Depth", &trigtapdepth);
-			cvui::checkbox(frame, scalex + 125, scaley + 170, "Tap Depth Single", &trigtapdepthsingle);
+			cvui::window(frame, scalex + 120, scaley + 10, 200, 80, "Trigger");
+			cvui::checkbox(frame, scalex + 125, scaley + 30, "Dwell", &trigdwell);
+			cvui::checkbox(frame, scalex + 125, scaley + 50, "Tap Depth", &trigtapdepth);
+			// cvui::checkbox(frame, scalex + 125, scaley + 30, "Thumb of base palm", &trigpalmbase);
+			// cvui::checkbox(frame, scalex + 125, scaley + 50, "Shoot", &trigpalmfree); // "Thumb of free palm"
+			// cvui::checkbox(frame, scalex + 125, scaley + 70, "Pinch with free palm", &trigpinch);
+			// cvui::checkbox(frame, scalex + 125, scaley + 90, "Tap Depth Distance", &trigdepthdistance);
+			// cvui::checkbox(frame, scalex + 125, scaley + 110, "Tap", &trigtap);
+			// cvui::checkbox(frame, scalex + 125, scaley + 170, "Tap Depth Single", &trigtapdepthsingle);
 
 			if (cellcnt < 3) cellcnt = 3;
 			if (cellcnt > 9) cellcnt = 9;
-			cvui::window(frame, scalex + 120, scaley + 200, 200, 50, "Number of cells per row/col");
-			cvui::counter(frame, scalex + 175, scaley + 225, &cellcnt, 2);
+			cvui::window(frame, scalex + 120, scaley + 100, 200, 50, "Number of cells per row/col");
+			cvui::counter(frame, scalex + 175, scaley + 125, &cellcnt, 2);
+			
+			cvui::window(frame, scalex + 120, scaley + 160, 200, 80, "Trial options");
+			cvui::checkbox(frame, scalex + 125, scaley + 190, "Pause before each target", &m_trial_pause_before_each_target);
+			cvui::checkbox(frame, scalex + 125, scaley + 220, "Show button during trial", &m_trial_show_button_during_trial);
 			
 			cvui::window(frame, scalex + 330, scaley + 10, 100, 80, "Screen Size");
 			cvui::checkbox(frame, scalex + 330, scaley + 30, "Small", &screen_small);

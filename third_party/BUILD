@@ -190,33 +190,6 @@ alias(
     }),
 )
 
-
-#--------------------------------------------------------------------------------
-# 2020-11-25
-# integrating librealsense in ubuntu 20.04 lts
-# srcs refer to shared objects from /usr/local/lib
-# hdrs refere to header files from /usr/local/include
-# copying from linux_opencv
-#--------------------------------------------------------------------------------
-alias(
-    name = "realsense",
-    actual = select({
-        "//conditions:default": ":realsense_binary",
-    }),
-    visibility = ["//visibility:public"],
-)
-
-# @linux_realsense is defined in WORKSPACE and uses @//third_party:opencv_linux.BUILD
-alias(
-    name = "realsense_binary",
-    actual = select({
-        "//conditions:default": "@linux_realsense//:realsense",
-    }),
-)
-
-#--------------------------------------------------------------------------------
-
-
 cc_library(
     name = "libffmpeg",
     visibility = ["//visibility:public"],
@@ -286,6 +259,13 @@ android_library(
 )
 
 android_library(
+    name = "camerax_camera2",
+    exports = [
+        "@maven//:androidx_camera_camera_camera2",
+    ],
+)
+
+android_library(
     name = "camerax_core",
     exports = [
         "@maven//:androidx_camera_camera_core",
@@ -293,8 +273,34 @@ android_library(
 )
 
 android_library(
-    name = "camera2",
+    name = "camerax_lifecycle",
     exports = [
-        "@maven//:androidx_camera_camera_camera2",
+        "@maven//:androidx_camera_camera_lifecycle",
     ],
 )
+
+
+#--------------------------------------------------------------------------------
+# 2020-11-25
+# integrating librealsense in ubuntu 20.04 lts
+# srcs refer to shared objects from /usr/local/lib
+# hdrs refere to header files from /usr/local/include
+# copying from linux_opencv
+#--------------------------------------------------------------------------------
+alias(
+    name = "realsense",
+    actual = select({
+        "//conditions:default": ":realsense_binary",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+# @linux_realsense is defined in WORKSPACE and uses @//third_party:opencv_linux.BUILD
+alias(
+    name = "realsense_binary",
+    actual = select({
+        "//conditions:default": "@linux_realsense//:realsense",
+    }),
+)
+
+#--------------------------------------------------------------------------------

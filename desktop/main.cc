@@ -16,6 +16,17 @@
 
 // #include "mediapipe/framework/port/rs.hpp" // Include RealSense Cross Platform API
 
+
+#ifdef WINDOWS
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
+#include <unistd.h>
+#define GetCurrentDir getcwd
+#endif
+
+
+
 DEFINE_string(
     calculator_graph_config_file, 
     "mediapipe/graphs/hand_tracking/multi_hand_tracking_mobile.pbtxt",
@@ -47,6 +58,14 @@ std::string current_time() {
 
   strftime(buffer,sizeof(buffer),"%d_%m_%Y_%H_%M_%S",timeinfo);
   return std::string(buffer);
+}
+
+
+std::string get_current_dir() {
+   char buff[FILENAME_MAX]; //create string buffer to hold path
+   GetCurrentDir( buff, FILENAME_MAX );
+   std::string current_working_dir(buff);
+   return current_working_dir;
 }
 
 
@@ -103,7 +122,7 @@ int main(int argc, char** argv) {
   int choice_anchor = 2;
   int choice_trigger = 8;
   int choice_initiator = 1;
-  int choice_divisions = 6;
+  int choice_divisions = 5;
   int choice_screensize = 2;
   int choice_debug = 1;
   int choice_visibility = 2;
@@ -188,7 +207,7 @@ int main(int argc, char** argv) {
       mp_graph->initiator = new InitiatorTwoHand();
       break;
     default:
-      std::cerr << "ERROR main.cc invalid initiator choice\n";
+      std::cout << "ERROR main.cc invalid initiator choice\n";
       return EXIT_FAILURE;
   }
 
@@ -197,23 +216,24 @@ int main(int argc, char** argv) {
       mp_graph->anchor = new AnchorDynamic(cv::Scalar(25, 25, 255), cv::Scalar(255, 25, 25));
       break;
     case 2:
+      
       mp_graph->anchor = new AnchorStatic(
                                   cv::Scalar(25, 25, 255), 
                                   cv::Scalar(255, 25, 25), 
-                                  "/home/prantoran/work/src/github.com/google/mediapipe/desktop/anchors/Hand.png");
+                                  get_current_dir() + "/desktop/anchors/Hand.png");
       break;
     case 3:
       // TODO inspect midair
       // mp_graph->anchor = new ;
       break;
     default:
-      std::cerr << "ERROR main.cc invalid anchor choice\n";
+      std::cout << "ERROR main.cc invalid anchor choice\n";
       return EXIT_FAILURE;
   }
 
   mp_graph->anchor->setDivisions(choice_divisions);
     
-  std::cerr << "choice_trigger:" << choice_trigger << "\n";
+  std::cout << "choice_trigger:" << choice_trigger << "\n";
 
   switch (choice_trigger) {
     case 1:

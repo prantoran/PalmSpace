@@ -137,7 +137,7 @@ void AnchorMidAir::draw(
             cv::Scalar(0, 0, 0));
 
     } catch(cv::Exception e) {
-        std::cerr << "ERROR anchors/anchors_static.cpp draw() " << e.what() << "\n";
+        std::cout << "ERROR anchors/anchors_static.cpp draw() " << e.what() << "\n";
     }
     // input.copyTo(overlay);
 
