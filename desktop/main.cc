@@ -107,6 +107,8 @@ int main(int argc, char** argv) {
   const bool load_video = !FLAGS_input_video_path.empty();
   const bool save_video = !FLAGS_output_video_path.empty();
 
+  // analogous to structural pattern
+   
   if (mp_graph == NULL) {
     mp_graph = std::make_shared<MediaPipeMultiHandGPU>(
       APP_NAME, 
@@ -127,7 +129,7 @@ int main(int argc, char** argv) {
   int choice_debug = 1;
   int choice_visibility = 2;
   int choice_depth = 1;
-  int choice_trial_start_btn_location = 3;
+  int choice_trial_start_btn_location = 4;
   bool choice_trial_pause_before_each_target = true;
   bool choice_trial_show_button_during_trial = false;
 
@@ -163,7 +165,10 @@ int main(int argc, char** argv) {
     choice_trial_show_button_during_trial);
   
 
-  mp_graph->trial = new userstudies::Trial(choice_divisions);
+  mp_graph->trial = new userstudies::Trial(
+    choice_divisions, 
+    FLAGS_frame_width,
+    FLAGS_frame_height);
 
   switch (choice_trial_start_btn_location) {
     case 1:
@@ -174,6 +179,8 @@ int main(int argc, char** argv) {
       break;
     case 3:
       mp_graph->trial->m_start_btn_loc = userstudies::Location::LEFTCENTER;
+    case 4:
+      mp_graph->trial->m_start_btn_loc = userstudies::Location::RIGHTCENTER;
   } 
 
   mp_graph->trial->m_trial_pause_before_each_target = choice_trial_pause_before_each_target;
@@ -218,13 +225,19 @@ int main(int argc, char** argv) {
     case 2:
       
       mp_graph->anchor = new AnchorStatic(
-                                  cv::Scalar(25, 25, 255), 
-                                  cv::Scalar(255, 25, 25), 
-                                  get_current_dir() + "/desktop/anchors/Hand.png");
+        cv::Scalar(25, 25, 255), 
+        cv::Scalar(255, 25, 25), 
+        get_current_dir() + "/desktop/anchors/Hand.png");
       break;
     case 3:
       // TODO inspect midair
       // mp_graph->anchor = new ;
+      break;
+    case 4:
+      mp_graph->anchor = new AnchoHandToScreen(
+        cv::Scalar(25, 25, 255), 
+        cv::Scalar(255, 25, 25), 
+        get_current_dir() + "/desktop/anchors/Hand.png");
       break;
     default:
       std::cout << "ERROR main.cc invalid anchor choice\n";
@@ -264,7 +277,8 @@ int main(int argc, char** argv) {
                                 FLAGS_frame_height);
       break;
     case 8:
-      mp_graph->trigger = new TriggerTapDepth();
+      // mp_graph->trigger = new TriggerTapDepth();
+      mp_graph->trigger = new TriggerTapDepthGradient();
       break;
     case 9:
       mp_graph->trigger = new TriggerTapDepthSingle();

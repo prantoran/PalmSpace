@@ -7,7 +7,7 @@
 // #include <chrono>
 
 namespace userstudies {
-    enum class Location{LEFT, CENTER, LEFTCENTER};
+    enum class Location{LEFT, CENTER, LEFTCENTER, RIGHTCENTER};
 
     enum class TrialState{OPEN, STARTED, PAUSED};
         
@@ -43,7 +43,9 @@ namespace userstudies {
         std::string m_start_btn_label;
         cv::Point m_start_btn_label_loc_topleft;
 
-        Trial(int _divisions);
+        int m_view_width, m_view_height;
+
+        Trial(int _divisions, int _view_width, int _view_height);
         ~Trial();
         void update_start_button_loc(Grid & grid);
         void draw_start_button(cv::Mat & output_frame);

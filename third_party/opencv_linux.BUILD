@@ -23,6 +23,7 @@ cc_library(
             "lib/libopencv_imgproc.so",
             "lib/libopencv_video.so",
             "lib/libopencv_videoio.so",
+            # "lib/libopencv_photo.so"
         ],
     ),
     hdrs = glob([

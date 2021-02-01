@@ -1,4 +1,5 @@
 #include "anchors.h"
+#include "../ui/ui.h"
 
 #include "mediapipe/framework/port/opencv_highgui_inc.h"
 #include "mediapipe/framework/port/opencv_imgproc_inc.h"
@@ -90,10 +91,16 @@ void Anchor::setupSelection(
     int & selected_row_i, int & selected_col_j) {
     // checks whether index_pointer is within a til in the grid,
     // if yes then setup selected i,j and message
+    
+    m_selected_i_prv = selected_row_i;
+    m_selected_j_prv = selected_col_j;
+
+    if (m_selection_locked) {
+        // selection locked becaurse trigger is pressed
+        return; 
+    } 
 
     if (index_pointer_x != -1 && index_pointer_y != -1) {
-        m_selected_i_prv = selected_row_i;
-        m_selected_j_prv = selected_col_j;
 
         selected_row_i = m_grid.arg_x(index_pointer_x);
         selected_col_j = m_grid.arg_y(index_pointer_y);
@@ -181,7 +188,7 @@ cv::Point Anchor::getGridBottomRight() {
 
 
 void Anchor::setScreenSize(const choices::eScreenSize & size) {
-    screen.size = size;
+    m_screen.size = size;
 }
 
 void Anchor::setVisibility(const choices::eVisibility & _visibility) {
@@ -209,4 +216,47 @@ bool Anchor::isVisible(const Parameters & params) {
 
 choices::anchor::types Anchor::type() {
     return _type;
+}
+
+
+void Anchor::lock_selection() {
+    m_selection_locked = true;
+}
+
+
+void Anchor::unlock_selection() {
+    m_selection_locked = false;
+}
+
+
+void Anchor::draw_main_grid_layout(cv::Mat & src) {
+    ui::rounded_rectangle(
+        src, 
+        getGridTopLeft(), getGridBottomRight(), 
+        COLORS_floralwhite,
+        5, 
+        cv::LINE_8,
+        3);
+}
+
+
+void Anchor::draw_cells(cv::Mat & src) {
+    for (int i = 1; i <= m_grid.m_divisions; i ++ ) {
+        for (int j = 1; j <= m_grid.m_divisions; j ++) {
+            color_cur = color_red;
+            if (i == green_i && j == green_j) {
+            color_cur = color_green;
+            } else if (i == m_selected_i && j == m_selected_j) {
+            color_cur = color_blue;
+            }
+
+            cv::rectangle(
+            src, 
+            m_grid.get_cell(i, j), 
+            color_cur,
+            -1, 
+            cv::LINE_8,
+            0);
+        }
+    }
 }

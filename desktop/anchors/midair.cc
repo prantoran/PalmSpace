@@ -45,6 +45,8 @@ void AnchorMidAir::initiate() {
 
     indexbase_x = -1, indexbase_y = -1;
     palmbase_x = -1, palmbase_y = -1;
+
+    m_selection_locked = false;
 }
 
 
@@ -59,7 +61,7 @@ void AnchorMidAir::calculate(
     if (!width || !height) {
         setConfig(input.size().width, input.size().height);
 
-        screen.setMinWidthHeight(
+        m_screen.setMinWidthHeight(
             m_grid.m_width_min, m_grid.m_height_min, 
             width, height);
     }
@@ -79,13 +81,13 @@ void AnchorMidAir::calculate(
         if (indexbase_x > 0 && indexbase_y > 0) {
             static_display = true;
   
-            if (screen.isFull()) {
+            if (m_screen.isFull()) {
                 palmbase_x = 0.5; // determines a position of grid
                 palmbase_y = 1;   // middle-bottom point
 
                 indexbase_x = 0;
                 indexbase_y = 0;
-            } else if (screen.isCentered()){
+            } else if (m_screen.isCentered()){
                 // fixing at center
                 indexbase_x = ((double)(width - m_grid.m_width_min) / 2) / width;
                 indexbase_y = ((double)(height - m_grid.m_height_min) / 2) / height;
@@ -141,32 +143,9 @@ void AnchorMidAir::draw(
     }
     // input.copyTo(overlay);
 
-    cv::rectangle(
-        overlay, 
-        getGridTopLeft(), getGridBottomRight(), 
-        cv::Scalar(25, 25, 125),
-        -1, 
-        cv::LINE_8,
-        0);
+    draw_main_grid_layout(overlay);
 
-    for (int i = 1; i <= m_grid.m_divisions; i ++ ) {
-        for (int j = 1; j <= m_grid.m_divisions; j ++) {
-          color_cur = color_red;
-          if (i == green_i && j == green_j) {
-            color_cur = color_green;
-          } else if (i == m_selected_i && j == m_selected_j) {
-            color_cur = color_blue;
-          }
-
-          cv::rectangle(
-            overlay, 
-            m_grid.get_cell(i, j), 
-            color_cur,
-            -1, 
-            cv::LINE_8,
-            0);
-        }
-    }
+    draw_cells(overlay);
 
     drawTextHighlighted(overlay);
     drawTextSelected(overlay);

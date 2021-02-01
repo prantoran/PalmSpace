@@ -62,10 +62,15 @@ CameraRealSense::CameraRealSense(int _width, int _height, int _fps) {
 
     // m_align = rs2::align(m_align_to); // does not work
 
+    m_frames_size = 3;
+    m_frames_color = std::vector<cv::Mat> ();
+    
     for (int i = 0; i < 2*m_fps; i ++) {
       //Wait for all configured streams to produce a frame
       m_frameset = m_pipe.wait_for_frames();
     }
+
+
   } catch(const std::exception& e) {
     std::cout << "realsense camera constructor error:" << e.what() << "\n";
   }
@@ -86,6 +91,9 @@ void CameraRealSense::get_frames() {
   m_frameset = align_to.process(m_frameset);
   
   m_rsColor = m_frameset.get_color_frame();
+
+  
+
   
   m_rsDepth = m_frameset.get_depth_frame();  
 
@@ -106,7 +114,22 @@ void CameraRealSense::rgb(cv::Mat & dst) {
     (void*) m_rsColor.get_data(), 
     cv::Mat::AUTO_STEP);
   
-  // cv::fastNlMeansDenoisingColored(dst, dst, 10, 10, 7, 21);
+  cv::medianBlur(dst, dst, 5);
+
+  // m_frames_color.emplace_back(dst);
+  // if (m_frames_color.size() == m_frames_size) {
+  //   // cv::fastNlMeansDenoisingColoredMulti(
+  //   //   m_frames_color,
+  //   //   dst,
+  //   //   m_frames_color.size()/2,
+  //   //   m_frames_color.size()
+  //   // );
+    
+  //   m_frames_color.erase(m_frames_color.begin());
+
+  //   // cv::fastNlMeansDenoisingColored(dst, dst, 10, 10, 7, 21);
+  // }
+  
 }
 
 

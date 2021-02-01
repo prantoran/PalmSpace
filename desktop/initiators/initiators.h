@@ -20,7 +20,7 @@ const double MIN_WIDTH = 0.1;
 const double MIN_HEIGHT = 0.1;
 
 const double AREA_THRESHOLD = 0.06;
-const double SMALLAREA_THRESHOLD = 0.01;
+const double SMALLAREA_THRESHOLD = 0.008;
 
 
 class Initiator {

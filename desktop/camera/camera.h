@@ -58,6 +58,9 @@ class CameraRealSense: public Camera {
     // Declare depth colorizer for pretty visualization of depth data
     cv::Mat m_depth_mat;
 
+    std::vector<cv::Mat> m_frames_color;
+    int m_frames_size;
+
     public:
     CameraRealSense(int _width, int _height, int _fps);
     ~CameraRealSense();

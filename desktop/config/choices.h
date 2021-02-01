@@ -12,9 +12,12 @@ namespace choices {
         enum types {
             DYNAMIC = 1,
             STATIC,
-            MIDAIR
+            MIDAIR,
+            HANDTOSCREEN
         };
     }
+
+    // TODO clean up unused
 
     enum eInitiators {
         DEFAULT = 1, 
