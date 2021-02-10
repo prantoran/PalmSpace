@@ -83,9 +83,7 @@ void AnchoHandToScreen::setup_palmiamge(std::string imagePath) {
 
 
 void AnchoHandToScreen::calculate(
-    const cv::Mat& input, 
-    const std::tuple<double, double, double> & palmbase,
-    const std::tuple<double, double, double> & indexbase, 
+    const cv::Mat& input,
     double scale_ratio, 
     int pointer_x, int pointer_y,
     Parameters & params) {
@@ -101,8 +99,8 @@ void AnchoHandToScreen::calculate(
     }
 
     if (!static_display) {
-        indexbase_x = std::get<0>(indexbase);
-        indexbase_y = std::get<1>(indexbase);
+        indexbase_x = params.m_indexbase.x();
+        indexbase_y = params.m_indexbase.y();
 
         if (indexbase_x > 0 && indexbase_y > 0) {
             static_display = true;
@@ -136,7 +134,7 @@ void AnchoHandToScreen::calculate(
         // setupGrid((palmbase_x*width) - (ws/2), (palmbase_y*height) - hs); // defined in parent anchor class
         setupGrid(indexbase_x*width, indexbase_y*height); // defined in parent anchor class
 
-        checkSelectionWithinPalm(pointer_x, pointer_y, palmbase);
+        checkSelectionWithinPalm(pointer_x, pointer_y, params.m_palmbase);
 
         setupSelection(pointer_x, pointer_y, m_selected_i, m_selected_j); // defined in parent anchor class
         
@@ -162,10 +160,10 @@ void AnchoHandToScreen::ensureMarkedCellWithinPalm(int & marked_row_i, int & mar
 
 void AnchoHandToScreen::checkSelectionWithinPalm(
     int pointer_x, int pointer_y,
-    const std::tuple<double, double, double> & palmbase) {
+    const SmoothCoord & palmbase) {
 
-    double palmbase_x_new = std::get<0>(palmbase);
-    double palmbase_y_new = std::get<1>(palmbase);
+    double palmbase_x_new = palmbase.x();
+    double palmbase_y_new = palmbase.y();
 
     if (palmbase_x_new != -1) { // putting palm when palm coord detected
         palmstart_x = palmbase_x_new*width - 150;
@@ -199,15 +197,10 @@ void AnchoHandToScreen::checkSelectionWithinPalm(
 
 void AnchoHandToScreen::draw(
     const cv::Mat& input, 
-    cv::Mat& output, 
-    const std::tuple<double, double, double> & palmbase,
-    const std::tuple<double, double, double> & indexbase, 
+    cv::Mat& output,
     double scale_ratio, 
     int pointer_x, int pointer_y,
     Parameters & params) {
-        
-    double palmbase_x_new = std::get<0>(palmbase);
-    double palmbase_y_new = std::get<1>(palmbase);
 
     cv::Mat overlay = cv::Mat(
         input.rows,
@@ -227,7 +220,7 @@ void AnchoHandToScreen::draw(
     // cv::addWeighted(overlay, alpha, input, 1-alpha, 0, output);
     cv::addWeighted(overlay, alpha, input, 0, 0, output);
 
-    if (palmbase_x_new != -1) { // putting palm when palm coord detected
+    if (params.m_palmbase.x() != -1) { // putting palm when palm coord detected
         image_palm.copyTo(
             output(
                 cv::Rect(

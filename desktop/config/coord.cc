@@ -2,6 +2,7 @@
 
 SmoothCoord::SmoothCoord() {
     m_decay = 1;
+    init();
     reset();
 }
 
@@ -9,12 +10,19 @@ SmoothCoord::SmoothCoord() {
 SmoothCoord::SmoothCoord(std::string _name, double _decay) {
     m_decay = _decay;
     m_name = _name;
+    init();
     reset();
+}
+
+void SmoothCoord::init() {
+    m_max_drop_cnt = 5;
+    m_diff_thresh = 15;
 }
 
 
 void SmoothCoord::reset() {
     m_cur = std::make_tuple(-1, -1, -1);
+    m_drop_cnt = 0;
 }
 
 
@@ -26,6 +34,23 @@ void SmoothCoord::set(const std::tuple<type_t, type_t, type_t> & _new_point) {
         std::cout << m_name << ": resetting in set func() NOT expected behaviour\n";
         m_cur = _new_point;
     } else {
+
+        m_dx = std::get<0>(_new_point) - std::get<0>(m_prev);
+        m_dy = std::get<1>(_new_point) - std::get<1>(m_prev);
+        m_dz = std::get<2>(_new_point) - std::get<2>(m_prev);
+
+        if ((m_dx > m_diff_thresh || m_dx < -m_diff_thresh) ||
+            (m_dx > m_diff_thresh || m_dx < -m_diff_thresh) ||
+            (m_dx > m_diff_thresh || m_dx < -m_diff_thresh)) {
+
+            m_drop_cnt ++;
+            if (m_drop_cnt < m_max_drop_cnt) {
+                return;
+            }
+        }
+
+        m_drop_cnt = 0;
+
         type_t _x = m_decay*std::get<0>(_new_point) + (1-m_decay)*std::get<0>(m_prev);
         type_t _y = m_decay*std::get<1>(_new_point) + (1-m_decay)*std::get<1>(m_prev);          
         type_t _z = m_decay*std::get<2>(_new_point) + (1-m_decay)*std::get<2>(m_prev);

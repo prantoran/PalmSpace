@@ -40,6 +40,8 @@ class CameraOpenCV: public Camera {
 };
 
 
+#ifdef REALSENSE_CAM 
+
 // use RealSense SDK
 class CameraRealSense: public Camera {
     rs2::pipeline m_pipe;
@@ -72,6 +74,6 @@ class CameraRealSense: public Camera {
     float get_depth(int x_col, int y_row);
 };
 
-
+#endif
 
 #endif

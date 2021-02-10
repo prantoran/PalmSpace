@@ -319,10 +319,8 @@ void MediaPipeMultiHandGPU::debug(
   Parameters params = Parameters(frame_width, frame_height, load_video, camera);
   params.set_depth_map(&m_depth_map);
 
-  std::tuple<double, double, double> palmbase, indexbase;
-
-  double interface_scaling_factor = 1;
   // used for smoothing
+  double interface_scaling_factor = 1;
 
   cv::Scalar color_cur;
   
@@ -495,11 +493,6 @@ void MediaPipeMultiHandGPU::debug(
     // std::cerr << "initiator null? " << (initiator == NULL) << "\n";
     initiator->params(points, params);
 
-    // std::cerr << "initiator->params(points, params)\n";
-
-    params.get_palmbase(palmbase);
-    params.get_indexbase(indexbase);
-    
     params.set_is_static(anchor->static_display);
 
     show_display = false;
@@ -507,10 +500,6 @@ void MediaPipeMultiHandGPU::debug(
     if (initiator->inspect(points, params)) {
       show_display = true;
       initiator->params(points, params);
-
-      params.get_palmbase(palmbase);
-      params.get_indexbase(indexbase);
-
 
     } else if (!anchor->static_display) {
       params.reset();
@@ -537,8 +526,6 @@ void MediaPipeMultiHandGPU::debug(
     
     anchor->calculate(
       camera_frame, 
-      palmbase,
-      indexbase, 
       interface_scaling_factor,
       indexfinger_x, indexfinger_y, params); 
     
@@ -572,8 +559,6 @@ void MediaPipeMultiHandGPU::debug(
       anchor->draw(
           camera_frame, 
           m_primary_output,
-          palmbase,
-          indexbase, 
           interface_scaling_factor,
           indexfinger_x, indexfinger_y, params);
 

@@ -27,21 +27,25 @@
 
 ## Running the code:
 - Open a terminal in the root directory of MediaPipe directory where the `WORKSPACE` is located.
-- execute:
-`make run`
+- Running the project:
+  - Use normal/default camera:
+      - `make run`
+  - Use RealSense camera:
+      - `make rund`
 
 ## Sample Demo
 - Grid selection by waiting
+
 ![image](demos/1.png)
-![image](demos/2.png)
-![image](demos/3.png)
+<!-- ![image](demos/2.png) -->
+<!-- ![image](demos/3.png) -->
 
 ## TODOS:
-throw exception, modular func, less dependency on shared memory
-read constants from env file using config pkg
-anchor calculate refactor indexfinger x y
-use forward declaration, wherever possible, to speed up compilation
-use namespaces wherever possible
+- Make webassembly version
+- throw exception, modular func, less dependency on shared memory
+- read constants from env file using config pkg
+- use forward declaration, wherever possible, to speed up compilation
+- use namespaces wherever possible
 
 ## NOTES:
 - forward declaration (i.e. seperating declarations in header files and definintions in .cpp translation/compilation units) 
@@ -53,5 +57,5 @@ use namespaces wherever possible
 
 ## Debugging
 - OpenGL 3.1 downgrading to 2.0 err
-https://dev.classmethod.jp/articles/mediapipe-process-on-aws-ec2-with-gpu/
-comment out EGL_WINDOW_BIT in EGLint config_attr in mediapipe/gpu/gl_context_egl.cc
+    - https://dev.classmethod.jp/articles/mediapipe-process-on-aws-ec2-with-gpu/
+        - comment out EGL_WINDOW_BIT in EGLint config_attr in mediapipe/gpu/gl_context_egl.cc

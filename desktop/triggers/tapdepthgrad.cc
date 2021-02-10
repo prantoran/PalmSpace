@@ -31,6 +31,7 @@ TriggerTapDepthGradient::TriggerTapDepthGradient() {
     std::memset(m_ticks, 0, sizeof(m_ticks));
 
     m_max_axis_spatial_diff_thresh_exceed_cnt = 0;
+    m_stable_frames_cnt = 0;
 }
 
 
@@ -52,14 +53,27 @@ void TriggerTapDepthGradient::update(
     std::cerr << "m_max_axis_spatial_diff:" << m_max_axis_spatial_diff << "\n";
     if (m_max_axis_spatial_diff > 20) {
         m_max_axis_spatial_diff_thresh_exceed_cnt ++;
+        if (m_max_axis_spatial_diff_thresh_exceed_cnt > 3) {
+            m_max_axis_spatial_diff_thresh_exceed_cnt = 3;
+        }
     } else {
         m_max_axis_spatial_diff_thresh_exceed_cnt --;
+        if (m_max_axis_spatial_diff_thresh_exceed_cnt < 0)
+            m_max_axis_spatial_diff_thresh_exceed_cnt = 0;
     }
 
     if (m_max_axis_spatial_diff_thresh_exceed_cnt > 1) {
         cur_state = TRIGGER::OPEN;
         return;
     }
+
+    if (m_max_axis_spatial_diff < 10) {
+        m_stable_frames_cnt ++;
+    }else {
+        m_stable_frames_cnt = 0;
+    }
+    
+    std::cerr << "m_stable_frames_cnt: " << m_stable_frames_cnt << "\n"; 
 
     for (int i = 0; i < m_channel_cnt; i ++) {
         m_ch_medians[i] = 0;
@@ -115,14 +129,14 @@ void TriggerTapDepthGradient::update(
     m_gesture_pat_found = false;
     m_gesture_pat_initiated = false;
 
-    if (m_ticks[0][0] > 1) {
+    if (m_ticks[0][0] >= 1) {
         m_gesture_pat_initiated = true;
-        if (m_ticks[1][1] > 1) {
+        if (m_ticks[1][1] >= 1) {
             m_gesture_pat_found = true;
         }
-    } else if (m_ticks[0][1] > 1) {
+    } else if (m_ticks[0][1] >= 1) {
         m_gesture_pat_initiated = true;
-        if (m_ticks[1][0] > 1) {
+        if (m_ticks[1][0] >= 1) {
             m_gesture_pat_found = true;
         }
     }
@@ -131,8 +145,19 @@ void TriggerTapDepthGradient::update(
     
 
     cur_state = TRIGGER::OPEN;
-    if (m_gesture_pat_found) cur_state = TRIGGER::RELEASED;
-    else if (m_gesture_pat_initiated) cur_state = TRIGGER::PRESSED;
+    if (m_gesture_pat_initiated && m_stable_frames_cnt > 6) {
+        cur_state = TRIGGER::PRESSED;
+    }
+    
+    if (cur_state == TRIGGER::PRESSED && m_gesture_pat_found) {
+        cur_state = TRIGGER::RELEASED;
+        m_stable_frames_cnt = 0;
+    } 
+
+    if (cur_state == TRIGGER::OPEN) std::cerr << "cur_state: OPEN\n";
+    else if (cur_state == TRIGGER::PRESSED) std::cerr << "curstate: PRESSED\n";
+    else if (cur_state == TRIGGER::RELEASED) std::cerr << "cur_state: RELEASD\n";
+
 }
 
 

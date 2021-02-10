@@ -133,6 +133,10 @@ int main(int argc, char** argv) {
   bool choice_trial_pause_before_each_target = true;
   bool choice_trial_show_button_during_trial = false;
 
+  #ifndef REALSENSE_CAM
+    choice_depth = 0;
+  #endif
+
   PalmSpaceUI::Menu menu = PalmSpaceUI::Menu(
     FLAGS_frame_width,
     FLAGS_frame_height,
@@ -193,11 +197,19 @@ int main(int argc, char** argv) {
   std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
 
   if (choice_depth) {
-    mp_graph->camera = new CameraRealSense(
-      FLAGS_frame_width,
-      FLAGS_frame_height,
-      FLAGS_fps
-    );
+    #ifdef REALSENSE_CAM
+      mp_graph->camera = new CameraRealSense(
+        FLAGS_frame_width,
+        FLAGS_frame_height,
+        FLAGS_fps
+      );
+    #else 
+      mp_graph->camera = new CameraOpenCV(
+        FLAGS_frame_width,
+        FLAGS_frame_height,
+        FLAGS_fps
+      );  
+    #endif  
   } else {
     mp_graph->camera = new CameraOpenCV(
       FLAGS_frame_width,
@@ -223,17 +235,12 @@ int main(int argc, char** argv) {
       mp_graph->anchor = new AnchorDynamic(cv::Scalar(25, 25, 255), cv::Scalar(255, 25, 25));
       break;
     case 2:
-      
       mp_graph->anchor = new AnchorStatic(
         cv::Scalar(25, 25, 255), 
         cv::Scalar(255, 25, 25), 
         get_current_dir() + "/desktop/anchors/Hand.png");
       break;
     case 3:
-      // TODO inspect midair
-      // mp_graph->anchor = new ;
-      break;
-    case 4:
       mp_graph->anchor = new AnchoHandToScreen(
         cv::Scalar(25, 25, 255), 
         cv::Scalar(255, 25, 25), 

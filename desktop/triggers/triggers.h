@@ -332,7 +332,8 @@ class TriggerTapDepthGradient: public Trigger {
     double m_max_axis_spatial_diff;
 
     int m_max_axis_spatial_diff_thresh_exceed_cnt;
-     
+    int m_stable_frames_cnt;
+
     TriggerTapDepthGradient();
     
     void update(

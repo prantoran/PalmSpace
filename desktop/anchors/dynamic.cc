@@ -60,8 +60,6 @@ void AnchorDynamic::initiate() {
 
 void AnchorDynamic::calculate(
     const cv::Mat& input, 
-    const std::tuple<double, double, double> & palmbase,
-    const std::tuple<double, double, double> & indexbase,
     double scale_ratio, 
     int pointer_x, int pointer_y,
     Parameters & params) {
@@ -73,8 +71,8 @@ void AnchorDynamic::calculate(
         width, height);
     }
 
-    updatePalmBase(palmbase);
-    updateIndexBase(indexbase);
+    updateBase(params.m_palmbase, palmbase_x, palmbase_y);
+    updateBase(params.m_indexbase, indexbase_x, indexbase_y);
 
     if (indexbase_x > 0 && indexbase_y > 0) {
       // using palmbase
@@ -88,23 +86,15 @@ void AnchorDynamic::calculate(
 }
 
 
-void AnchorDynamic::updatePalmBase(const std::tuple<double, double, double> & palmbase) {
-  palmbase_x = std::get<0>(palmbase);
-  palmbase_y = std::get<1>(palmbase);
-}
-
-
-void AnchorDynamic::updateIndexBase(const std::tuple<double, double, double> & indexbase) {
-  indexbase_x = std::get<0>(indexbase);
-  indexbase_y = std::get<1>(indexbase);
+void AnchorDynamic::updateBase(const SmoothCoord & palmbase, double & _x, double & _y) {
+  _x = palmbase.x();
+  _y = palmbase.y();
 }
 
 
 void AnchorDynamic::draw(
     const cv::Mat& input, 
     cv::Mat& output, 
-    const std::tuple<double, double, double> & palmbase,
-    const std::tuple<double, double, double> & indexbase, 
     double scale_ratio, 
     int pointer_x, int pointer_y,
     Parameters & params) {

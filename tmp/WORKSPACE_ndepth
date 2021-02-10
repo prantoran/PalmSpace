@@ -398,14 +398,3 @@ tf_workspace(tf_repo_name = "org_tensorflow")
 
 
 
-# pasted by scripts/run.sh
-# 2020-11-25	
-# integrating librealsense in ubuntu 20.04 lts	
-# srcs refer to shared objects from /usr/local/lib	
-# hdrs refere to header files from /usr/local/include	
-# copying from linux_opencv	
-new_local_repository(	
-    name = "linux_realsense",	
-    build_file = "@//third_party:realsense_linux.BUILD",	
-    path = "/usr/local",	
-)

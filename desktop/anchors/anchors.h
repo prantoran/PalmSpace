@@ -101,9 +101,7 @@ class Anchor { // interface via abstract class
 
     // pure virtual functions
     virtual void calculate(
-        const cv::Mat& input, 
-        const std::tuple<double, double, double> & palmbase,
-        const std::tuple<double, double, double> & indexbase,  
+        const cv::Mat& input,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
         Parameters & params) = 0;
@@ -111,8 +109,6 @@ class Anchor { // interface via abstract class
     virtual void draw(
         const cv::Mat& input, 
         cv::Mat& output,  
-        const std::tuple<double, double, double> & palmbase,
-        const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
         Parameters & params) = 0;
@@ -163,24 +159,19 @@ class AnchorDynamic: public Anchor {
         const cv::Scalar & blue);
         
     void calculate(
-        const cv::Mat& input, 
-        const std::tuple<double, double, double> & palmbase,
-        const std::tuple<double, double, double> & indexbase,  
+        const cv::Mat& input,
         double scale_ratio, 
         int pointer_x, int pointer_y,
         Parameters & params);
 
     void draw(
         const cv::Mat& input, 
-        cv::Mat& output, 
-        const std::tuple<double, double, double> & palmbase,
-        const std::tuple<double, double, double> & indexbase,  
+        cv::Mat& output,  
         double area, 
         int pointer_x, int pointer_y,
         Parameters & params);
 
-    void updatePalmBase(const std::tuple<double, double, double> & palmbase);
-    void updateIndexBase(const std::tuple<double, double, double> & indexbase);
+    void updateBase(const SmoothCoord & palmbase, double & _x, double & _y);
     void initiate();
 };
 
@@ -201,18 +192,14 @@ class AnchorStatic: public Anchor {
 
 
     void calculate(
-        const cv::Mat& input, 
-        const std::tuple<double, double, double> & palmbase,
-        const std::tuple<double, double, double> & indexbase,  
+        const cv::Mat& input,   
         double scale_ratio, 
         int pointer_x, int pointer_y,
         Parameters & params);
 
     void draw(
         const cv::Mat& input, 
-        cv::Mat& output, 
-        const std::tuple<double, double, double> & palmbase,
-        const std::tuple<double, double, double> & indexbase,  
+        cv::Mat& output,
         double scale_ratio, 
         int pointer_x, int pointer_y,
         Parameters & params);
@@ -221,43 +208,10 @@ class AnchorStatic: public Anchor {
     void setup_palmiamge(std::string imagePath);
     void checkSelectionWithinPalm(
         int pointer_x, int pointer_y,
-        const std::tuple<double, double, double> & palmbase);
+        const SmoothCoord & palmbase);
     
     void ensureMarkedCellWithinPalm(int & marked_row_i, int & marked_col_j);
     
-};
-
-
-class AnchorMidAir: public Anchor {
-
-    public:
-    int palmstart_x, palmstart_y;
-    
-    ~AnchorMidAir();
-    AnchorMidAir();
-    AnchorMidAir(
-        const cv::Scalar & red, 
-        const cv::Scalar & blue);
-    
-
-    void calculate(
-        const cv::Mat& input, 
-        const std::tuple<double, double, double> & palmbase,
-        const std::tuple<double, double, double> & indexbase,  
-        double scale_ratio, 
-        int pointer_x, int pointer_y,
-        Parameters & params);
-
-    void draw(
-        const cv::Mat& input, 
-        cv::Mat& output, 
-        const std::tuple<double, double, double> & palmbase,
-        const std::tuple<double, double, double> & indexbase,  
-        double scale_ratio, 
-        int pointer_x, int pointer_y,
-        Parameters & params);
-    
-    void initiate();
 };
 
 
@@ -278,17 +232,13 @@ class AnchoHandToScreen: public Anchor {
 
     void calculate(
         const cv::Mat& input, 
-        const std::tuple<double, double, double> & palmbase,
-        const std::tuple<double, double, double> & indexbase,  
         double scale_ratio, 
         int pointer_x, int pointer_y,
         Parameters & params);
 
     void draw(
         const cv::Mat& input, 
-        cv::Mat& output, 
-        const std::tuple<double, double, double> & palmbase,
-        const std::tuple<double, double, double> & indexbase,  
+        cv::Mat& output,
         double scale_ratio, 
         int pointer_x, int pointer_y,
         Parameters & params);
@@ -297,7 +247,7 @@ class AnchoHandToScreen: public Anchor {
     void setup_palmiamge(std::string imagePath);
     void checkSelectionWithinPalm(
         int pointer_x, int pointer_y,
-        const std::tuple<double, double, double> & palmbase);
+        const SmoothCoord & palmbase);
     
     void ensureMarkedCellWithinPalm(int & marked_row_i, int & marked_col_j);
     
