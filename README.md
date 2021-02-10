@@ -33,10 +33,11 @@
   - Use RealSense camera:
       - `make rund`
 
-## Sample Demo
+<!-- ## Sample Demo
 - Grid selection by waiting
+-->
 
-![image](demos/1.png)
+<!-- ![image](demos/1.png) -->
 <!-- ![image](demos/2.png) -->
 <!-- ![image](demos/3.png) -->
 
