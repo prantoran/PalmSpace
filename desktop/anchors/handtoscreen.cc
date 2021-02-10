@@ -1,18 +1,18 @@
 #include "anchors.h"
 
 
-AnchorStatic::~AnchorStatic() {
-    std::cout << "anchor static killed\n";
+AnchoHandToScreen::~AnchoHandToScreen() {
+    std::cout << "anchor AnchoHandToScreen killed\n";
 }
 
 
-AnchorStatic::AnchorStatic() {
+AnchoHandToScreen::AnchoHandToScreen() {
     initiate();
     reset_grid();
 }
 
 
-AnchorStatic::AnchorStatic(
+AnchoHandToScreen::AnchoHandToScreen(
     const cv::Scalar & red, 
     const cv::Scalar & blue, 
     const std::string & imagePath) {
@@ -28,9 +28,9 @@ AnchorStatic::AnchorStatic(
 }
 
 
-void AnchorStatic::initiate() {
-    name = "static";
-    _type = choices::anchor::STATIC;
+void AnchoHandToScreen::initiate() {
+    name = "handtoscreen";
+    _type = choices::anchor::HANDTOSCREEN;
 
     width = 0;
     height = 0;
@@ -55,7 +55,7 @@ void AnchorStatic::initiate() {
     m_selection_locked = false;
 }
 
-void AnchorStatic::setup_palmiamge(std::string imagePath) {
+void AnchoHandToScreen::setup_palmiamge(std::string imagePath) {
     // only take .png as it has alpha channel for transparency
     image_palm = cv::imread(imagePath, CV_LOAD_IMAGE_UNCHANGED); 
     // CV_LOAD_IMAGE_COLOR ignores alpha transparency channel
@@ -82,13 +82,14 @@ void AnchorStatic::setup_palmiamge(std::string imagePath) {
 }
 
 
-
-void AnchorStatic::calculate(
+void AnchoHandToScreen::calculate(
     const cv::Mat& input,
     double scale_ratio, 
     int pointer_x, int pointer_y,
     Parameters & params) {
         
+    std::cerr << "anchor hand2screen calculate()\n";
+
     if (!width || !height) {
         setConfig(input.size().width, input.size().height);
                 
@@ -138,7 +139,7 @@ void AnchorStatic::calculate(
         setupSelection(pointer_x, pointer_y, m_selected_i, m_selected_j); // defined in parent anchor class
         
         if (green_i != -1 && green_j != -1) {
-            // ensureMarkedCellWithinPalm(green_i, green_j);
+            ensureMarkedCellWithinPalm(green_i, green_j);
         }
 
         params.set_selected_cell(m_selected_i, m_selected_j);
@@ -146,7 +147,7 @@ void AnchorStatic::calculate(
 }
 
 
-void AnchorStatic::ensureMarkedCellWithinPalm(int & marked_row_i, int & marked_col_j) {
+void AnchoHandToScreen::ensureMarkedCellWithinPalm(int & marked_row_i, int & marked_col_j) {
     double gdx = m_grid.m_x_cols[marked_row_i] - palmstart_x;
     double gdy = m_grid.m_y_rows[marked_col_j] - palmstart_y;
     if (gdx < 50 || gdx > 250 || gdy < 50 || gdy > 250) {
@@ -157,7 +158,7 @@ void AnchorStatic::ensureMarkedCellWithinPalm(int & marked_row_i, int & marked_c
 }
 
 
-void AnchorStatic::checkSelectionWithinPalm(
+void AnchoHandToScreen::checkSelectionWithinPalm(
     int pointer_x, int pointer_y,
     const SmoothCoord & palmbase) {
 
@@ -194,52 +195,65 @@ void AnchorStatic::checkSelectionWithinPalm(
 }
 
 
-void AnchorStatic::draw(
+void AnchoHandToScreen::draw(
     const cv::Mat& input, 
     cv::Mat& output,
     double scale_ratio, 
     int pointer_x, int pointer_y,
     Parameters & params) {
+
+    cv::Mat overlay = cv::Mat(
+        input.rows,
+        input.cols,
+        CV_8UC3,
+        cv::Scalar(0, 0, 0)
+    );
+
+    output = cv::Mat(
+        input.rows,
+        input.cols,
+        CV_8UC3,
+        cv::Scalar(0, 0, 0)
+    );
+
+    // input.copyTo(overlay);
+    // cv::addWeighted(overlay, alpha, input, 1-alpha, 0, output);
+    cv::addWeighted(overlay, alpha, input, 0, 0, output);
+
+    if (params.m_palmbase.x() != -1) { // putting palm when palm coord detected
+        image_palm.copyTo(
+            output(
+                cv::Rect(
+                    palmstart_x,
+                    palmstart_y, 
+                    image_palm.cols, 
+                    image_palm.rows
+                )
+            ), 
+            mask
+        );
+
+        cv::Point p1(palmstart_x+50, palmstart_y+50);                            // start & end points 
+        cv::Point p2(palmstart_x+50,palmstart_y+250);
+        cv::Point p3(palmstart_x+250,palmstart_y+250);                            // start & end points 
+        cv::Point p4(palmstart_x+250,palmstart_y+50);
         
-    cv::Mat overlay;
-    input.copyTo(overlay);
+        std::vector<cv::Point> contour = {p1, p2, p3, p4, p1};
 
-    if (m_screen.isFull()) { 
-        if (params.m_palmbase.x() != -1) { // putting palm when palm coord detected
-            image_palm.copyTo(
-                input(
-                    cv::Rect(
-                        palmstart_x,
-                        palmstart_y, 
-                        image_palm.cols, 
-                        image_palm.rows
-                    )
-                ), 
-                mask
-            );
+        const cv::Point *pts = (const cv::Point*) cv::Mat(contour).data;
+        int npts = cv::Mat(contour).rows;
 
-            cv::Point p1(palmstart_x+50, palmstart_y+50);                            // start & end points 
-            cv::Point p2(palmstart_x+50,palmstart_y+250);
-            cv::Point p3(palmstart_x+250,palmstart_y+250);                            // start & end points 
-            cv::Point p4(palmstart_x+250,palmstart_y+50);
-            
-            std::vector<cv::Point> contour = {p1, p2, p3, p4, p1};
-
-            const cv::Point *pts = (const cv::Point*) cv::Mat(contour).data;
-            int npts = cv::Mat(contour).rows;
-
-            cv::polylines(
-                overlay, 
-                &pts, 
-                &npts, 
-                1, 
-                false, 
-                COLORS_floralwhite, 
-                3,
-                CV_AA,
-                0
-            );
-        }
+        cv::polylines(
+            output, 
+            &pts, 
+            &npts, 
+            1, 
+            false, 
+            COLORS_floralwhite, 
+            3,
+            CV_AA,
+            0
+        );
     }
 
     draw_main_grid_layout(overlay);
@@ -251,6 +265,8 @@ void AnchorStatic::draw(
 
     drawProgressBar(overlay, params);
 
-    cv::addWeighted(overlay, alpha, input, 1-alpha, 0, output);
+    cv::addWeighted(overlay, alpha, output, 1-alpha, 0, output);
+
+    // cv::addWeighted(overlay, alpha, input, 1-alpha, 0, output);
 }
 

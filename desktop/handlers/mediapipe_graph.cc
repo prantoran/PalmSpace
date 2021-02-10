@@ -319,10 +319,8 @@ void MediaPipeMultiHandGPU::debug(
   Parameters params = Parameters(frame_width, frame_height, load_video, camera);
   params.set_depth_map(&m_depth_map);
 
-  std::tuple<double, double, double> palmbase, indexbase;
-
-  double interface_scaling_factor = 1;
   // used for smoothing
+  double interface_scaling_factor = 1;
 
   cv::Scalar color_cur;
   
@@ -491,16 +489,10 @@ void MediaPipeMultiHandGPU::debug(
       }
     }
 
-
     // std::cerr << "calling initiator->params(points, params)\n";
     // std::cerr << "initiator null? " << (initiator == NULL) << "\n";
     initiator->params(points, params);
 
-    // std::cerr << "initiator->params(points, params)\n";
-
-    params.get_palmbase(palmbase);
-    params.get_indexbase(indexbase);
-    
     params.set_is_static(anchor->static_display);
 
     show_display = false;
@@ -509,30 +501,21 @@ void MediaPipeMultiHandGPU::debug(
       show_display = true;
       initiator->params(points, params);
 
-      params.get_palmbase(palmbase);
-      params.get_indexbase(indexbase);
-
-
     } else if (!anchor->static_display) {
       params.reset();
     }
     
-    // Convert back to opencv for display or saving.
-    // cv::Mat m_primary_output = mediapipe::formats::MatView(output_frame.get());
-    if (anchor->type() == choices::anchor::MIDAIR) {
-      try {
-        m_primary_output = cv::Mat(
-            frame_height, 
-            frame_width, 
-            CV_8UC3, 
-            cv::Scalar(0, 0, 0));
-
-      } catch(cv::Exception e) {
-          std::cerr << "ERROR anchors/anchors_static.cpp draw() " << e.what() << "\n";
-      }
+    if (anchor->type() == choices::anchor::HANDTOSCREEN) {
+      m_primary_output = cv::Mat(
+          frame_height, 
+          frame_width, 
+          CV_8UC3, 
+          cv::Scalar(0, 0, 0));
     } else {
       m_primary_output = camera_frame;
     }
+    // Convert back to opencv for display or saving.
+    // cv::Mat m_primary_output = mediapipe::formats::MatView(output_frame.get());
 
     if (params.is_set_primary_cursor()) {
       params.get_primary_cursor_cv_indices(indexfinger_x, indexfinger_y);
@@ -543,8 +526,6 @@ void MediaPipeMultiHandGPU::debug(
     
     anchor->calculate(
       camera_frame, 
-      palmbase,
-      indexbase, 
       interface_scaling_factor,
       indexfinger_x, indexfinger_y, params); 
     
@@ -554,33 +535,39 @@ void MediaPipeMultiHandGPU::debug(
 
       trigger->update(camera_frame, points, params);
 
+      switch (trigger->status()) {
+        
+        case TRIGGER::PRESSED:
+          anchor->lock_selection();
+        
+        case TRIGGER::RELEASED:
+          if (!trial || trial->started()) {
+            anchor->highlightSelected();
+            anchor->unlock_selection();
+          }
+
+          if (trial) {
+            trial->process_is_button_clicked(indexfinger_x, indexfinger_y);
+            
+            if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
+              trial->process_correct_selection();
+              anchor->unlock_selection();
+            }
+          }
+      }
+          
+      anchor->draw(
+          camera_frame, 
+          m_primary_output,
+          interface_scaling_factor,
+          indexfinger_x, indexfinger_y, params);
+
       if (trial) {
         if (trial->started()) {
             trial->draw_target(m_primary_output, anchor->m_grid);
 
         }
       }
-      if (trigger->status() == TRIGGER::RELEASED) {
-        if (!trial || trial->started()) {
-          anchor->highlightSelected();
-        }
-
-        if (trial) {
-          trial->process_is_button_clicked(indexfinger_x, indexfinger_y);
-          
-          if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
-            trial->process_correct_selection();
-          }
-        }
-      }
-          
-      anchor->draw(
-          camera_frame, 
-          m_primary_output,
-          palmbase,
-          indexbase, 
-          interface_scaling_factor,
-          indexfinger_x, indexfinger_y, params);
 
       trial->update_start_button_loc(anchor->m_grid);
       trial->draw_start_button(m_primary_output);
@@ -597,7 +584,11 @@ void MediaPipeMultiHandGPU::debug(
       }
 
       if (debug_mode == 1) {
-        debug(m_primary_output, points, params);
+        if (!m_depth_map.empty()) {
+          debug(m_depth_map, points, params);
+        } else {
+          debug(m_primary_output, points, params);
+        }
       }
     }
 

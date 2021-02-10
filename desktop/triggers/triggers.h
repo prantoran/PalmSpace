@@ -34,6 +34,8 @@ std::chrono::milliseconds cur_time();
 class Trigger {
     public:
     int width, height;
+
+    // TODO rename to m_cur_state
     TRIGGER::state cur_state;
 
     std::string state_str(); 
@@ -196,10 +198,21 @@ class TriggerTapDepthArea: public Trigger {
 
 
 class SupportPoints {
+    /*
+        - Encapsulates number of support points/vectors to 
+            represent an object (i.e. cursor) location
+        - Supports smoothing by adding momentum of locations from 
+            previous frames, by maintaining a running weighted mean
+    */
     public:
+
+    using type_t = double;
+
     int m_support_pts_size;
-    std::vector<int> m_xcoords, m_ycoords;
-    std::vector<int> m_xcoords_prev, m_ycoords_prev;
+    std::vector<type_t> m_xcoords, m_ycoords;
+    std::vector<type_t> m_xcoords_prev, m_ycoords_prev;
+    std::vector<type_t> m_dx, m_dy;
+
     SupportPoints();
     void init(int _size);
     void backup_prev();
@@ -208,9 +221,8 @@ class SupportPoints {
         const std::vector<std::tuple<double, double, double>> & coords,
         const Parameters & params); 
     void print();
+    void max_diff(type_t & diff);
 };
-
-
 
 
 class TriggerTapDepth: public Trigger {
@@ -288,6 +300,50 @@ class TriggerTapDepthDistance: public Trigger {
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
         Parameters & params);
     void median_depth_region(Parameters & params, double & depth_cursor);
+};
+
+
+class TriggerTapDepthGradient: public Trigger {
+    public:
+    // TODO clean up unused attributes
+    double m_depth_cursor;
+    double m_depth_cursor_prev;
+    
+    SupportPoints m_cursor_pts;
+
+    int m_cursor_indices[4];
+
+    // channel medians - flood fill start
+    int m_channel_cnt;
+    int m_median_size;
+    int m_medians[5][100];
+    int m_median_indices[5];
+    int m_ch_medians[5];
+    Range m_flood_width, m_flood_height;
+    
+    // end
+
+    std::vector<std::vector<int>> m_cyclic_pixels_window;
+    int m_px_window_sz, m_px_window_i; 
+
+    int m_ticks[2][2]; 
+    bool m_gesture_pat_found, m_gesture_pat_initiated;
+
+    double m_max_axis_spatial_diff;
+
+    int m_max_axis_spatial_diff_thresh_exceed_cnt;
+    int m_stable_frames_cnt;
+
+    TriggerTapDepthGradient();
+    
+    void update(
+        const cv::Mat & input_image,
+        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        Parameters & params);
+    
+    void get_channel_medians(cv::Mat * mat, int col_x, int row_y);
+    void process_depths(Parameters & params);
+    void palm_rect_fill(Parameters & params, int & cnt);
 };
 
 #endif

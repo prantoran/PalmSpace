@@ -43,45 +43,44 @@ namespace PalmSpaceUI {
 			onehand = false;
 		}
 
-		ancdyn = true, ancstat  = false, ancmid  = false; 
-		if (anchor == 2) {
-			ancdyn = false;
-			ancstat = true;
+		ancdyn = false, ancstat  = false, anchandtoscreen = false; 
+		switch (anchor) {
+			case 1:
+				ancdyn = true;
+				break;
+			case 2:
+				ancstat = true;
+				break;
+			case 3:
+				anchandtoscreen = true;
+				break;
+			default:
+				break;
 		}
 
-		if (anchor == 3) {
-			ancdyn = false;
-			ancmid = true;
-		}
-
-		trigpalmbase = false, trigpalmfree = false, trigpinch = false, trigtap = false, trigdwell = true, trigtapdepth = false, trigtapdepthsingle = false, trigdepthdistance = false;
+		trigpalmbase = false, trigpalmfree = false, trigpinch = false, trigtap = false, trigdwell = false, trigtapdepth = false, trigtapdepthsingle = false, trigdepthdistance = false;
 		switch (trigger) {
 			case 1:
-				trigdwell = false;
 				trigpalmbase = true;
 				break;
 			case 2:
-				trigdwell = false;
 				trigpalmfree = true;
 				break;
 			case 3:
-				trigdwell = false;
 				trigpinch = true;
 				break;
 			case 5:
-				trigdwell = false;
 				trigtap = true;
 				break;
+			case 6:
+				trigdwell = true;
 			case 8:
-				trigdwell = false;
 				trigtapdepth = true;
 				break;
 			case 9:
-				trigdwell = false;
 				trigtapdepthsingle = true;
 				break;
 			case 10:
-				trigdwell = false;
 				trigdepthdistance = true;
 				break;
 			default:
@@ -89,19 +88,23 @@ namespace PalmSpaceUI {
 		}
 
 
-		trial_start_btn_location_left = true;
+		trial_start_btn_location_left = false;
 		trial_start_btn_location_center = false;
 		trial_start_btn_location_left_center = false;
+		trial_start_btn_location_right_center = false;
 
 		switch (trial_start_btn_location) {
+			case 1:
+				trial_start_btn_location_left = true;
+				break;
 			case 2:
-				trial_start_btn_location_left = false;
 				trial_start_btn_location_center = true;
 				break;
 			case 3:
-				trial_start_btn_location_left = false;
 				trial_start_btn_location_left_center = true;
 				break;
+			case 4:
+				trial_start_btn_location_right_center = true;
 			default:
 				break;
 		}
@@ -114,15 +117,20 @@ namespace PalmSpaceUI {
 
 		_depth = depth;
 
-		screen_small = 1, screen_large = 0, screen_full = 0;
-		if (screensize == 2) {
-			screen_large = 1;
-			screen_small = 0;
-		} else if (screensize == 3) {
-			screen_small = 0;
-			screen_full = 1;
+		screen_small = false, screen_large = false, screen_full = false;
+		switch(screensize) {
+			case 1:
+				screen_small = true;
+				break;
+			case 2:
+				screen_large = true;
+				break;
+			case 3:
+				screen_full = true;
+				break;
+			default:
+				break;
 		}
-
 
 		visibility_fixed = true, visibility_conditional = false;
 		if (visibility == 2) {
@@ -135,6 +143,8 @@ namespace PalmSpaceUI {
 
 		m_trial_show_button_during_trial = false;
 		if (trial_show_button_during_trial) m_trial_show_button_during_trial = true;
+
+		
 	}
 
 
@@ -148,22 +158,26 @@ namespace PalmSpaceUI {
 			// TODO make UI relative to width and height
 			
 			cvui::checkbox(frame, width - 120, height - 100, "Debug", &_debug);
-			cvui::checkbox(frame, width - 120, height - 130, "Depth", &_depth);
 
+			#ifdef REALSENSE_CAM
+				cvui::checkbox(frame, width - 120, height - 130, "Depth", &_depth);
+			#endif
 			cvui::window(frame, scalex + 10, scaley + 10, 100, 80, "Initiator");
 			cvui::checkbox(frame, scalex + 15, scaley + 30, "One Hand", &onehand);
 			cvui::checkbox(frame, scalex + 15, scaley + 50, "Two Hand", &twohand);
 
 
-			cvui::window(frame, scalex + 10, scaley + 100, 100, 120, "Anchor");
-			cvui::checkbox(frame, scalex + 15, scaley + 130, "Dynamic", &ancdyn);
-			cvui::checkbox(frame, scalex + 15, scaley + 150, "Static", &ancstat);
-			cvui::checkbox(frame, scalex + 15, scaley + 170, "MidAir", &ancmid);
+			cvui::window(frame, scalex - 20, scaley + 100, 130, 100, "Anchor");
+			cvui::checkbox(frame, scalex - 15, scaley + 130, "Dynamic", &ancdyn);
+			cvui::checkbox(frame, scalex - 15, scaley + 150, "Static", &ancstat);
+			// cvui::checkbox(frame, scalex - 15, scaley + 170, "MidAir", &ancmid);
+			cvui::checkbox(frame, scalex - 15, scaley + 170, "Hand to screen", &anchandtoscreen);
 
 
 
 			cvui::window(frame, scalex + 120, scaley + 10, 200, 80, "Trigger");
 			cvui::checkbox(frame, scalex + 125, scaley + 30, "Dwell", &trigdwell);
+			
 			cvui::checkbox(frame, scalex + 125, scaley + 50, "Tap Depth", &trigtapdepth);
 			// cvui::checkbox(frame, scalex + 125, scaley + 30, "Thumb of base palm", &trigpalmbase);
 			// cvui::checkbox(frame, scalex + 125, scaley + 50, "Shoot", &trigpalmfree); // "Thumb of free palm"
@@ -194,6 +208,7 @@ namespace PalmSpaceUI {
 			cvui::checkbox(frame, scalex + 330, scaley + 200, " Left", &trial_start_btn_location_left);
 			cvui::checkbox(frame, scalex + 330, scaley + 220, "Center", &trial_start_btn_location_center);
 			cvui::checkbox(frame, scalex + 330, scaley + 240, "Left Center", &trial_start_btn_location_left_center);
+			cvui::checkbox(frame, scalex + 330, scaley + 260, "Right Center", &trial_start_btn_location_right_center);
 
 			if (cvui::button(frame, width - 120, height - 50, 100, 30, "Next")) {
 				if (is_valid()) {
@@ -242,7 +257,7 @@ namespace PalmSpaceUI {
 
 		if (ancdyn) anchor = 1;
 		if (ancstat) anchor = 2;
-		if (ancmid) anchor = 3;
+		if (anchandtoscreen) anchor = 3;
 
 		if (trigpalmbase) trigger = 1;
 		if (trigpalmfree) trigger = 2;
@@ -271,6 +286,7 @@ namespace PalmSpaceUI {
 		if (trial_start_btn_location_left) trial_start_btn_location = 1;
 		else if (trial_start_btn_location_center) trial_start_btn_location = 2;
 		else if (trial_start_btn_location_left_center) trial_start_btn_location = 3;
+		else if (trial_start_btn_location_right_center) trial_start_btn_location = 4;
 
 	}
 
@@ -299,7 +315,7 @@ namespace PalmSpaceUI {
 			cnt = 0;
 			if (ancdyn) cnt ++;
 			if (ancstat) cnt ++;
-			if (ancmid) cnt ++;
+			if (anchandtoscreen) cnt ++;
 			if (cnt != 1) {
 				valid = 0;
 				errormsg = "Select exactly 1 anchor.";
@@ -349,6 +365,7 @@ namespace PalmSpaceUI {
 			if (trial_start_btn_location_left) cnt ++;
 			if (trial_start_btn_location_center) cnt ++;
 			if (trial_start_btn_location_left_center) cnt ++;
+			if (trial_start_btn_location_right_center) cnt ++;
 			if (cnt != 1) {
 				valid = 0;
 				errormsg = "Select exactly 1 location for trial start button.";

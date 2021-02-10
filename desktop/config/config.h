@@ -47,11 +47,16 @@ class SmoothCoord {
   std::tuple<type_t, type_t, type_t> m_cur, m_prev;
   double m_decay;
   std::string m_name;
+
+  type_t m_dx, m_dy, m_dz;
+  int m_drop_cnt, m_max_drop_cnt, m_diff_thresh;
+
   public:
 
   SmoothCoord();
   SmoothCoord(std::string _name, double _decay);
   void reset();
+  void init();
   void set(const std::tuple<type_t, type_t, type_t> & _new_point);
   void set(const type_t & _x_col, const type_t & _y_row);
   void get(std::tuple<type_t, type_t, type_t> & _point);

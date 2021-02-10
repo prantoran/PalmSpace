@@ -23,10 +23,10 @@ namespace PalmSpaceUI {
         int low_threshold, high_threshold;
         int cellcnt;
         bool onehand, twohand;
-        bool ancdyn, ancstat, ancmid; 
-        bool trigpalmbase, trigpalmfree, trigpinch, trigtap, trigdwell, trigtapdepth, trigtapdepthsingle, trigdepthdistance;
-
-        // eScreenSize screen_size;
+        bool ancdyn, ancstat, anchandtoscreen; 
+        bool trigpalmbase, trigpalmfree, trigpinch, trigtap, 
+            trigdwell, trigtapdepth, trigtapdepthsingle, 
+            trigdepthdistance;
 
         bool screen_small, screen_large, screen_full;
 
@@ -36,12 +36,13 @@ namespace PalmSpaceUI {
 
         bool visibility_fixed, visibility_conditional;
 
-        bool trial_start_btn_location_left, trial_start_btn_location_center, trial_start_btn_location_left_center;
+        bool trial_start_btn_location_left, 
+            trial_start_btn_location_center, 
+            trial_start_btn_location_left_center,
+            trial_start_btn_location_right_center;
 
         bool m_trial_pause_before_each_target;
         bool m_trial_show_button_during_trial;
-
-
 
         public:
         

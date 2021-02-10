@@ -40,6 +40,8 @@ class CameraOpenCV: public Camera {
 };
 
 
+#ifdef REALSENSE_CAM 
+
 // use RealSense SDK
 class CameraRealSense: public Camera {
     rs2::pipeline m_pipe;
@@ -58,6 +60,9 @@ class CameraRealSense: public Camera {
     // Declare depth colorizer for pretty visualization of depth data
     cv::Mat m_depth_mat;
 
+    std::vector<cv::Mat> m_frames_color;
+    int m_frames_size;
+
     public:
     CameraRealSense(int _width, int _height, int _fps);
     ~CameraRealSense();
@@ -69,6 +74,6 @@ class CameraRealSense: public Camera {
     float get_depth(int x_col, int y_row);
 };
 
-
+#endif
 
 #endif
