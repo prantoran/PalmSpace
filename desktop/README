@@ -1,6 +1,12 @@
 # PalmSspace
 ### Virtual interface for mid-air interaction
 
+
+## NOTES
+- relative depth is presented in different shades.
+- lighter and larger the circle, the closer the landmark is towards the camera.
+
+
 TODOS:
 
 throw exception, modular func, less dependency on shared memory

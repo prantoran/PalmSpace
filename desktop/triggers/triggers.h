@@ -49,6 +49,7 @@ class Trigger {
         Parameters & params) = 0;
 
     TRIGGER::state status();
+    void reset_status();
 };
 
 class TriggerThumb: public Trigger {
@@ -117,14 +118,13 @@ class TriggerWait: public Trigger {
 
 class TriggerTap: public Trigger {
     public:
-    double m_zvalue;
-    int cnt;
-    double zvalue, prev_zvalue;
-    int hand_ID, prev_handID, hand_switch_ignore_cnt;
-    
-    TriggerTap();
-    TriggerTap(int _width, int _height);
+    int m_cnt;
 
+    int m_base_rel_depth, m_diff;
+
+
+    TriggerTap();
+    
     void update(
         const cv::Mat & input_image,
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,

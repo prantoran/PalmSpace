@@ -74,6 +74,7 @@ namespace PalmSpaceUI {
 				break;
 			case 6:
 				trigdwell = true;
+				break;
 			case 8:
 				trigtapdepth = true;
 				break;
@@ -179,11 +180,11 @@ namespace PalmSpaceUI {
 			cvui::checkbox(frame, scalex + 125, scaley + 30, "Dwell", &trigdwell);
 			
 			cvui::checkbox(frame, scalex + 125, scaley + 50, "Tap Depth", &trigtapdepth);
+			cvui::checkbox(frame, scalex + 125, scaley + 70, "Tap", &trigtap);
 			// cvui::checkbox(frame, scalex + 125, scaley + 30, "Thumb of base palm", &trigpalmbase);
 			// cvui::checkbox(frame, scalex + 125, scaley + 50, "Shoot", &trigpalmfree); // "Thumb of free palm"
 			// cvui::checkbox(frame, scalex + 125, scaley + 70, "Pinch with free palm", &trigpinch);
 			// cvui::checkbox(frame, scalex + 125, scaley + 90, "Tap Depth Distance", &trigdepthdistance);
-			// cvui::checkbox(frame, scalex + 125, scaley + 110, "Tap", &trigtap);
 			// cvui::checkbox(frame, scalex + 125, scaley + 170, "Tap Depth Single", &trigtapdepthsingle);
 
 			if (cellcnt < 3) cellcnt = 3;

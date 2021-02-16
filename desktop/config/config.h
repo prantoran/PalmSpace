@@ -42,6 +42,13 @@ class Range{
 };
 
 
+namespace handedness {
+  typedef enum {
+    LEFT,
+    RIGHT,
+  } hand;
+}
+
 class SmoothCoord {
   using type_t = double;
   std::tuple<type_t, type_t, type_t> m_cur, m_prev;
@@ -68,6 +75,8 @@ class SmoothCoord {
   double y() const;
   double z() const;
 };
+
+
 
 
 class Parameters {
@@ -118,7 +127,12 @@ class Parameters {
   std::string m_depth_txt;
 
   int m_base_id; // m_base_hand_id_set_by_initiator;
-  
+
+  handedness::hand hand[4];
+
+  std::pair<double, double> m_hand_landmarks_relative_depth_minmax[4];
+  int m_hand_color_scale[4], m_hand_size_scale[4];
+
   void get_raw_dimensions(double & _width, double _height);
   void set_raw_dimensions(double _width, double _height);
   
@@ -179,6 +193,10 @@ class Parameters {
   void set_other_index(); // TODO need more inspection
   void get_other_index_z_value(double _z);
 
+  int cursor_hand_id();
+
+  int primary_cursor_size();
+  int primary_cursor_color_size();
 };
 
 

@@ -18,6 +18,7 @@
 
 // data structures for mediapipe graph
 #include "mediapipe/framework/formats/landmark.pb.h"
+#include "mediapipe/framework/formats/classification.pb.h"
 
 #include "desktop/ui/cvui.h"
 
@@ -26,6 +27,7 @@
 constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
 constexpr char kLandmarkOutputStream[] = "hand_landmarks";
+constexpr char kHandedness[] = "handedness";
 
 // constexpr char kWindowName[] = "PalmSpace";
 constexpr int BLOB_AREA_THRESH = 100;
@@ -302,6 +304,8 @@ void MediaPipeMultiHandGPU::debug(
                    graph.AddOutputStreamPoller(kOutputStream));
   ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller multi_hand_landmarks_poller,
                   graph.AddOutputStreamPoller(kLandmarkOutputStream));
+  ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller handedness_poller,
+                  graph.AddOutputStreamPoller(kHandedness));
   // ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller multi_hand_palm_detections_poller,
   //                 graph.AddOutputStreamPoller("palm_detections"));
   
@@ -448,6 +452,36 @@ void MediaPipeMultiHandGPU::debug(
       );
     }
 
+
+    mediapipe::Packet handedness_packet;
+    bool _handedness_found = true;
+    if (!handedness_poller.Next(&handedness_packet)) {
+      std::cout << "handler/MediaPipeMultiHandGPU::run() landmarks cannot be polled\n";
+      _handedness_found = false;
+    }
+
+    if (_handedness_found) {
+      // const auto& handedness = handedness_packet.Get<int>();
+      // const auto& handedness = handedness_packet.Get<mediapipe::ClassificationList>();
+
+      const auto& handedness = handedness_packet.Get<std::vector<mediapipe::ClassificationList, std::allocator<mediapipe::ClassificationList> >>();
+      // std::cerr << "handedness:" << handedness << "\n";
+      for (int i = 0; i < 2 && i < handedness.size(); i ++) {
+        auto& h = handedness[i];
+        std::cerr << "h.classification_size:" << h.classification_size() << "\n";
+        if (h.classification_size() > 0) {
+          const mediapipe::Classification & c = h.classification(0);
+          std::cerr << "i:" << i << " label:" << c.label() << "\tindex:" << c.index() << "\n";
+          if (c.index() == 0) {
+            params.hand[i] = handedness::LEFT;
+          } else if (c.index() == 1) {
+            params.hand[i] = handedness::RIGHT;
+          } else {
+            std::cerr << "invalid handedness\n";
+          }
+        }
+      }
+    }
     
     mediapipe::Packet multi_hand_landmarks_packet;
     bool _landmarks_found = true;
@@ -458,17 +492,17 @@ void MediaPipeMultiHandGPU::debug(
     }
 
 
-    // resetting points
-    for (int i = 0; i < 2; i ++) {
-      points[i][0] = std::make_tuple(0, 0, 0);
-      for (int j = 1; j < 21; j ++) {
-        points[i][j] = points[i][0];
-      }
-    } 
-
-    // std::cerr << "reset landmarks\n";
 
     if (_landmarks_found) {
+      
+      // resetting points
+      for (int i = 0; i < 2; i ++) {
+        points[i][0] = std::make_tuple(0, 0, 0);
+        for (int j = 1; j < 21; j ++) {
+          points[i][j] = points[i][0];
+        }
+      } 
+
       const auto& multi_hand_landmarks = multi_hand_landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
       int hand_id = 0;
 
@@ -482,8 +516,28 @@ void MediaPipeMultiHandGPU::debug(
             landmark.y(), 
             landmark.z()
           );
+
+
+          if (j == 8) {
+            
+            std::cerr << "hand_id:" << hand_id << "\tindextop relative_depth:" << landmark.z() << "\tpalmbase:" << std::get<2>(points[hand_id][0]) << "\tindex/base ratio:" << (landmark.z()/std::get<2>(points[hand_id][0])) << "\n"; 
+          }
           ++ j;
         }
+
+        handlers::util::GetMinMaxZ(
+          points[hand_id], 
+          &params.m_hand_landmarks_relative_depth_minmax[hand_id].first,
+          &params.m_hand_landmarks_relative_depth_minmax[hand_id].second);
+        
+        handlers::util::SetColorSizeValueFromZ(
+          std::get<2>(points[hand_id][8]),
+          params.m_hand_landmarks_relative_depth_minmax[hand_id].first,
+          params.m_hand_landmarks_relative_depth_minmax[hand_id].second,
+          &params.m_hand_color_scale[hand_id],
+          1, 20,
+          &params.m_hand_size_scale[hand_id]
+        );
 
         ++hand_id;
       }
@@ -504,6 +558,9 @@ void MediaPipeMultiHandGPU::debug(
     } else if (!anchor->static_display) {
       params.reset();
     }
+
+
+    
     
     if (anchor->type() == choices::anchor::HANDTOSCREEN) {
       m_primary_output = cv::Mat(
@@ -554,6 +611,8 @@ void MediaPipeMultiHandGPU::debug(
               anchor->unlock_selection();
             }
           }
+
+          trigger->reset_status();
       }
           
       anchor->draw(
@@ -576,8 +635,13 @@ void MediaPipeMultiHandGPU::debug(
         cv::circle(
           m_primary_output,
           cv::Point(indexfinger_x, indexfinger_y),
-          10,
-          COLORS_darkblue,
+          params.primary_cursor_size(),
+          // COLORS_darkblue,
+          cv::Scalar(
+            params.primary_cursor_color_size(), 
+            params.primary_cursor_color_size(), 
+            params.primary_cursor_color_size()            
+          ),
           -1,
           cv::LINE_8,
           0);

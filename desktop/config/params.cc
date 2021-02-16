@@ -262,3 +262,33 @@ void Parameters::set_other_index() { // TODO need more inspection
 void Parameters::get_other_index_z_value(double _z) {
     _z = std::get<2>(m_other_index);
 }
+
+
+int Parameters::cursor_hand_id() {
+    if (m_base_id == -1) {
+        std::cout <<"WARNING: config/params.cc cursor_hand_id() m_base_id = -1\n";
+        return -1;
+    }
+
+    return (1-m_base_id);
+}
+
+
+int Parameters::primary_cursor_size() {
+    if (m_base_id == -1) {
+        std::cout <<"WARNING: config/params.cc primary_cursor_size() m_base_id = -1\n";
+        return 0;
+    }
+
+    return m_hand_size_scale[cursor_hand_id()];
+}
+
+
+int Parameters::primary_cursor_color_size() {
+    if (m_base_id == -1) {
+        std::cout <<"WARNING: config/params.cc primary_cursor_color_size() m_base_id = -1\n";
+        return 0;
+    }
+
+    return m_hand_color_scale[cursor_hand_id()];
+}
