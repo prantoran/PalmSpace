@@ -39,8 +39,8 @@ DEFINE_string(output_video_path,
               "Full path of where to save result (.mp4 only). "
               "If not provided, show result in a window.");
 
-DEFINE_int32(frame_width, 640, "frame/screen width in pixels."); // 640 // 1280
-DEFINE_int32(frame_height, 480, "frame/screen height in pixels."); // 480 // 720
+DEFINE_int32(frame_width, 640, "frame/screen width in pixels."); // 640 // 1280 // 848
+DEFINE_int32(frame_height, 480, "frame/screen height in pixels."); // 480 // 720 // 480
 DEFINE_int32(fps, 30, "frames per second.");
 DEFINE_int32(debug, 0, "debug mode");
 
@@ -121,8 +121,8 @@ int main(int argc, char** argv) {
   }
 
   
-  int choice_anchor = 2;
-  int choice_trigger = 8;
+  int choice_anchor = 1;
+  int choice_trigger = 5; // 5 tap z 6 tap depth cam 8 dwell
   int choice_initiator = 1;
   int choice_divisions = 5;
   int choice_screensize = 2;
@@ -134,7 +134,8 @@ int main(int argc, char** argv) {
   bool choice_trial_show_button_during_trial = false;
 
   #ifndef REALSENSE_CAM
-    choice_depth = 0;
+    if (choice_depth == 8)
+      choice_depth = 0;
   #endif
 
   PalmSpaceUI::Menu menu = PalmSpaceUI::Menu(
@@ -192,7 +193,7 @@ int main(int argc, char** argv) {
 
 
   mp_graph->trial->generate_sample_space();
-  mp_graph->trial->generate_random_target_sequence(5);
+  mp_graph->trial->generate_random_target_sequence(7);
 
   std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
 
@@ -270,7 +271,7 @@ int main(int argc, char** argv) {
       // mp_graph->trigger->set_anchor_choice(choice_anchor); // TODO inspect, needed by wait trigger
       break;
     case 5:
-      mp_graph->trigger = new TriggerTap(FLAGS_frame_width, FLAGS_frame_height);
+      mp_graph->trigger = new TriggerTap();
       break;
     case 6:
       mp_graph->trigger = new TriggerDwell();

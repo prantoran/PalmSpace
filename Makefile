@@ -7,3 +7,6 @@ run:
 	./scripts/run.sh
 rund:
 	./scripts/run.sh -d
+eg:
+	./scripts/example.sh
+	 

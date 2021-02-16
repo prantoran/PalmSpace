@@ -26,3 +26,8 @@ std::chrono::milliseconds cur_time() {
 TRIGGER::state Trigger::status() {
     return cur_state;
 }
+
+
+void Trigger::reset_status() {
+    cur_state = TRIGGER::OPEN;
+}

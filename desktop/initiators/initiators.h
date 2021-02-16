@@ -19,8 +19,8 @@ const int INDEXBASE_IDX = 17; // adjusted for left hand
 const double MIN_WIDTH = 0.1;
 const double MIN_HEIGHT = 0.1;
 
-const double AREA_THRESHOLD = 0.06;
-const double SMALLAREA_THRESHOLD = 0.008;
+const double AREA_THRESHOLD = 0.03;
+const double SMALLAREA_THRESHOLD = 0.004;
 
 
 class Initiator {

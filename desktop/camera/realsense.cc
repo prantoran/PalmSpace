@@ -30,6 +30,35 @@ CameraRealSense::CameraRealSense(int _width, int _height, int _fps) {
     auto sensor = m_profile.get_device().first<rs2::depth_sensor>();
     m_depth_scale =  sensor.get_depth_scale();
 
+    if (sensor.supports(RS2_OPTION_ENABLE_AUTO_EXPOSURE)) {
+
+      std::cout << "INFO: realsense depth sensor supports auto_exposure\n";
+      sensor.set_option(RS2_OPTION_ENABLE_AUTO_EXPOSURE, 1);
+      std::cout << "INFO: enabled auto_exposure\n";
+      rs2::roi_sensor s(sensor);
+      rs2::region_of_interest roi = s.get_region_of_interest();
+      
+    } else {
+      std::cout << "WARNING: realsense depth sensor does not support auto_exposure\n";
+    }
+
+
+    if (sensor.supports(RS2_OPTION_EMITTER_ENABLED)) {
+      std::cout << "INFO: realsense depth sensor supports emitter\n";
+      
+      sensor.set_option(RS2_OPTION_EMITTER_ENABLED, 1.f); // Enable emitter, required for more accuracy
+      // sensor.set_option(RS2_OPTION_EMITTER_ENABLED, 0.f); // Disable emitter
+    }
+
+    if (sensor.supports(RS2_OPTION_LASER_POWER)) {
+        // Query min and max values:
+      std::cout << "INFO: realsense depth sensor supports laser power\n";
+      
+      // auto range = sensor.get_option_range(RS2_OPTION_LASER_POWER);
+      // sensor.set_option(RS2_OPTION_LASER_POWER, range.max); // Set max power, what are the risks?
+      // sensor.set_option(RS2_OPTION_LASER_POWER, 0.f); // Disable laser, reduces accuracy
+    }
+
 
     std::cerr << "realsense pipe started, depth scale:" << std::to_string(m_depth_scale) << "\n";
     

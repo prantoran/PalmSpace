@@ -59,4 +59,26 @@ class MediaPipeMultiHandGPU {
 };
 
 
+namespace handlers {
+namespace util {
+
+// Remap x from range [lo hi] to range [0 1] then multiply by scale.
+inline double Remap(double x, double lo, double hi, double scale);
+
+void GetMinMaxZ(
+    const std::vector<std::tuple<double, double, double>>& landmarks, 
+    double* z_min, double* z_max);
+
+void SetColorSizeValueFromZ(
+  double z, double z_min, double z_max,
+  int *color_scale,
+  double min_depth_circle_thickness,
+  double max_depth_circle_thickness,
+  int *size_scale);
+
+
+} // namespace util
+} // namespace handlers
+
+
 #endif

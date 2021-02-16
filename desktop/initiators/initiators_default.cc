@@ -24,13 +24,13 @@ bool InitiatorDefault::inspect(
         for (int j = 0; valid[i] && j < points[i].size(); j ++) {
             auto & u = points[i][j];
             pointsConvex[i].emplace_back(u);
-            if (std::get<0>(u) < 0.1 && std::get<1>(u) < 0.1) {
-              valid[i] = false;
-            }
+            // if (std::get<0>(u) < 0.01 && std::get<1>(u) < 0.01) {
+            //   valid[i] = false;
+            // }
 
-            if (std::get<0>(u) > 0.9 && std::get<1>(u) > 0.9) {
-              valid[i] = false;
-            }
+            // if (std::get<0>(u) > 0.99 && std::get<1>(u) > 0.99) {
+            //   valid[i] = false;
+            // }
         }
     }
 
@@ -40,12 +40,19 @@ bool InitiatorDefault::inspect(
         convex_hull(pointsConvex[i]);
         areas[i] = area(pointsConvex[i]);
       }
+
+      if (areas[i] < SMALLAREA_THRESHOLD) {
+        valid[i] = false;
+      }
     }
 
     params.m_base_id = 0;
-    if (valid[1] && areas[1] > AREA_THRESHOLD && std::get<0>(points[1][17]) < std::get<0>(points[0][17])) {      
+    if (valid[1] && params.hand[1] == handedness::LEFT) {      
+      std::cerr << "switching\n";
       params.m_base_id = 1;
     }
+
+    std::cerr << "base_id:" << params.m_base_id << "\thand:" << params.hand[params.m_base_id] << "\n";
     
     show_display = true;
     if (areas[params.m_base_id] < AREA_THRESHOLD) {

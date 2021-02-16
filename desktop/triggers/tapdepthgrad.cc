@@ -51,10 +51,10 @@ void TriggerTapDepthGradient::update(
 
     m_cursor_pts.max_diff(m_max_axis_spatial_diff);
     std::cerr << "m_max_axis_spatial_diff:" << m_max_axis_spatial_diff << "\n";
-    if (m_max_axis_spatial_diff > 20) {
+    if (m_max_axis_spatial_diff > 15) {
         m_max_axis_spatial_diff_thresh_exceed_cnt ++;
-        if (m_max_axis_spatial_diff_thresh_exceed_cnt > 3) {
-            m_max_axis_spatial_diff_thresh_exceed_cnt = 3;
+        if (m_max_axis_spatial_diff_thresh_exceed_cnt > 10) {
+            m_max_axis_spatial_diff_thresh_exceed_cnt = 10;
         }
     } else {
         m_max_axis_spatial_diff_thresh_exceed_cnt --;
@@ -67,7 +67,7 @@ void TriggerTapDepthGradient::update(
         return;
     }
 
-    if (m_max_axis_spatial_diff < 10) {
+    if (m_max_axis_spatial_diff < 8) {
         m_stable_frames_cnt ++;
     }else {
         m_stable_frames_cnt = 0;
@@ -145,7 +145,7 @@ void TriggerTapDepthGradient::update(
     
 
     cur_state = TRIGGER::OPEN;
-    if (m_gesture_pat_initiated && m_stable_frames_cnt > 6) {
+    if (m_gesture_pat_initiated && m_stable_frames_cnt > 12) {
         cur_state = TRIGGER::PRESSED;
     }
     

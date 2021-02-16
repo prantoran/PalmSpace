@@ -1,7 +1,7 @@
 #include "config.h"
 
 Grid::Grid() {
-    m_gap = 5;
+    m_gap = 1;
 }
 
 
