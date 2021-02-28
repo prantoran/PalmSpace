@@ -5,6 +5,10 @@
 #include <tuple>
 #include <string>
 
+Trigger::Trigger() {
+    m_debug = false;
+}
+
 Trigger::~Trigger() {}
 
 

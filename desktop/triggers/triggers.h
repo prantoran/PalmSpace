@@ -40,6 +40,10 @@ class Trigger {
 
     std::string state_str(); 
 
+    bool m_debug;
+
+    Trigger();
+
     virtual ~Trigger();
     
 

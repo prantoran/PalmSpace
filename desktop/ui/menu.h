@@ -23,7 +23,7 @@ namespace PalmSpaceUI {
         int low_threshold, high_threshold;
         int cellcnt;
         bool onehand, twohand;
-        bool ancdyn, ancstat, anchandtoscreen; 
+        bool ancdyn, ancstat, anchandtoscreen, ancpad, ancpadlarge; 
         bool trigpalmbase, trigpalmfree, trigpinch, trigtap, 
             trigdwell, trigtapdepth, trigtapdepthsingle, 
             trigdepthdistance;

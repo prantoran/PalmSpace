@@ -43,4 +43,32 @@ namespace ui {
         cv::ellipse( src, p3 + cv::Point(-cornerRadius, -cornerRadius), cv::Size( cornerRadius, cornerRadius ), 0.0, 0, 90, lineColor, thickness, lineType );
         cv::ellipse( src, p4 + cv::Point(cornerRadius, -cornerRadius), cv::Size( cornerRadius, cornerRadius ), 90.0, 0, 90, lineColor, thickness, lineType );
     }
+
+
+    void clear_rectangle(
+        cv::Mat& src,
+        cv::Point p1,
+        cv::Point p2,
+        cv::Point p3,
+        cv::Point p4,
+        cv::Scalar color
+    ) {
+        
+        std::vector<cv::Point> contour = {p1, p2, p3, p4, p1};
+
+        const cv::Point *pts = (const cv::Point*) cv::Mat(contour).data;
+        int npts = cv::Mat(contour).rows;
+
+        cv::polylines(
+            src, 
+            &pts, 
+            &npts, 
+            1, 
+            false, 
+            color, 
+            3,
+            CV_AA,
+            0
+        );
+    }
 }

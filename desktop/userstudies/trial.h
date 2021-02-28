@@ -10,7 +10,8 @@ namespace userstudies {
     enum class Location{LEFT, CENTER, LEFTCENTER, RIGHTCENTER};
 
     enum class TrialState{OPEN, STARTED, PAUSED};
-        
+    
+    enum class ButtonState {OPEN, CLICKED, READY};
         
     class Trial {
         public:
@@ -41,20 +42,30 @@ namespace userstudies {
         TrialState m_state;
 
         std::string m_start_btn_label;
-        cv::Point m_start_btn_label_loc_topleft;
 
         int m_view_width, m_view_height;
 
+        std::chrono::time_point<std::chrono::steady_clock> m_last_trial_end_time;
+
+        ButtonState m_button_state;
+
         Trial(int _divisions, int _view_width, int _view_height);
         ~Trial();
-        void update_start_button_loc(Grid & grid);
+        void update_start_button_input_loc(
+            const cv::Point & _topleft, 
+            const cv::Point & _bottomright);
+        void update_start_button_input_loc(Grid & grid);
+        void draw_start_button(
+            cv::Mat & output_frame,
+            cv::Point _topleft,
+            cv::Point _bottomright);
         void draw_start_button(cv::Mat & output_frame);
         void process_is_button_clicked(int cursor_x_col, int cursor_y_row);
         void generate_sample_space();
         void generate_random_target_sequence(int n);
         std::pair<int, int> current_target();
         bool done();
-        void draw_target(cv::Mat & output_frame, Grid & grid);
+        void draw_target(cv::Mat & output_frame, const Grid & grid);
         bool matched(int row_i, int col_j);
         void process_correct_selection();
         bool started();

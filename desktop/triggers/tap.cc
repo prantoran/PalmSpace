@@ -18,7 +18,10 @@ void TriggerTap::update(
     if (m_base_rel_depth == -1) m_base_rel_depth = rel_depth; 
     m_diff = rel_depth - m_base_rel_depth;
 
-    std::cerr << "trigger/tap size:" << rel_depth << "\tm_diff:" << m_diff << "\n";
+    if (m_debug) {
+        std::cerr << "trigger/tap size:" << rel_depth << "\tm_diff:" << m_diff << "\n";
+    }
+    
     if (m_diff < -2) {
         if (cur_state != TRIGGER::PRESSED) {
             cur_state = TRIGGER::PRESSED;

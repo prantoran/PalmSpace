@@ -1,9 +1,12 @@
 #include "anchors.h"
-#include "../ui/ui.h"
 
 #include "mediapipe/framework/port/opencv_highgui_inc.h"
 #include "mediapipe/framework/port/opencv_imgproc_inc.h"
 #include "mediapipe/framework/port/opencv_video_inc.h"
+
+
+Anchor::Anchor() {
+}
 
 
 Anchor::~Anchor() {
@@ -30,6 +33,7 @@ void Anchor::highlightSelected() {
 
 void Anchor::setDivisions(int _divisions) {
     m_grid.m_divisions = _divisions;
+    m_grid_out.m_divisions = _divisions;
 }
 
 int Anchor::getDivisions() {
@@ -75,14 +79,6 @@ void Anchor::drawProgressBar(cv::Mat & _image, Parameters & params) {
             0
         );
     }
-}
-
-
-void Anchor::setupGrid(double enlarged_topleft_x, double enlarged_topleft_y) {
-    // setup tile coords
-
-    // enlarged means topleft coords are received after multiplying ratios by width and height
-    m_grid.align(enlarged_topleft_x, enlarged_topleft_y);
 }
 
 
@@ -155,8 +151,8 @@ void Anchor::reset_palmbase() {
     palmbase_x = -1;
     palmbase_y = -1;
     // TODO check whether logical to reset grid dimensions
-    m_grid.m_width = 0;
-    m_grid.m_height = 0;
+    m_grid.reset_dimensions();
+    m_grid_out.reset_dimensions();
 }
 
 
@@ -164,26 +160,13 @@ void Anchor::reset_indexbase() {
     indexbase_x = -1;
     indexbase_y = -1;
     // TODO check whether logical to reset grid dimensions
-    m_grid.m_width = 0;
-    m_grid.m_height = 0;
+    m_grid.reset_dimensions();
+    m_grid_out.reset_dimensions();
 }
 
-void Anchor::reset_grid() {
+void Anchor::reset_grids() {
     m_grid.reset();
-}
-
-
-cv::Rect Anchor::getGrid() {
-    return m_grid.get_bound_rect();
-}
-
-cv::Point Anchor::getGridTopLeft() {
-    return m_grid.get_top_left();
-}
-
-
-cv::Point Anchor::getGridBottomRight() {
-    return m_grid.get_bottom_right();
+    m_grid_out.reset();
 }
 
 
@@ -215,7 +198,7 @@ bool Anchor::isVisible(const Parameters & params) {
 
 
 choices::anchor::types Anchor::type() {
-    return _type;
+    return m_type;
 }
 
 
@@ -229,10 +212,10 @@ void Anchor::unlock_selection() {
 }
 
 
-void Anchor::draw_main_grid_layout(cv::Mat & src) {
+void Anchor::draw_main_grid_layout(cv::Mat & src, const Grid & grid) {
     ui::rounded_rectangle(
         src, 
-        getGridTopLeft(), getGridBottomRight(), 
+        grid.get_top_left(), grid.get_bottom_right(), 
         COLORS_floralwhite,
         5, 
         cv::LINE_8,
@@ -240,23 +223,35 @@ void Anchor::draw_main_grid_layout(cv::Mat & src) {
 }
 
 
-void Anchor::draw_cells(cv::Mat & src) {
-    for (int i = 1; i <= m_grid.m_divisions; i ++ ) {
-        for (int j = 1; j <= m_grid.m_divisions; j ++) {
+void Anchor::draw_cells(cv::Mat & src, const Grid & grid) {
+        
+    for (int i = 1; i <= grid.m_divisions; i ++ ) {
+        for (int j = 1; j <= grid.m_divisions; j ++) {
             color_cur = color_red;
             if (i == green_i && j == green_j) {
-            color_cur = color_green;
-            } else if (i == m_selected_i && j == m_selected_j) {
-            color_cur = color_blue;
+                color_cur = color_green;
             }
 
             cv::rectangle(
-            src, 
-            m_grid.get_cell(i, j), 
-            color_cur,
-            -1, 
-            cv::LINE_8,
-            0);
+                src, 
+                grid.get_cell(i, j), 
+                color_cur,
+                -1, 
+                cv::LINE_8,
+                0);
+            
         }
+    }
+
+    if (m_selected_i != -1 && m_selected_j != -1) {
+        cv::Rect cell = grid.get_cell(m_selected_i, m_selected_j);
+        ui::clear_rectangle(
+            src,
+            cv::Point(cell.x-1, cell.y-1),
+            cv::Point(cell.x-1, cell.y+cell.height+1),
+            cv::Point(cell.x+cell.width+1, cell.y+cell.height+1),
+            cv::Point(cell.x+cell.width+1, cell.y-1),
+            color_blue
+        );
     }
 }

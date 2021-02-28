@@ -6,3 +6,7 @@ Initiator::~Initiator() {
     }
     pointsConvex.clear();
 }
+
+Initiator::Initiator() {
+    m_debug = false;
+}

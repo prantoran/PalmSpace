@@ -52,7 +52,9 @@ bool InitiatorDefault::inspect(
       params.m_base_id = 1;
     }
 
-    std::cerr << "base_id:" << params.m_base_id << "\thand:" << params.hand[params.m_base_id] << "\n";
+    if (m_debug) {
+      std::cerr << "base_id:" << params.m_base_id << "\thand:" << params.hand[params.m_base_id] << "\n";
+    }
     
     show_display = true;
     if (areas[params.m_base_id] < AREA_THRESHOLD) {

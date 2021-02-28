@@ -15,6 +15,7 @@
 #include "desktop/config/colors.h"
 #include "desktop/config/config.h"
 #include "desktop/config/choices.h"
+#include "desktop/ui/ui.h"
 
 constexpr double alpha = 0.4;
 #define COLORS_floralwhite  cv::Scalar(240,250,255)
@@ -27,8 +28,8 @@ class ScreenSize {
     choices::eScreenSize size;
     
     void setMinWidthHeight(
-        int &min_width, 
-        int &min_height, 
+        double &min_width, 
+        double &min_height, 
         int max_width, 
         int max_height) {
         switch (size) {
@@ -37,8 +38,8 @@ class ScreenSize {
                 min_height = max_height/5;
                 break;
             case choices::LARGE:
-                min_width = (1*max_width)/3;
-                min_height = (1*max_height)/3;
+                min_width = (1*max_width)/4;
+                min_height = (1*max_height)/4;
                 break; 
             case choices::FULL:
                 min_width = max_width;
@@ -68,10 +69,10 @@ class Anchor { // interface via abstract class
     double m_progress_bar;
 
     public:
-    choices::anchor::types _type;
+    choices::anchor::types m_type; 
     std::string name;
     int width = 0, height = 0;
-    Grid m_grid;
+    Grid m_grid, m_grid_out;
 
     double palmbase_x, palmbase_y;
     double indexbase_x, indexbase_y;
@@ -85,7 +86,7 @@ class Anchor { // interface via abstract class
     
     std::string message, message_selected;
 
-    bool static_display; // if true then keep on showing display
+    bool m_static_display; // if true then keep on showing display
 
     int progress_maxwidth, progress_maxheight; // progress bar
     int pwidth, npwidth;
@@ -94,7 +95,7 @@ class Anchor { // interface via abstract class
 
     bool m_selection_locked;
 
-
+    Anchor();
     virtual ~Anchor();
 
     void setConfig(int _width, int _height);
@@ -129,11 +130,7 @@ class Anchor { // interface via abstract class
     
     void reset_palmbase();
     void reset_indexbase();
-    void reset_grid();
-
-    cv::Rect getGrid();
-    cv::Point getGridTopLeft();
-    cv::Point getGridBottomRight();
+    void reset_grids();
 
     void setScreenSize(const choices::eScreenSize & size);
 
@@ -145,8 +142,8 @@ class Anchor { // interface via abstract class
 
     void lock_selection();
     void unlock_selection();
-    void draw_main_grid_layout(cv::Mat & src);
-    void draw_cells(cv::Mat & src);
+    void draw_main_grid_layout(cv::Mat & src, const Grid & grid);
+    void draw_cells(cv::Mat & src, const Grid & grid);
 };
 
 
@@ -171,7 +168,7 @@ class AnchorDynamic: public Anchor {
         int pointer_x, int pointer_y,
         Parameters & params);
 
-    void updateBase(const SmoothCoord & palmbase, double & _x, double & _y);
+    void updateBase(const SmoothCoord & base, double & _x, double & _y);
     void initiate();
 };
 
@@ -253,5 +250,82 @@ class AnchoHandToScreen: public Anchor {
     
 };
 
+
+class AnchorPad: public Anchor {
+    public:
+    cv::Mat image_palm, mask;
+
+    int palm_ubx, palm_uby;
+    int palmstart_x, palmstart_y;
+    std::pair<double, double> m_palm_x, m_palm_y;
+    
+    ~AnchorPad();
+    AnchorPad();
+    AnchorPad(
+        const cv::Scalar & red, 
+        const cv::Scalar & blue, 
+        const std::string & imagePath);
+
+    void calculate(
+        const cv::Mat& input,   
+        double scale_ratio, 
+        int pointer_x, int pointer_y,
+        Parameters & params);
+
+    void draw(
+        const cv::Mat& input, 
+        cv::Mat& output,
+        double scale_ratio, 
+        int pointer_x, int pointer_y,
+        Parameters & params);
+    
+    void initiate();
+    void setup_palmiamge(std::string imagePath);
+    void checkSelectionWithinPalm(
+        int pointer_x, int pointer_y,
+        const SmoothCoord & palmbase);
+    
+    void ensureMarkedCellWithinPalm(int & marked_row_i, int & marked_col_j);
+    
+};
+
+
+class AnchorPadLarge: public Anchor {
+    public:
+    cv::Mat image_palm, mask;
+
+    int palm_ubx, palm_uby;
+    int palmstart_x, palmstart_y;
+    std::pair<double, double> m_palm_x, m_palm_y;
+    SmoothCoord m_indexbase;
+    cv::Mat m_background;
+
+    ~AnchorPadLarge();
+    AnchorPadLarge();
+    AnchorPadLarge(
+        const int _width,
+        const int _height,
+        const cv::Scalar & red, 
+        const cv::Scalar & blue, 
+        const std::string & imagePath,
+        const std::string & imagePathBackground);
+
+    void calculate(
+        const cv::Mat& input,   
+        double scale_ratio, 
+        int pointer_x, int pointer_y,
+        Parameters & params);
+ 
+    void draw(
+        const cv::Mat& input, 
+        cv::Mat& output,
+        double scale_ratio, 
+        int pointer_x, int pointer_y,
+        Parameters & params);
+    
+    void initiate();
+    void setup_palmiamge(std::string imagePath, int _width, int _height);    
+    void setup_background(std::string _imagePath, int _width, int _height);
+};
 
 #endif

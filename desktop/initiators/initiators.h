@@ -33,7 +33,9 @@ class Initiator {
     double areas[2];
 
     bool valid[2];
-    
+    bool m_debug;
+
+    Initiator();
     virtual ~Initiator();
 
     // warning: changes the actual arguments

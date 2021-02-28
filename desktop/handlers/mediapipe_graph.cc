@@ -120,31 +120,31 @@ void MediaPipeMultiHandGPU::debug(
   }
 
 
-  cv::putText(
-    m_primary_output,
-    "pbidx",
-    cv::Point(
-      std::get<0>(points[params.m_base_id][0]) * params.m_frame_width,
-      std::get<1>(points[params.m_base_id][0]) * params.m_frame_height
-    ),
-    cv::FONT_HERSHEY_DUPLEX,
-    1.0,
-    cv::Scalar(0, 255, 0),
-    2
-  );
+  // cv::putText(
+  //   m_primary_output,
+  //   "pbidx",
+  //   cv::Point(
+  //     std::get<0>(points[params.m_base_id][0]) * params.m_frame_width,
+  //     std::get<1>(points[params.m_base_id][0]) * params.m_frame_height
+  //   ),
+  //   cv::FONT_HERSHEY_DUPLEX,
+  //   1.0,
+  //   cv::Scalar(0, 255, 0),
+  //   2
+  // );
 
-  cv::putText(
-    m_primary_output,
-    "ibidx",
-    cv::Point(
-      std::get<0>(points[params.m_base_id][17]) * params.m_frame_width,
-      std::get<1>(points[params.m_base_id][17]) * params.m_frame_height
-    ),
-    cv::FONT_HERSHEY_DUPLEX,
-    1.0,
-    cv::Scalar(0, 255, 0),
-    2
-  );
+  // cv::putText(
+  //   m_primary_output,
+  //   "ibidx",
+  //   cv::Point(
+  //     std::get<0>(points[params.m_base_id][17]) * params.m_frame_width,
+  //     std::get<1>(points[params.m_base_id][17]) * params.m_frame_height
+  //   ),
+  //   cv::FONT_HERSHEY_DUPLEX,
+  //   1.0,
+  //   cv::Scalar(0, 255, 0),
+  //   2
+  // );
 
   int x_col, y_row;
   params.get_primary_cursor_cv_indices(x_col, y_row);
@@ -158,15 +158,15 @@ void MediaPipeMultiHandGPU::debug(
     cv::LINE_8
   );
 
-  cv::rectangle(
-    m_primary_output,
-    cv::Point(params.m_flood_width.m_lower_bound, params.m_flood_height.m_lower_bound),
-    cv::Point(params.m_flood_width.m_upper_bound, params.m_flood_height.m_upper_bound),
-    cv::Scalar(255, 255, 0), 
-    2, 
-    8, 
-    0
-  );
+  // cv::rectangle(
+  //   m_primary_output,
+  //   cv::Point(params.m_flood_width.m_lower_bound, params.m_flood_height.m_lower_bound),
+  //   cv::Point(params.m_flood_width.m_upper_bound, params.m_flood_height.m_upper_bound),
+  //   cv::Scalar(255, 255, 0), 
+  //   2, 
+  //   8, 
+  //   0
+  // );
 
   if (!m_depth_map.empty()) { 
     cv::rectangle(
@@ -178,51 +178,76 @@ void MediaPipeMultiHandGPU::debug(
       8, 
       0
     );
+
+
+    ui::clear_rectangle(
+      m_depth_map,
+      cv::Point(anchor->m_grid.m_x_cols[0],  anchor->m_grid.m_y_rows[0]),                            // start & end points 
+      cv::Point(anchor->m_grid.m_x_cols[0],  anchor->m_grid.m_y_rows[0] + anchor->m_grid.m_height),
+      cv::Point(anchor->m_grid.m_x_cols[0] + anchor->m_grid.m_width,      anchor->m_grid.m_y_rows[0] + anchor->m_grid.m_height),                            // start & end points 
+      cv::Point(anchor->m_grid.m_x_cols[0] + anchor->m_grid.m_width,      anchor->m_grid.m_y_rows[0]),                            // start & end points 
+      COLORS_floralwhite);
+
+    if (params.is_set_primary_cursor()) {
+      cv::circle(
+        m_depth_map,
+        params.cursor_cvpoint(),
+        params.primary_cursor_size(),
+        // COLORS_darkblue,
+        cv::Scalar(
+          params.primary_cursor_color_size(), 
+          params.primary_cursor_color_size(), 
+          params.primary_cursor_color_size()            
+        ),
+        -1,
+        cv::LINE_8,
+        0);
+    }
   }
 
   // std::cerr << "about to print palmbase\n";
-  if (params.m_palmbase.is_set()) {
-    cv::putText(
-      m_primary_output,
-      "palmbs",
-      cv::Point(
-        params.m_palmbase.x() * params.m_frame_width,
-        params.m_palmbase.y() * params.m_frame_height
-      ),
-      cv::FONT_HERSHEY_DUPLEX,
-      1.0,
-      cv::Scalar(139, 0, 139),
-      2
-    );
-  }
+  // if (params.m_palmbase.is_set()) {
+  //   cv::putText(
+  //     m_primary_output,
+  //     "palmbs",
+  //     cv::Point(
+  //       params.m_palmbase.x() * params.m_frame_width,
+  //       params.m_palmbase.y() * params.m_frame_height
+  //     ),
+  //     cv::FONT_HERSHEY_DUPLEX,
+  //     1.0,
+  //     cv::Scalar(139, 0, 139),
+  //     2
+  //   );
+  // }
 
 
   // std::cerr << "about to print indexbase\n";
-  if (params.m_indexbase.is_set()) {
-    cv::putText(
-      m_primary_output,
-      "indexbs",
-      cv::Point(
-        params.m_indexbase.x() * params.m_frame_width,
-        params.m_indexbase.y() * params.m_frame_height
-      ),
-      cv::FONT_HERSHEY_DUPLEX,
-      1.0,
-      cv::Scalar(139, 0, 139),
-      2
-    );
-  }
+  // if (params.m_indexbase.is_set()) {
+  //   cv::putText(
+  //     m_primary_output,
+  //     "indexbs",
+  //     cv::Point(
+  //       params.m_indexbase.x() * params.m_frame_width,
+  //       params.m_indexbase.y() * params.m_frame_height
+  //     ),
+  //     cv::FONT_HERSHEY_DUPLEX,
+  //     1.0,
+  //     cv::Scalar(139, 0, 139),
+  //     2
+  //   );
+  // }
 
-  int xcol, yrow;
-  params.get_primary_cursor_cv_indices(xcol, yrow);
-  cv::putText(
-    m_primary_output,
-    "primary cursor",
-    cv::Point(xcol, yrow),
-    cv::FONT_HERSHEY_DUPLEX,
-    1.0,
-    cv::Scalar(139, 0, 139),
-    2);
+  // int xcol, yrow;
+  // params.get_primary_cursor_cv_indices(xcol, yrow);
+  // cv::putText(
+  //   m_primary_output,
+  //   "primary cursor",
+  //   cv::Point(xcol, yrow),
+  //   cv::FONT_HERSHEY_DUPLEX,
+  //   1.0,
+  //   cv::Scalar(139, 0, 139),
+  //   2);
 
   if (params.m_show_depth_txt) {
     int xcol, yrow;
@@ -238,20 +263,20 @@ void MediaPipeMultiHandGPU::debug(
   }
 
 
-  int x_col_palmid, y_row_palmid;
-  params.get_palmbase_middle_cv_indices(x_col_palmid, y_row_palmid);
-  cv::putText(
-    m_primary_output,
-    "palmmid",
-    cv::Point(
-      x_col_palmid,
-      y_row_palmid
-    ),
-    cv::FONT_HERSHEY_DUPLEX,
-    1.0,
-    cv::Scalar(139, 0, 139),
-    2
-  );
+  // int x_col_palmid, y_row_palmid;
+  // params.get_palmbase_middle_cv_indices(x_col_palmid, y_row_palmid);
+  // cv::putText(
+  //   m_primary_output,
+  //   "palmmid",
+  //   cv::Point(
+  //     x_col_palmid,
+  //     y_row_palmid
+  //   ),
+  //   cv::FONT_HERSHEY_DUPLEX,
+  //   1.0,
+  //   cv::Scalar(139, 0, 139),
+  //   2
+  // );
 }
 
 
@@ -316,8 +341,6 @@ void MediaPipeMultiHandGPU::debug(
 
   m_grab_frames = true;
   bool show_display = false;
-
-  int indexfinger_x = -1, indexfinger_y = -1;
   
   // for storing key values to be passed among handlers
   Parameters params = Parameters(frame_width, frame_height, load_video, camera);
@@ -334,10 +357,9 @@ void MediaPipeMultiHandGPU::debug(
   
   cv::Mat camera_frame;
   
-  std::vector<std::vector<std::tuple<double, double, double>>> points(2); 
-  
+  params.m_points = std::vector<std::vector<std::tuple<double, double, double>>> (2);
   for (int i = 0; i < 2; i ++) {
-    points[i] = std::vector<std::tuple<double, double, double>> (21);
+    params.m_points[i] = std::vector<std::tuple<double, double, double>> (21);
   }
   
   bool isDone = false;
@@ -360,6 +382,15 @@ void MediaPipeMultiHandGPU::debug(
     camera->depth(m_depth_map);
     // m_depth_map.convertTo(m_depth_map, CV_8UC1, 255.0/1000);
     camera->rgb(camera_frame);
+
+
+    if (anchor->m_type == choices::anchor::PADLARGE) {
+      // std::cout << "setting depthmap to camenra\n";
+
+      // imshow("testing", camera_frame);
+
+      camera_frame.copyTo(m_depth_map);
+    }
 
     if (camera_frame.empty()) {
       std::cout << "camera frame empty\n"; 
@@ -456,7 +487,7 @@ void MediaPipeMultiHandGPU::debug(
     mediapipe::Packet handedness_packet;
     bool _handedness_found = true;
     if (!handedness_poller.Next(&handedness_packet)) {
-      std::cout << "handler/MediaPipeMultiHandGPU::run() landmarks cannot be polled\n";
+      // std::cout << "handler/MediaPipeMultiHandGPU::run() handedness cannot be polled\n";
       _handedness_found = false;
     }
 
@@ -468,10 +499,10 @@ void MediaPipeMultiHandGPU::debug(
       // std::cerr << "handedness:" << handedness << "\n";
       for (int i = 0; i < 2 && i < handedness.size(); i ++) {
         auto& h = handedness[i];
-        std::cerr << "h.classification_size:" << h.classification_size() << "\n";
+        // std::cerr << "h.classification_size:" << h.classification_size() << "\n";
         if (h.classification_size() > 0) {
           const mediapipe::Classification & c = h.classification(0);
-          std::cerr << "i:" << i << " label:" << c.label() << "\tindex:" << c.index() << "\n";
+          // std::cerr << "i:" << i << " label:" << c.label() << "\tindex:" << c.index() << "\n";
           if (c.index() == 0) {
             params.hand[i] = handedness::LEFT;
           } else if (c.index() == 1) {
@@ -487,7 +518,7 @@ void MediaPipeMultiHandGPU::debug(
     bool _landmarks_found = true;
     // check if landmarks exist from graph
     if (!multi_hand_landmarks_poller.Next(&multi_hand_landmarks_packet)) {
-      std::cout << "handler/MediaPipeMultiHandGPU::run() landmarks cannot be polled\n";
+      // std::cout << "handler/MediaPipeMultiHandGPU::run() landmarks cannot be polled\n";
       _landmarks_found = false;
     }
 
@@ -497,9 +528,9 @@ void MediaPipeMultiHandGPU::debug(
       
       // resetting points
       for (int i = 0; i < 2; i ++) {
-        points[i][0] = std::make_tuple(0, 0, 0);
+        params.m_points[i][0] = std::make_tuple(0, 0, 0);
         for (int j = 1; j < 21; j ++) {
-          points[i][j] = points[i][0];
+          params.m_points[i][j] = params.m_points[i][0];
         }
       } 
 
@@ -511,7 +542,7 @@ void MediaPipeMultiHandGPU::debug(
 
         int j = 0;        
         for (const auto& landmark : hand_landmarks.landmark()) {
-          points[hand_id][j] = std::make_tuple(
+          params.m_points[hand_id][j] = std::make_tuple(
             landmark.x(), 
             landmark.y(), 
             landmark.z()
@@ -520,18 +551,18 @@ void MediaPipeMultiHandGPU::debug(
 
           if (j == 8) {
             
-            std::cerr << "hand_id:" << hand_id << "\tindextop relative_depth:" << landmark.z() << "\tpalmbase:" << std::get<2>(points[hand_id][0]) << "\tindex/base ratio:" << (landmark.z()/std::get<2>(points[hand_id][0])) << "\n"; 
+            // std::cerr << "hand_id:" << hand_id << "\tindextop relative_depth:" << landmark.z() << "\tpalmbase:" << std::get<2>(params.m_points[hand_id][0]) << "\tindex/base ratio:" << (landmark.z()/std::get<2>(params.m_points[hand_id][0])) << "\n"; 
           }
           ++ j;
         }
 
         handlers::util::GetMinMaxZ(
-          points[hand_id], 
+          params.m_points[hand_id], 
           &params.m_hand_landmarks_relative_depth_minmax[hand_id].first,
           &params.m_hand_landmarks_relative_depth_minmax[hand_id].second);
         
         handlers::util::SetColorSizeValueFromZ(
-          std::get<2>(points[hand_id][8]),
+          std::get<2>(params.m_points[hand_id][8]),
           params.m_hand_landmarks_relative_depth_minmax[hand_id].first,
           params.m_hand_landmarks_relative_depth_minmax[hand_id].second,
           &params.m_hand_color_scale[hand_id],
@@ -545,24 +576,25 @@ void MediaPipeMultiHandGPU::debug(
 
     // std::cerr << "calling initiator->params(points, params)\n";
     // std::cerr << "initiator null? " << (initiator == NULL) << "\n";
-    initiator->params(points, params);
+    initiator->params(params.m_points, params);
 
-    params.set_is_static(anchor->static_display);
+    params.set_is_static(anchor->m_static_display);
 
     show_display = false;
 
-    if (initiator->inspect(points, params)) {
+    if (initiator->inspect(params.m_points, params)) {
       show_display = true;
-      initiator->params(points, params);
+      initiator->params(params.m_points, params);
 
-    } else if (!anchor->static_display) {
+    } else if (!anchor->m_static_display) {
       params.reset();
     }
 
 
     
     
-    if (anchor->type() == choices::anchor::HANDTOSCREEN) {
+    if (anchor->type() == choices::anchor::HANDTOSCREEN || 
+      anchor->type() == choices::anchor::PADLARGE) {
       m_primary_output = cv::Mat(
           frame_height, 
           frame_width, 
@@ -574,23 +606,21 @@ void MediaPipeMultiHandGPU::debug(
     // Convert back to opencv for display or saving.
     // cv::Mat m_primary_output = mediapipe::formats::MatView(output_frame.get());
 
+
+    int cursor_x = -1, cursor_y = -1;
+
     if (params.is_set_primary_cursor()) {
-      params.get_primary_cursor_cv_indices(indexfinger_x, indexfinger_y);
-    } else {
-      indexfinger_x = -1;
-      indexfinger_y = -1;
-    }
+      params.get_primary_cursor_cv_indices(cursor_x, cursor_y);
+    } 
     
     anchor->calculate(
       camera_frame, 
       interface_scaling_factor,
-      indexfinger_x, indexfinger_y, params); 
+      cursor_x, cursor_y, params); 
     
-    cv::Rect gg = anchor->getGrid();
+    if (show_display || anchor->m_static_display) {
 
-    if (show_display || anchor->static_display) {
-
-      trigger->update(camera_frame, points, params);
+      trigger->update(camera_frame, params.m_points, params);
 
       switch (trigger->status()) {
         
@@ -604,7 +634,7 @@ void MediaPipeMultiHandGPU::debug(
           }
 
           if (trial) {
-            trial->process_is_button_clicked(indexfinger_x, indexfinger_y);
+            trial->process_is_button_clicked(cursor_x, cursor_y);
             
             if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
               trial->process_correct_selection();
@@ -613,28 +643,67 @@ void MediaPipeMultiHandGPU::debug(
           }
 
           trigger->reset_status();
+        default:
+          anchor->unlock_selection();
+          break;
       }
           
       anchor->draw(
           camera_frame, 
           m_primary_output,
           interface_scaling_factor,
-          indexfinger_x, indexfinger_y, params);
+          cursor_x, cursor_y, params);
 
       if (trial) {
         if (trial->started()) {
-            trial->draw_target(m_primary_output, anchor->m_grid);
+            trial->draw_target(m_primary_output, anchor->m_grid_out);
 
         }
       }
+      if (anchor->m_type == choices::anchor::PADLARGE) {
+        // trial->update_start_button_input_loc(anchor->m_grid);
 
-      trial->update_start_button_loc(anchor->m_grid);
-      trial->draw_start_button(m_primary_output);
+        const cv::Point & index_tip = params.index_tip(); 
+        const cv::Point & thumb_tip = params.thumb_tip();
+        const cv::Point & thumb_base = params.thumb_base();
+
+        trial->update_start_button_input_loc(
+          index_tip, 
+          cv::Point(
+            std::max(index_tip.x + 100, thumb_tip.x + 10),
+            std::max(index_tip.y + 100, std::max(thumb_base.y + 10, thumb_tip.y + 10)))
+          );
+        
+        trial->draw_start_button(
+          m_primary_output,
+            cv::Point(
+              anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10,
+              anchor->m_grid_out.m_y_rows[0] - anchor->m_grid_out.m_dy_row - 5
+            ),
+            cv::Point(
+              anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 2*anchor->m_grid_out.m_dx_col,
+              anchor->m_grid_out.m_y_rows[0]
+            )
+          );
+
+        if (!m_depth_map.empty()) {
+          trial->draw_start_button(
+            m_depth_map,
+              params.index_tip(), 
+              cv::Point(
+              std::max(index_tip.x + 100, thumb_tip.x + 10),
+              std::max(index_tip.y + 100, std::max(thumb_base.y + 10, thumb_tip.y + 10))));
+        }
+      } else {
+        trial->update_start_button_input_loc(anchor->m_grid);
+        trial->draw_start_button(m_primary_output);
+      }
+
       
-      if (params.is_set_primary_cursor()) {
+      if (params.is_set_primary_cursor() && anchor->m_type != choices::anchor::PADLARGE) {
         cv::circle(
           m_primary_output,
-          cv::Point(indexfinger_x, indexfinger_y),
+          cv::Point(cursor_x, cursor_y),
           params.primary_cursor_size(),
           // COLORS_darkblue,
           cv::Scalar(
@@ -649,9 +718,9 @@ void MediaPipeMultiHandGPU::debug(
 
       if (debug_mode == 1) {
         if (!m_depth_map.empty()) {
-          debug(m_depth_map, points, params);
+          debug(m_depth_map, params.m_points, params);
         } else {
-          debug(m_primary_output, points, params);
+          debug(m_primary_output, params.m_points, params);
         }
       }
     }

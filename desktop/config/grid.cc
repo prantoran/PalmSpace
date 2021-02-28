@@ -1,28 +1,35 @@
-#include "config.h"
+#include "grid.h"
 
 Grid::Grid() {
     m_gap = 1;
+    m_dynamic_dimensions = false;
 }
 
 
-void Grid::reset_dimensions() {
+void Grid::reset_minimum_dimensions() {
     m_width_min = 0;
     m_height_min = 0;
 }
 
 
-cv::Point Grid::get_bottom_right() {
+void Grid::reset_dimensions() {
+    m_width = 0;
+    m_height = 0;
+}
+
+
+cv::Point Grid::get_bottom_right() const {
     return cv::Point(m_x_cols[0]+m_width, m_y_rows[0]+m_height);
 }
 
 
 
-cv::Point Grid::get_top_left() {
+cv::Point Grid::get_top_left() const {
     return cv::Point(m_x_cols[0], m_y_rows[0]);
 }
 
 
-cv::Rect Grid::get_bound_rect() {
+cv::Rect Grid::get_bound_rect() const {
     return cv::Rect(get_top_left(), get_bottom_right());
 }
 
@@ -38,7 +45,7 @@ void Grid::reset() {
 
 int Grid::arg_x(int pointer_x) {
     for (int j = 1;j <= m_divisions; j ++) {
-        if (pointer_x > m_x_cols[j] && pointer_x < m_x_cols[j] + m_dx_col) {
+        if (pointer_x >= m_x_cols[j] && pointer_x <= m_x_cols[j] + m_dx_col) {
             return j;
         }     
     }
@@ -49,7 +56,7 @@ int Grid::arg_x(int pointer_x) {
 
 int Grid::arg_y(int pointer_y) {
     for (int i = 1;i <= m_divisions; i ++) {
-        if (pointer_y > m_y_rows[i] && pointer_y < m_y_rows[i] + m_dy_row) {
+        if (pointer_y >= m_y_rows[i] && pointer_y <= m_y_rows[i] + m_dy_row) {
         return i;
         }
     }
@@ -59,6 +66,8 @@ int Grid::arg_y(int pointer_y) {
 
 
 void Grid::align(double topleft_x, double topleft_y) {
+    // topleft coords are actual coords in the range [0, width-1] and [0, height-1] respectively
+    // setup tile coords 
     m_width = m_width_min;
     m_height = m_height_min;
 
@@ -79,7 +88,7 @@ void Grid::align(double topleft_x, double topleft_y) {
 }
 
 
-cv::Rect Grid::get_cell(int i, int j) {
+cv::Rect Grid::get_cell(int i, int j) const {
     return cv::Rect(
         cv::Point(m_x_cols[i], m_y_rows[j]), 
         cv::Point(m_x_cols[i]+m_dx_col, m_y_rows[j]+m_dy_row)

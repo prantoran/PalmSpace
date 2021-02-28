@@ -10,6 +10,8 @@
 
 
 #include "choices.h"
+#include "grid.h"
+#include "coord.h"
 #include "../camera/camera.h"
 
 const std::string APP_NAME = "PalmSpace";
@@ -49,35 +51,6 @@ namespace handedness {
   } hand;
 }
 
-class SmoothCoord {
-  using type_t = double;
-  std::tuple<type_t, type_t, type_t> m_cur, m_prev;
-  double m_decay;
-  std::string m_name;
-
-  type_t m_dx, m_dy, m_dz;
-  int m_drop_cnt, m_max_drop_cnt, m_diff_thresh;
-
-  public:
-
-  SmoothCoord();
-  SmoothCoord(std::string _name, double _decay);
-  void reset();
-  void init();
-  void set(const std::tuple<type_t, type_t, type_t> & _new_point);
-  void set(const type_t & _x_col, const type_t & _y_row);
-  void get(std::tuple<type_t, type_t, type_t> & _point);
-  void get(type_t & x_col, type_t & y_row);
-  void get(type_t & x_col, type_t & y_row, type_t &z_depth);
-  void set_decay(double _decay);
-  bool is_set();
-  double x() const;
-  double y() const;
-  double z() const;
-};
-
-
-
 
 class Parameters {
   // TODO add m_ prefix to all attributes
@@ -115,9 +88,9 @@ class Parameters {
 
   bool is_static_display;
 
-// https://docs.microsoft.com/en-us/cpp/cpp/how-to-create-and-use-shared-ptr-instances?view=msvc-160
-// When initialization must be separate from declaration, e.g. class members, 
-// initialize with nullptr to make your programming intent explicit.
+  // https://docs.microsoft.com/en-us/cpp/cpp/how-to-create-and-use-shared-ptr-instances?view=msvc-160
+  // When initialization must be separate from declaration, e.g. class members, 
+  // initialize with nullptr to make your programming intent explicit.
   cv::Mat* depth_mat;
   float medians[25];
 
@@ -132,6 +105,9 @@ class Parameters {
 
   std::pair<double, double> m_hand_landmarks_relative_depth_minmax[4];
   int m_hand_color_scale[4], m_hand_size_scale[4];
+
+  std::vector<std::vector<std::tuple<double, double, double>>> m_points;
+
 
   void get_raw_dimensions(double & _width, double _height);
   void set_raw_dimensions(double _width, double _height);
@@ -176,7 +152,8 @@ class Parameters {
   void get_primary_cursor(double & x, double & y);
   void get_primary_cursor_cv_indices(index_t & x_col, index_t & y_row);
   bool is_set_primary_cursor();
-
+  cv::Point cursor_cvpoint();
+  
   void set_primary_cursor_middlefinger_base(const std::tuple<double, double, double> & p);
   void get_primary_cursor_middlefinger_base_cv_indices(index_t & x_col, index_t & y_row);
 
@@ -197,25 +174,15 @@ class Parameters {
 
   int primary_cursor_size();
   int primary_cursor_color_size();
+
+  std::pair<double, double> palm_width() const;
+  std::pair<double, double> palm_height() const;
+  
+  cv::Point thumb_tip();
+  cv::Point index_tip();
+  cv::Point thumb_base();
 };
 
-
-class Grid {
-  public:
-  int m_divisions;
-  int m_width, m_height, m_width_min, m_height_min;
-  int m_gap, m_x_cols[11], m_y_rows[11], m_dx_col, m_dy_row;
-  Grid();
-  void reset_dimensions();
-  cv::Point get_bottom_right();
-  cv::Point get_top_left();
-  cv::Rect get_bound_rect();
-  void reset();
-  int arg_x(int pointer_x);
-  int arg_y(int pointer_y);
-  void align(double topleft_x, double topleft_y);
-  cv::Rect get_cell(int i, int j);
-};
 
 
 #endif

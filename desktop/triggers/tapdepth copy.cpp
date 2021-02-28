@@ -13,10 +13,10 @@ SupportPoints::SupportPoints() {}
 void SupportPoints::init(int _size) {
     m_support_pts_size = _size;
 
-    m_xcoords = std::vector<int>(m_support_pts_size);
-    m_xcoords_prev = std::vector<int>(m_support_pts_size);
-    m_ycoords = std::vector<int>(m_support_pts_size);
-    m_ycoords_prev = std::vector<int>(m_support_pts_size);
+    m_xcoords       = std::vector<int>(m_support_pts_size);
+    m_xcoords_prev  = std::vector<int>(m_support_pts_size);
+    m_ycoords       = std::vector<int>(m_support_pts_size);
+    m_ycoords_prev  = std::vector<int>(m_support_pts_size);
 
     for (int i = 0; i < m_support_pts_size; i ++) {
         m_xcoords[i] = -1;

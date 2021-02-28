@@ -13,7 +13,9 @@ namespace choices {
             DYNAMIC = 1,
             STATIC,
             MIDAIR,
-            HANDTOSCREEN
+            HANDTOSCREEN,
+            PAD,
+            PADLARGE
         };
     }
 

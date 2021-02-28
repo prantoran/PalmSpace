@@ -14,6 +14,9 @@
 
 #include "desktop/userstudies/trial.h"
 
+// #include <tensorflow/cc/saved_model/loader.h>
+// #include <tensorflow/cc/saved_model/tag_constants.h>
+
 // #include "mediapipe/framework/port/rs.hpp" // Include RealSense Cross Platform API
 
 
@@ -121,7 +124,7 @@ int main(int argc, char** argv) {
   }
 
   
-  int choice_anchor = 1;
+  int choice_anchor = 5;
   int choice_trigger = 5; // 5 tap z 6 tap depth cam 8 dwell
   int choice_initiator = 1;
   int choice_divisions = 5;
@@ -246,6 +249,21 @@ int main(int argc, char** argv) {
         cv::Scalar(25, 25, 255), 
         cv::Scalar(255, 25, 25), 
         get_current_dir() + "/desktop/anchors/Hand.png");
+      break;
+    case 4:
+      mp_graph->anchor = new AnchorPad(
+        cv::Scalar(25, 25, 255), 
+        cv::Scalar(255, 25, 25), 
+        get_current_dir() + "/desktop/anchors/Hand.png");
+      break;
+    case 5:
+      mp_graph->anchor = new AnchorPadLarge(
+        FLAGS_frame_width,
+        FLAGS_frame_height,
+        cv::Scalar(25, 25, 255), 
+        cv::Scalar(255, 25, 25), 
+        get_current_dir() + "/desktop/anchors/Hand.png",
+        get_current_dir() + "/desktop/anchors/bg.jpg");
       break;
     default:
       std::cout << "ERROR main.cc invalid anchor choice\n";

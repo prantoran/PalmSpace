@@ -8,7 +8,22 @@
 #define WINDOW_NAME "PalmSpace CVUI"
 
 namespace ui {
-    void rounded_rectangle( cv::Mat& src, cv::Point topLeft, cv::Point bottomRight, const cv::Scalar lineColor, const int thickness, const int lineType , const int cornerRadius);
+    void rounded_rectangle(
+        cv::Mat& src, 
+        cv::Point topLeft, 
+        cv::Point bottomRight, 
+        const cv::Scalar lineColor, 
+        const int thickness, 
+        const int lineType, 
+        const int cornerRadius);
+    
+    void clear_rectangle(
+        cv::Mat& src,
+        cv::Point p1,
+        cv::Point p2,
+        cv::Point p3,
+        cv::Point p4,
+        cv::Scalar color);
 }
 
 #endif

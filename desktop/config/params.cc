@@ -25,10 +25,10 @@ Parameters::Parameters(int _frame_width, int _frame_height, bool _load_video, Ca
 
     m_camera = _camera;
 
-    m_indexbase = SmoothCoord("indexbase", 0.1);
-    m_palmbase = SmoothCoord("palmbase", 0.1);
-    m_primary_cursor = SmoothCoord("primary_cursor", 0.1);
-    m_primary_cursor_middlefinger_base = SmoothCoord("primary_cursor_middlefinger_base", 0.1);
+    m_indexbase = SmoothCoord("indexbase", 0.9, 15);
+    m_palmbase = SmoothCoord("palmbase", 0.9, 15);
+    m_primary_cursor = SmoothCoord("primary_cursor", 0.9, 15);
+    m_primary_cursor_middlefinger_base = SmoothCoord("primary_cursor_middlefinger_base", 0.9, 15);
 
     reset();
     init(_load_video);
@@ -205,6 +205,13 @@ bool Parameters::is_set_primary_cursor() {
     return m_primary_cursor.is_set();
 }
 
+cv::Point Parameters::cursor_cvpoint() {
+    int x, y;
+    get_cv_indices(m_primary_cursor, x, y);
+    
+    return cv::Point(x, y);
+}
+
 
 // TODO clean if not used
 float Parameters::get_depth(int x_col, int y_row) {
@@ -291,4 +298,97 @@ int Parameters::primary_cursor_color_size() {
     }
 
     return m_hand_color_scale[cursor_hand_id()];
+}
+
+
+int palm_ids [] = {0, 1, 5, 9, 13, 17};
+
+
+std::pair<double, double> Parameters::palm_width() const {
+    if (m_base_id == -1) {
+        std::cout <<"WARNING: config/params.cc palm_width() m_base_id = -1\n";
+        return {0, 0};
+    }
+    double mnm = std::get<0>(m_points[m_base_id][0]);
+    double mxm = std::get<0>(m_points[m_base_id][0]);
+
+    for (int i = 1; i < 6; i ++) {
+        if (mnm > std::get<0>(m_points[m_base_id][palm_ids[i]])) {
+            mnm = std::get<0>(m_points[m_base_id][palm_ids[i]]);
+        }
+
+        if (mxm < std::get<0>(m_points[m_base_id][palm_ids[i]])) {
+            mxm = std::get<0>(m_points[m_base_id][palm_ids[i]]);
+        }
+    }
+
+    return std::make_pair(
+        mnm*m_frame_width, 
+        mxm*m_frame_width);
+}
+
+
+std::pair<double, double> Parameters::palm_height() const {
+    if (m_base_id == -1) {
+        std::cout <<"WARNING: config/params.cc palm_height() m_base_id = -1\n";
+        return {0, 0};
+    }
+
+    double mnm = std::get<1>(m_points[m_base_id][0]);
+    double mxm = std::get<1>(m_points[m_base_id][0]);
+
+    for (int i = 1; i < 6; i ++) {
+        if (mnm > std::get<1>(m_points[m_base_id][palm_ids[i]])) {
+            mnm = std::get<1>(m_points[m_base_id][palm_ids[i]]);
+        }
+
+        if (mxm < std::get<1>(m_points[m_base_id][palm_ids[i]])) {
+            mxm = std::get<1>(m_points[m_base_id][palm_ids[i]]);
+        }
+    }
+
+    
+    return std::make_pair(
+        mnm*m_frame_height, 
+        mxm*m_frame_height);
+}
+
+
+cv::Point Parameters::thumb_tip() {
+    if (m_base_id == -1) {
+        std::cout <<"WARNING: config/params.cc thumb_tip() m_base_id = -1\n";
+        return cv::Point(0, 0);
+    }
+
+    return cv::Point(
+        std::get<0>(m_points[m_base_id][4])*m_frame_width,
+        std::get<1>(m_points[m_base_id][4])*m_frame_height
+    );
+}
+
+
+
+cv::Point Parameters::index_tip() {
+    if (m_base_id == -1) {
+        std::cout <<"WARNING: config/params.cc index_tip() m_base_id = -1\n";
+        return cv::Point(0, 0);
+    }
+
+    return cv::Point(
+        std::get<0>(m_points[m_base_id][8])*m_frame_width,
+        std::get<1>(m_points[m_base_id][8])*m_frame_height
+    );
+}
+
+
+cv::Point Parameters::thumb_base() {
+    if (m_base_id == -1) {
+        std::cout <<"WARNING: config/params.cc thumb_base() m_base_id = -1\n";
+        return cv::Point(0, 0);
+    }
+
+    return cv::Point(
+        std::get<0>(m_points[m_base_id][2])*m_frame_width,
+        std::get<1>(m_points[m_base_id][2])*m_frame_height
+    );
 }

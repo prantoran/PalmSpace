@@ -7,7 +7,10 @@
 #include "mediapipe/framework/port/opencv_imgproc_inc.h"
 #include "mediapipe/framework/port/opencv_video_inc.h"
 
+#ifdef REALSENSE_CAM
 #include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
+#endif
+
 #include <iostream>
 
 

@@ -22,38 +22,44 @@ namespace userstudies {
 
         m_view_width = _view_width;
         m_view_height = _view_height;
+
+        m_button_state = ButtonState::OPEN;
     }
 
     
     Trial::~Trial() {}
 
-    
-    void Trial::update_start_button_loc(Grid & grid) {
+
+    void Trial::update_start_button_input_loc(const cv::Point & _topleft, const cv::Point & _bottomright) {
+        m_topleft = _topleft;
+        m_bottomright = _bottomright;
+        
+        m_start_btn = cv::Rect(
+            m_topleft,
+            m_bottomright
+        );
+
+    }
+
+
+    void Trial::update_start_button_input_loc(Grid & grid) {
 
         std::cerr << "trial updloc grid width:" << grid.m_width << "\theight:" << grid.m_height << "\twidth_min:" << grid.m_width_min << "\theight_min:" << grid.m_height_min << "\n";
 
         switch (m_start_btn_loc) {
             case Location::LEFT:
-                m_topleft = cv::Point(
-                    std::max(0, grid.m_x_cols[0] - grid.m_dx_col - 20),
-                    grid.m_y_rows[0]+grid.m_height - grid.m_dy_row
+        
+                update_start_button_input_loc(
+                    cv::Point(
+                        std::max(0.0, grid.m_x_cols[0] - grid.m_dx_col - 20),
+                        grid.m_y_rows[0]+grid.m_height - grid.m_dy_row),
+                    cv::Point(
+                        grid.m_x_cols[0],
+                        grid.m_y_rows[0]+grid.m_height)
                 );
                 
-                m_bottomright = cv::Point(
-                    grid.m_x_cols[0],
-                    grid.m_y_rows[0]+grid.m_height
-                );
-
-                m_start_btn = cv::Rect(
-                    m_topleft,
-                    m_bottomright
-                );
-                
-                m_start_btn_label_loc_topleft = 
-                    cv::Point(m_topleft.x + 5, (m_topleft.y+m_bottomright.y+10)/2);
-                    
-
                 break;
+
             case Location::CENTER:
                 m_start_btn = grid.get_cell(
                     (grid.m_divisions+1)/2,
@@ -62,47 +68,81 @@ namespace userstudies {
 
                 break;
             case Location::LEFTCENTER:
-                m_topleft = cv::Point(
-                    std::max(0, grid.m_x_cols[0] - grid.m_dx_col - 20),
-                    grid.m_y_rows[0]+grid.m_height/2 - grid.m_dy_row
-                );
                 
-                m_bottomright = cv::Point(
-                    grid.m_x_cols[0],
-                    grid.m_y_rows[0]+grid.m_height/2 + grid.m_dy_row
+                update_start_button_input_loc(
+                    cv::Point(
+                        std::max(0.0, grid.m_x_cols[0] - grid.m_dx_col - 20),
+                        grid.m_y_rows[0]+grid.m_height/2 - grid.m_dy_row),
+                    cv::Point(
+                        grid.m_x_cols[0],
+                        grid.m_y_rows[0]+grid.m_height/2 + grid.m_dy_row)
                 );
-
-                m_start_btn = cv::Rect(
-                    m_topleft,
-                    m_bottomright
-                );
-
-                m_start_btn_label_loc_topleft = 
-                    cv::Point(m_topleft.x + 5, (m_topleft.y+m_bottomright.y+10)/2);
 
                 break;
 
             case Location::RIGHTCENTER:
                 std::cerr << "RIGHTCENTER\n";
-                m_topleft = cv::Point(
-                    std::min(m_view_width, grid.m_x_cols[0] + grid.m_width_min),
-                    grid.m_y_rows[0]+grid.m_height/2 - grid.m_dy_row
+                
+                update_start_button_input_loc(
+                    cv::Point(
+                        std::min(m_view_width, (int)(grid.m_x_cols[0] + grid.m_width_min)),
+                        grid.m_y_rows[0]+grid.m_height/2 - grid.m_dy_row),
+                    cv::Point(
+                        std::min(m_view_width, (int)(grid.m_x_cols[0] + grid.m_width_min + grid.m_dx_col + 20)),
+                        grid.m_y_rows[0]+grid.m_height/2 + grid.m_dy_row)
                 );
                 
-                m_bottomright = cv::Point(
-                    std::min(m_view_width, grid.m_x_cols[0] + grid.m_width_min + grid.m_dx_col + 20),
-                    grid.m_y_rows[0]+grid.m_height/2 + grid.m_dy_row
-                );
-
-                m_start_btn = cv::Rect(
-                    m_topleft,
-                    m_bottomright
-                );
-
-                m_start_btn_label_loc_topleft = 
-                    cv::Point(m_topleft.x + 5, (m_topleft.y+m_bottomright.y+10)/2);
-
+                break;
+            
+            default:
+                std::cout << "ERROR: userstudies/trial.cc update_start_button_input_loc() undefined\n";
+                break;
         }
+    }
+
+
+    void Trial::draw_start_button(
+        cv::Mat & output_frame,
+        cv::Point _topleft,
+        cv::Point _bottomright) {
+        
+        
+        
+        if (m_state == TrialState::STARTED) {
+            m_btn_color = cv::Scalar(220,248,255);
+        }
+
+        if (m_state == TrialState::OPEN || 
+            m_state == TrialState::PAUSED || 
+            m_trial_show_button_during_trial) {
+            
+
+            ui::rounded_rectangle(
+                output_frame,
+                _topleft,
+                _bottomright,
+                m_btn_color,
+                5,
+                cv::LINE_8,
+                5
+            );
+
+            cv::putText(
+                output_frame,
+                m_start_btn_label,
+                cv::Point(_topleft.x + 5, (_topleft.y+_bottomright.y+10)/2),
+                cv::FONT_HERSHEY_SIMPLEX,
+                0.5,
+                cv::Scalar(0, 0, 0),
+                2
+            );
+
+            if (m_button_state == ButtonState::OPEN) {
+                m_button_state = ButtonState::READY;
+                // std::cout << "button state from open to ready\n";
+                m_last_trial_end_time = std::chrono::steady_clock::now();
+            }
+        } 
     }
 
 
@@ -115,15 +155,6 @@ namespace userstudies {
         if (m_state == TrialState::OPEN || 
             m_state == TrialState::PAUSED || 
             m_trial_show_button_during_trial) {
-            
-            // cv::rectangle(
-            //     output_frame,
-            //     m_start_btn,
-            //     m_btn_color,
-            //     -1,
-            //     cv::LINE_8,
-            //     0
-            // );
 
             ui::rounded_rectangle(
                 output_frame,
@@ -138,17 +169,38 @@ namespace userstudies {
             cv::putText(
                 output_frame,
                 m_start_btn_label,
-                m_start_btn_label_loc_topleft,
+                cv::Point(m_topleft.x + 5, (m_topleft.y+m_bottomright.y+10)/2),
                 cv::FONT_HERSHEY_SIMPLEX,
                 0.5,
                 cv::Scalar(0, 0, 0),
                 2
             );
+
+            if (m_button_state == ButtonState::OPEN) {
+                m_button_state = ButtonState::READY;
+                // std::cout << "button state from open to ready\n";
+                m_last_trial_end_time = std::chrono::steady_clock::now();
+            }
         } 
     }
 
 
+
+
+
     void Trial::process_is_button_clicked(int cursor_x_col, int cursor_y_row) {
+        
+        auto diff =  (std::chrono::steady_clock::now() - m_last_trial_end_time).count();
+        // std::cout << "diff:" << diff <<  "\n";
+        if (m_state == TrialState::OPEN and diff < 2000000000) {
+            return ;
+        }
+
+        if (diff < 1000000000) {
+                return;
+        }
+        
+        
         if (m_start_btn.contains(
             cv::Point(cursor_x_col, cursor_y_row)
         )) {
@@ -224,7 +276,7 @@ namespace userstudies {
     }
     
 
-    void Trial::draw_target(cv::Mat & output_frame, Grid & grid) {
+    void Trial::draw_target(cv::Mat & output_frame, const Grid & grid) {
         
         if (m_state == TrialState::OPEN || m_state == TrialState::PAUSED) {
             return;
@@ -255,8 +307,8 @@ namespace userstudies {
 
     void Trial::process_correct_selection() {
         
-        m_trial_end_times[m_target_id] = std::chrono::steady_clock::now();;
-        
+        m_trial_end_times[m_target_id] = std::chrono::steady_clock::now();
+
         m_time_taken[m_target_id] = 
                 m_trial_end_times[m_target_id] - m_trial_start_times[m_target_id];
         
@@ -267,6 +319,8 @@ namespace userstudies {
         } else {
             _set_cur_target_start_time();
         }
+
+        m_last_trial_end_time = std::chrono::steady_clock::now(); 
     }
 
     

@@ -1,17 +1,18 @@
+
 #include "anchors.h"
 
 
-AnchoHandToScreen::~AnchoHandToScreen() {
-    std::cout << "anchor AnchoHandToScreen killed\n";
+AnchorPad::~AnchorPad() {
+    std::cout << "anchor static killed\n";
 }
 
 
-AnchoHandToScreen::AnchoHandToScreen() {
+AnchorPad::AnchorPad() {
     initiate();
 }
 
 
-AnchoHandToScreen::AnchoHandToScreen(
+AnchorPad::AnchorPad(
     const cv::Scalar & red, 
     const cv::Scalar & blue, 
     const std::string & imagePath) {
@@ -26,9 +27,9 @@ AnchoHandToScreen::AnchoHandToScreen(
 }
 
 
-void AnchoHandToScreen::initiate() {
-    name = "handtoscreen";
-    m_type = choices::anchor::HANDTOSCREEN;
+void AnchorPad::initiate() {
+    name = "static";
+    m_type = choices::anchor::PAD;
 
     width = 0;
     height = 0;
@@ -56,11 +57,12 @@ void AnchoHandToScreen::initiate() {
     reset_grids();
 }
 
-void AnchoHandToScreen::setup_palmiamge(std::string imagePath) {
+void AnchorPad::setup_palmiamge(std::string imagePath) {
     // only take .png as it has alpha channel for transparency
     image_palm = cv::imread(imagePath, CV_LOAD_IMAGE_UNCHANGED); 
     // CV_LOAD_IMAGE_COLOR ignores alpha transparency channel
     // https://docs.opencv.org/3.4/da/d0a/group__imgcodecs__c.html
+    cv::flip(image_palm, image_palm, 1); // flip vertically
 
     if(image_palm.channels() < 4) {
         return;
@@ -76,38 +78,41 @@ void AnchoHandToScreen::setup_palmiamge(std::string imagePath) {
     cv::merge(cs, 3, image_palm);  // glue together again
     mask = rgbLayer[3];       // png's alpha channel used as mask
 
-    // cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-    // cv::imshow("Display window", mask);                   // Show our image inside it.
+    m_grid_out.m_width_min = image_palm.cols / 2;
+    m_grid_out.m_height_min = image_palm.rows / 2;
+
+    cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+    cv::imshow("Display window", mask);                   // Show our image inside it.
 
     // cv::waitKey(0);
 }
 
 
-void AnchoHandToScreen::calculate(
+
+void AnchorPad::calculate(
     const cv::Mat& input,
     double scale_ratio, 
     int pointer_x, int pointer_y,
     Parameters & params) {
-        
-    std::cerr << "anchor hand2screen calculate()\n";
-
+    
     if (!width || !height) {
-        setConfig(input.size().width, input.size().height);
-                
-        m_screen.setMinWidthHeight(
-            m_grid.m_width_min, m_grid.m_height_min,
-            width, height);
-        
-        m_screen.setMinWidthHeight(
-            m_grid_out.m_width_min, m_grid_out.m_height_min, 
-            width, height);
+      setConfig(input.size().width, input.size().height);
     }
+    
+    m_palm_x = params.palm_width();
+    m_palm_y = params.palm_height();
+    
+    m_grid.m_width_min = m_palm_x.second - m_palm_x.first;
+    m_grid.m_height_min = m_palm_y.second - m_palm_y.first;
 
     if (!m_static_display) {
         indexbase_x = params.m_indexbase.x();
         indexbase_y = params.m_indexbase.y();
 
         if (indexbase_x > 0 && indexbase_y > 0) {
+            indexbase_x = m_palm_x.first;
+            indexbase_y = m_palm_y.first;
+            
             m_static_display = true;
   
             if (m_screen.isFull()) {
@@ -137,16 +142,17 @@ void AnchoHandToScreen::calculate(
     
     if (m_static_display) {
         // setupGrid((palmbase_x*width) - (ws/2), (palmbase_y*height) - hs); // defined in parent anchor class
-        
-        m_grid.align(indexbase_x*width, indexbase_y*height);
-        m_grid_out.align(indexbase_x*width, indexbase_y*height);
-
-        checkSelectionWithinPalm(pointer_x, pointer_y, params.m_palmbase);
+        m_grid.align(m_palm_x.first, m_palm_y.first);
+        // m_grid.align(indexbase_x*width, indexbase_y*height);
+        // m_grid_out.align(indexbase_x*width, indexbase_y*height);
+        m_grid_out.align(image_palm.cols/6, params.m_frame_height-image_palm.rows/2 - 30);
+    
+        // checkSelectionWithinPalm(pointer_x, pointer_y, params.m_palmbase);
 
         setupSelection(pointer_x, pointer_y, m_selected_i, m_selected_j); // defined in parent anchor class
         
         if (green_i != -1 && green_j != -1) {
-            ensureMarkedCellWithinPalm(green_i, green_j);
+            // ensureMarkedCellWithinPalm(green_i, green_j);
         }
 
         params.set_selected_cell(m_selected_i, m_selected_j);
@@ -154,7 +160,7 @@ void AnchoHandToScreen::calculate(
 }
 
 
-void AnchoHandToScreen::ensureMarkedCellWithinPalm(int & marked_row_i, int & marked_col_j) {
+void AnchorPad::ensureMarkedCellWithinPalm(int & marked_row_i, int & marked_col_j) {
     double gdx = m_grid.m_x_cols[marked_row_i] - palmstart_x;
     double gdy = m_grid.m_y_rows[marked_col_j] - palmstart_y;
     if (gdx < 50 || gdx > 250 || gdy < 50 || gdy > 250) {
@@ -165,7 +171,7 @@ void AnchoHandToScreen::ensureMarkedCellWithinPalm(int & marked_row_i, int & mar
 }
 
 
-void AnchoHandToScreen::checkSelectionWithinPalm(
+void AnchorPad::checkSelectionWithinPalm(
     int pointer_x, int pointer_y,
     const SmoothCoord & palmbase) {
 
@@ -202,51 +208,39 @@ void AnchoHandToScreen::checkSelectionWithinPalm(
 }
 
 
-void AnchoHandToScreen::draw(
+void AnchorPad::draw(
     const cv::Mat& input, 
     cv::Mat& output,
     double scale_ratio, 
     int pointer_x, int pointer_y,
     Parameters & params) {
-
-    cv::Mat overlay = cv::Mat(
-        input.rows,
-        input.cols,
-        CV_8UC3,
-        cv::Scalar(0, 0, 0)
-    );
-
-    output = cv::Mat(
-        input.rows,
-        input.cols,
-        CV_8UC3,
-        cv::Scalar(0, 0, 0)
-    );
-
-    cv::addWeighted(overlay, alpha, input, 0, 0, output);
+        
+    cv::Mat overlay;
+    input.copyTo(overlay);
 
     if (params.m_palmbase.x() != -1) { // putting palm when palm coord detected
         image_palm.copyTo(
-            output(
+            input(
                 cv::Rect(
-                    palmstart_x,
-                    palmstart_y, 
+                    0,
+                    params.m_frame_height-image_palm.rows, 
                     image_palm.cols, 
                     image_palm.rows
                 )
             ), 
             mask
         );
-        
+
         ui::clear_rectangle(
             overlay,
-            cv::Point(palmstart_x+50, palmstart_y+50),                            // start & end points 
-            cv::Point(palmstart_x+50,palmstart_y+250),
-            cv::Point(palmstart_x+250,palmstart_y+250),                            // start & end points 
-            cv::Point(palmstart_x+250,palmstart_y+50),
+            cv::Point(m_palm_x.first, m_palm_y.first),                            // start & end points 
+            cv::Point(m_palm_x.first, m_palm_y.second),
+            cv::Point(m_palm_x.second, m_palm_y.second),                            // start & end points 
+            cv::Point(m_palm_x.second, m_palm_y.first),
             COLORS_floralwhite
         );
     }
+    
 
     draw_main_grid_layout(overlay, m_grid_out);
 
@@ -257,6 +251,6 @@ void AnchoHandToScreen::draw(
 
     drawProgressBar(overlay, params);
 
-    cv::addWeighted(overlay, alpha, output, 1-alpha, 0, output);
+    cv::addWeighted(overlay, alpha, input, 1-alpha, 0, output);
 }
 

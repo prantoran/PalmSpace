@@ -43,7 +43,7 @@ namespace PalmSpaceUI {
 			onehand = false;
 		}
 
-		ancdyn = false, ancstat  = false, anchandtoscreen = false; 
+		ancdyn = false, ancstat  = false, anchandtoscreen = false, ancpad = false, ancpadlarge = false; 
 		switch (anchor) {
 			case 1:
 				ancdyn = true;
@@ -53,6 +53,12 @@ namespace PalmSpaceUI {
 				break;
 			case 3:
 				anchandtoscreen = true;
+				break;
+			case 4:
+				ancpad = true;
+				break;
+			case 5:
+				ancpadlarge = true;
 				break;
 			default:
 				break;
@@ -168,12 +174,13 @@ namespace PalmSpaceUI {
 			cvui::checkbox(frame, scalex + 15, scaley + 50, "Two Hand", &twohand);
 
 
-			cvui::window(frame, scalex - 20, scaley + 100, 130, 100, "Anchor");
+			cvui::window(frame, scalex - 20, scaley + 100, 130, 140, "Anchor");
 			cvui::checkbox(frame, scalex - 15, scaley + 130, "Dynamic", &ancdyn);
 			cvui::checkbox(frame, scalex - 15, scaley + 150, "Static", &ancstat);
 			// cvui::checkbox(frame, scalex - 15, scaley + 170, "MidAir", &ancmid);
 			cvui::checkbox(frame, scalex - 15, scaley + 170, "Hand to screen", &anchandtoscreen);
-
+			cvui::checkbox(frame, scalex - 15, scaley + 190, "Pad", &ancpad);
+			cvui::checkbox(frame, scalex - 15, scaley + 210, "Large Pad", &ancpadlarge);
 
 
 			cvui::window(frame, scalex + 120, scaley + 10, 200, 80, "Trigger");
@@ -259,6 +266,8 @@ namespace PalmSpaceUI {
 		if (ancdyn) anchor = 1;
 		if (ancstat) anchor = 2;
 		if (anchandtoscreen) anchor = 3;
+		if (ancpad) anchor = 4;
+		if (ancpadlarge) anchor = 5;
 
 		if (trigpalmbase) trigger = 1;
 		if (trigpalmfree) trigger = 2;
@@ -317,6 +326,8 @@ namespace PalmSpaceUI {
 			if (ancdyn) cnt ++;
 			if (ancstat) cnt ++;
 			if (anchandtoscreen) cnt ++;
+			if (ancpad) cnt ++;
+			if (ancpadlarge) cnt ++;
 			if (cnt != 1) {
 				valid = 0;
 				errormsg = "Select exactly 1 anchor.";

@@ -8,7 +8,6 @@ AnchorStatic::~AnchorStatic() {
 
 AnchorStatic::AnchorStatic() {
     initiate();
-    reset_grid();
 }
 
 
@@ -24,18 +23,18 @@ AnchorStatic::AnchorStatic(
 
     setup_palmiamge(imagePath);
 
-    reset_grid();
 }
 
 
 void AnchorStatic::initiate() {
     name = "static";
-    _type = choices::anchor::STATIC;
+    m_type = choices::anchor::STATIC;
 
     width = 0;
     height = 0;
  
-    m_grid.reset_dimensions();
+    m_grid.reset_minimum_dimensions();
+    m_grid_out.reset_minimum_dimensions();
 
     color_red = COLORS_red;
     color_blue = COLORS_blue;
@@ -45,7 +44,7 @@ void AnchorStatic::initiate() {
     m_selected_i = -1, m_selected_j = -1;
     green_i = -1, green_j = -1;
 
-    static_display = false;
+    m_static_display = false;
 
     palm_ubx = 0, palm_uby = 0; // used as bounds for palm image
 
@@ -53,6 +52,8 @@ void AnchorStatic::initiate() {
     palmbase_x = -1, palmbase_y = -1;
 
     m_selection_locked = false;
+    
+    reset_grids();
 }
 
 void AnchorStatic::setup_palmiamge(std::string imagePath) {
@@ -75,9 +76,8 @@ void AnchorStatic::setup_palmiamge(std::string imagePath) {
     cv::merge(cs, 3, image_palm);  // glue together again
     mask = rgbLayer[3];       // png's alpha channel used as mask
 
-    cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-    cv::imshow("Display window", mask);                   // Show our image inside it.
-
+    // cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+    // cv::imshow("Display window", mask);                   // Show our image inside it.
     // cv::waitKey(0);
 }
 
@@ -95,14 +95,18 @@ void AnchorStatic::calculate(
         m_screen.setMinWidthHeight(
             m_grid.m_width_min, m_grid.m_height_min, 
             width, height);
+        
+        m_screen.setMinWidthHeight(
+            m_grid_out.m_width_min, m_grid_out.m_height_min,
+            width, height);
     }
 
-    if (!static_display) {
+    if (!m_static_display) {
         indexbase_x = params.m_indexbase.x();
         indexbase_y = params.m_indexbase.y();
 
         if (indexbase_x > 0 && indexbase_y > 0) {
-            static_display = true;
+            m_static_display = true;
   
             if (m_screen.isFull()) {
                 palmbase_x = 0.5; // determines a position of grid
@@ -126,12 +130,14 @@ void AnchorStatic::calculate(
         }
     } 
 
-    // reset static_display if visibility not fixed and 0 hands detected.
-    static_display &= isVisible(params);
+    // reset m_static_display if visibility not fixed and 0 hands detected.
+    m_static_display &= isVisible(params);
     
-    if (static_display) {
+    if (m_static_display) {
         // setupGrid((palmbase_x*width) - (ws/2), (palmbase_y*height) - hs); // defined in parent anchor class
-        setupGrid(indexbase_x*width, indexbase_y*height); // defined in parent anchor class
+        
+        m_grid.align(indexbase_x*width, indexbase_y*height);
+        m_grid_out.align(indexbase_x*width, indexbase_y*height);
 
         checkSelectionWithinPalm(pointer_x, pointer_y, params.m_palmbase);
 
@@ -217,34 +223,21 @@ void AnchorStatic::draw(
                 ), 
                 mask
             );
-
-            cv::Point p1(palmstart_x+50, palmstart_y+50);                            // start & end points 
-            cv::Point p2(palmstart_x+50,palmstart_y+250);
-            cv::Point p3(palmstart_x+250,palmstart_y+250);                            // start & end points 
-            cv::Point p4(palmstart_x+250,palmstart_y+50);
             
-            std::vector<cv::Point> contour = {p1, p2, p3, p4, p1};
-
-            const cv::Point *pts = (const cv::Point*) cv::Mat(contour).data;
-            int npts = cv::Mat(contour).rows;
-
-            cv::polylines(
-                overlay, 
-                &pts, 
-                &npts, 
-                1, 
-                false, 
-                COLORS_floralwhite, 
-                3,
-                CV_AA,
-                0
+            ui::clear_rectangle(
+                overlay,
+                cv::Point(palmstart_x+50, palmstart_y+50),                            // start & end points 
+                cv::Point(palmstart_x+50,palmstart_y+250),
+                cv::Point(palmstart_x+250,palmstart_y+250),                            // start & end points 
+                cv::Point(palmstart_x+250,palmstart_y+50),
+                COLORS_floralwhite
             );
         }
     }
 
-    draw_main_grid_layout(overlay);
+    draw_main_grid_layout(overlay, m_grid_out);
 
-    draw_cells(overlay);
+    draw_cells(overlay, m_grid_out);
 
     drawTextHighlighted(overlay);
     drawTextSelected(overlay);
