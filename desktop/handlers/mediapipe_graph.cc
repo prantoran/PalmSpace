@@ -89,7 +89,7 @@ MediaPipeMultiHandGPU::~MediaPipeMultiHandGPU() {
 
 void MediaPipeMultiHandGPU::debug(
   cv::Mat & m_primary_output, 
-  std::vector<std::vector<std::tuple<double, double, double>>> & points,
+  std::vector<std::vector<SmoothCoord>> & points,
   Parameters & params) {
     
   // drawing landmarks of hand 0
@@ -97,8 +97,8 @@ void MediaPipeMultiHandGPU::debug(
     cv::putText(m_primary_output, //target image
       std::to_string(i), //text
       cv::Point(
-        std::get<0>(points[0][i])*params.m_frame_width, 
-        std::get<1>(points[0][i])*params.m_frame_height),
+        points[0][i].x() * params.m_frame_width, 
+        points[0][i].y() * params.m_frame_height),
       cv::FONT_HERSHEY_DUPLEX,
       1.0,
       CV_RGB(0, 0, 0), //font color
@@ -110,8 +110,8 @@ void MediaPipeMultiHandGPU::debug(
     cv::putText(m_primary_output, //target image
       std::to_string(i), //text
       cv::Point(
-        std::get<0>(points[1][i])*params.m_frame_width, 
-        std::get<1>(points[1][i])*params.m_frame_height
+        points[1][i].x() * params.m_frame_width, 
+        points[1][i].y() * params.m_frame_height
         ),
       cv::FONT_HERSHEY_DUPLEX,
       1.0,
@@ -130,7 +130,7 @@ void MediaPipeMultiHandGPU::debug(
   //   cv::FONT_HERSHEY_DUPLEX,
   //   1.0,
   //   cv::Scalar(0, 255, 0),
-  //   2
+  //   2 
   // );
 
   // cv::putText(
@@ -357,10 +357,27 @@ void MediaPipeMultiHandGPU::debug(
   
   cv::Mat camera_frame;
   
-  params.m_points = std::vector<std::vector<std::tuple<double, double, double>>> (2);
+  params.m_points = std::vector<std::vector<SmoothCoord>> (2);
   for (int i = 0; i < 2; i ++) {
-    params.m_points[i] = std::vector<std::tuple<double, double, double>> (21);
+    params.m_points[i] = std::vector<SmoothCoord> (21);
+    for (int j = 0; j < 21; j ++) {
+      params.m_points[i][j] = SmoothCoord(
+        "H_" + std::to_string(i) + "L_" + std::to_string(j),
+        0.999,
+        0.2,
+        5
+      );
+    }
   }
+
+  std::vector<std::vector<std::tuple<double, double, double>>> points(2);
+  for (int i = 0; i < 2; i ++) {
+    points[i] = std::vector<std::tuple<double, double, double>> (21);
+  }
+
+  const int POINTS_RESET_THRESH = 10;
+  int points_reset_counter[2] = {0, 0};
+
   
   bool isDone = false;
 
@@ -385,10 +402,6 @@ void MediaPipeMultiHandGPU::debug(
 
 
     if (anchor->m_type == choices::anchor::PADLARGE) {
-      // std::cout << "setting depthmap to camenra\n";
-
-      // imshow("testing", camera_frame);
-
       camera_frame.copyTo(m_depth_map);
     }
 
@@ -491,25 +504,36 @@ void MediaPipeMultiHandGPU::debug(
       _handedness_found = false;
     }
 
+    params.m_hand_mask = 0;
+
     if (_handedness_found) {
-      // const auto& handedness = handedness_packet.Get<int>();
-      // const auto& handedness = handedness_packet.Get<mediapipe::ClassificationList>();
 
       const auto& handedness = handedness_packet.Get<std::vector<mediapipe::ClassificationList, std::allocator<mediapipe::ClassificationList> >>();
-      // std::cerr << "handedness:" << handedness << "\n";
+      
+      for (int i = 0; i < 2; i ++) {
+        params.hand[i] = handedness::UNDEFINED;
+      }
+      
+
       for (int i = 0; i < 2 && i < handedness.size(); i ++) {
         auto& h = handedness[i];
         // std::cerr << "h.classification_size:" << h.classification_size() << "\n";
         if (h.classification_size() > 0) {
           const mediapipe::Classification & c = h.classification(0);
           // std::cerr << "i:" << i << " label:" << c.label() << "\tindex:" << c.index() << "\n";
-          if (c.index() == 0) {
-            params.hand[i] = handedness::LEFT;
-          } else if (c.index() == 1) {
-            params.hand[i] = handedness::RIGHT;
-          } else {
-            std::cerr << "invalid handedness\n";
+          
+          switch (c.index()) {
+            case 0:
+              params.hand[i] = handedness::LEFT;
+              break;
+            case 1:
+              params.hand[i] = handedness::RIGHT;
+              break;
+            default:
+              std::cerr << "invalid handedness\n";
           }
+
+          params.m_hand_mask |= (1 << (int)c.index());
         }
       }
     }
@@ -523,68 +547,112 @@ void MediaPipeMultiHandGPU::debug(
     }
 
 
+    int hand_id = 0;
+
+    // resetting points
+    for (int i = 0; i < 2; i ++) {
+      points[i][0] = std::make_tuple(0, 0, 0);
+      for (int j = 1; j < 21; j ++) {
+        points[i][j] = points[i][0];
+      }
+
+    } 
+
+    for (int i = 0; i < 2; i ++) {
+      if (!points_reset_counter[i]) {
+        for (int j = 0; j < 21; j ++) {
+          params.m_points[i][j].reset();
+        }
+      }
+    }
 
     if (_landmarks_found) {
       
-      // resetting points
-      for (int i = 0; i < 2; i ++) {
-        params.m_points[i][0] = std::make_tuple(0, 0, 0);
-        for (int j = 1; j < 21; j ++) {
-          params.m_points[i][j] = params.m_points[i][0];
-        }
-      } 
-
       const auto& multi_hand_landmarks = multi_hand_landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
-      int hand_id = 0;
 
       for (const auto& hand_landmarks : multi_hand_landmarks) {
         if (hand_id == 2) break; // considering only two hands
-
+        int phand_id = params.hand[hand_id];
+        // std::cout << "hand_id:" << hand_id << "\tphand_id:" << phand_id << "\n";
         int j = 0;        
         for (const auto& landmark : hand_landmarks.landmark()) {
-          params.m_points[hand_id][j] = std::make_tuple(
-            landmark.x(), 
-            landmark.y(), 
-            landmark.z()
-          );
+          
+          points[phand_id][j] = 
+            std::make_tuple(
+              landmark.x(), 
+              landmark.y(), 
+              landmark.z()
+            );
 
-
-          if (j == 8) {
-            
-            // std::cerr << "hand_id:" << hand_id << "\tindextop relative_depth:" << landmark.z() << "\tpalmbase:" << std::get<2>(params.m_points[hand_id][0]) << "\tindex/base ratio:" << (landmark.z()/std::get<2>(params.m_points[hand_id][0])) << "\n"; 
-          }
           ++ j;
         }
 
+        // std::cout << "setting params.m_points\n";
+
+        for (int i = 0; i < 21; i ++) {
+          params.m_points[phand_id][i].set(
+            points[phand_id][i]
+          );
+        }
+
+        // std::cout << "setting params.m_points dpne\n";
+
         handlers::util::GetMinMaxZ(
-          params.m_points[hand_id], 
-          &params.m_hand_landmarks_relative_depth_minmax[hand_id].first,
-          &params.m_hand_landmarks_relative_depth_minmax[hand_id].second);
+          points[phand_id], 
+          &params.m_hand_landmarks_relative_depth_minmax[phand_id].first,
+          &params.m_hand_landmarks_relative_depth_minmax[phand_id].second);
         
         handlers::util::SetColorSizeValueFromZ(
-          std::get<2>(params.m_points[hand_id][8]),
-          params.m_hand_landmarks_relative_depth_minmax[hand_id].first,
-          params.m_hand_landmarks_relative_depth_minmax[hand_id].second,
-          &params.m_hand_color_scale[hand_id],
+          std::get<2>(points[phand_id][8]),
+          params.m_hand_landmarks_relative_depth_minmax[phand_id].first,
+          params.m_hand_landmarks_relative_depth_minmax[phand_id].second,
+          &params.m_hand_color_scale[phand_id],
           1, 20,
-          &params.m_hand_size_scale[hand_id]
+          &params.m_hand_size_scale[phand_id]
         );
 
         ++hand_id;
       }
+
+
+      // for (int i = 0; i < 2; i ++) {
+      //   std::cout << "hand " << i << "\n";
+      //   for (int j = 0 ; j < 21; j ++) {
+      //     std::cout << "\t(" << params.m_points[i][j].x() << ", " << params.m_points[i][j].y() << ")\n";
+      //   }
+      // }
+
     }
+
+    for (int i = 0; i < 2; i ++) {
+      if (params.m_hand_mask & (1 << i)) {
+        points_reset_counter[i] = POINTS_RESET_THRESH;
+      } else {
+        points_reset_counter[i] --;
+        if (points_reset_counter[i] < 0) {
+          points_reset_counter[i] = 0;
+        }
+      }
+    }
+
+    // std::cout << "hand_id:" << hand_id << "\n";
+    // for (int i =  0; i < 2; i ++ ) {
+    //   std::cout << "threshold :" << i << ": " << points_reset_counter[i] << "\n";
+    // }
+
+    auto sm_points = params.get_points();
 
     // std::cerr << "calling initiator->params(points, params)\n";
     // std::cerr << "initiator null? " << (initiator == NULL) << "\n";
-    initiator->params(params.m_points, params);
+    initiator->params(sm_points, params);
 
     params.set_is_static(anchor->m_static_display);
 
     show_display = false;
 
-    if (initiator->inspect(params.m_points, params)) {
+    if (initiator->inspect(sm_points, params)) {
       show_display = true;
-      initiator->params(params.m_points, params);
+      initiator->params(sm_points, params);
 
     } else if (!anchor->m_static_display) {
       params.reset();
@@ -617,18 +685,25 @@ void MediaPipeMultiHandGPU::debug(
       camera_frame, 
       interface_scaling_factor,
       cursor_x, cursor_y, params); 
+
+
+    params.m_selection_changed = anchor->is_selection_changed();
     
     if (show_display || anchor->m_static_display) {
 
-      trigger->update(camera_frame, params.m_points, params);
+      trigger->update(camera_frame, sm_points, params);
 
       switch (trigger->status()) {
         
         case TRIGGER::PRESSED:
+
+          anchor->reset_selection_prior_trigger();
+
           anchor->lock_selection();
         
         case TRIGGER::RELEASED:
           if (!trial || trial->started()) {
+            
             anchor->highlightSelected();
             anchor->unlock_selection();
           }

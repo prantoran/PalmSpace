@@ -6,6 +6,9 @@
 
 
 Anchor::Anchor() {
+    m_cur_time_id = 0;
+    m_past_selections_size = 15;
+    m_past_selections = std::vector<std::pair<int, int>> (m_past_selections_size);
 }
 
 
@@ -115,7 +118,15 @@ void Anchor::setupSelection(
             selected_row_i = m_selected_i_prv;
             selected_col_j = m_selected_j_prv;
         }
+
+        m_past_selections[m_cur_time_id] = {selected_row_i, selected_col_j};
+
+        // selected_row_i = m_past_selections[(m_cur_time_id-1+m_past_selections_size)%m_past_selections_size].first;
+        // selected_col_j = m_past_selections[(m_cur_time_id-1+m_past_selections_size)%m_past_selections_size].second;
+        
+        m_cur_time_id = (m_cur_time_id + 1) % m_past_selections_size;
     }
+
 }
 
 
@@ -254,4 +265,16 @@ void Anchor::draw_cells(cv::Mat & src, const Grid & grid) {
             color_blue
         );
     }
+}
+
+
+
+bool Anchor::is_selection_changed() {
+    return !((m_selected_i == m_selected_i_prv) && (m_selected_j == m_selected_j_prv));
+}
+
+
+void Anchor::reset_selection_prior_trigger() {
+    m_selected_i = m_past_selections[(m_cur_time_id+3)%m_past_selections_size].first;
+    m_selected_j = m_past_selections[(m_cur_time_id+3)%m_past_selections_size].second;
 }

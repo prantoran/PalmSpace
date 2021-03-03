@@ -1,8 +1,7 @@
 
 
-#include "triggers.h"
+#include "trigger.h"
 
-#include <tuple>
 #include <string>
 
 Trigger::Trigger() {
@@ -33,5 +32,6 @@ TRIGGER::state Trigger::status() {
 
 
 void Trigger::reset_status() {
+    m_cnt = 0;
     cur_state = TRIGGER::OPEN;
 }

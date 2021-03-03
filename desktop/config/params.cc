@@ -25,10 +25,10 @@ Parameters::Parameters(int _frame_width, int _frame_height, bool _load_video, Ca
 
     m_camera = _camera;
 
-    m_indexbase = SmoothCoord("indexbase", 0.9, 15);
-    m_palmbase = SmoothCoord("palmbase", 0.9, 15);
-    m_primary_cursor = SmoothCoord("primary_cursor", 0.9, 15);
-    m_primary_cursor_middlefinger_base = SmoothCoord("primary_cursor_middlefinger_base", 0.9, 15);
+    m_indexbase = SmoothCoord("indexbase", 0.9, 5, 15);
+    m_palmbase = SmoothCoord("palmbase", 0.9, 5, 15);
+    m_primary_cursor = SmoothCoord("primary_cursor", 0.9, 2, 15);
+    m_primary_cursor_middlefinger_base = SmoothCoord("primary_cursor_middlefinger_base", 0.9, 5, 15);
 
     reset();
     init(_load_video);
@@ -309,16 +309,20 @@ std::pair<double, double> Parameters::palm_width() const {
         std::cout <<"WARNING: config/params.cc palm_width() m_base_id = -1\n";
         return {0, 0};
     }
-    double mnm = std::get<0>(m_points[m_base_id][0]);
-    double mxm = std::get<0>(m_points[m_base_id][0]);
+
+    double _x  = m_points[m_base_id][0].x();
+    double mnm = _x;
+    double mxm = _x;
 
     for (int i = 1; i < 6; i ++) {
-        if (mnm > std::get<0>(m_points[m_base_id][palm_ids[i]])) {
-            mnm = std::get<0>(m_points[m_base_id][palm_ids[i]]);
+        _x = m_points[m_base_id][palm_ids[i]].x();
+        
+        if (mnm > _x) {
+            mnm = _x;
         }
 
-        if (mxm < std::get<0>(m_points[m_base_id][palm_ids[i]])) {
-            mxm = std::get<0>(m_points[m_base_id][palm_ids[i]]);
+        if (mxm < _x) {
+            mxm = _x;
         }
     }
 
@@ -334,16 +338,19 @@ std::pair<double, double> Parameters::palm_height() const {
         return {0, 0};
     }
 
-    double mnm = std::get<1>(m_points[m_base_id][0]);
-    double mxm = std::get<1>(m_points[m_base_id][0]);
+    double _y  = m_points[m_base_id][0].y();
+    double mnm = _y;
+    double mxm = _y;
 
     for (int i = 1; i < 6; i ++) {
-        if (mnm > std::get<1>(m_points[m_base_id][palm_ids[i]])) {
-            mnm = std::get<1>(m_points[m_base_id][palm_ids[i]]);
+        _y = m_points[m_base_id][palm_ids[i]].y();
+        
+        if (mnm > _y) {
+            mnm = _y;
         }
 
-        if (mxm < std::get<1>(m_points[m_base_id][palm_ids[i]])) {
-            mxm = std::get<1>(m_points[m_base_id][palm_ids[i]]);
+        if (mxm < _y) {
+            mxm = _y;
         }
     }
 
@@ -361,8 +368,8 @@ cv::Point Parameters::thumb_tip() {
     }
 
     return cv::Point(
-        std::get<0>(m_points[m_base_id][4])*m_frame_width,
-        std::get<1>(m_points[m_base_id][4])*m_frame_height
+        m_points[m_base_id][4].x() * m_frame_width,
+        m_points[m_base_id][4].y() * m_frame_height
     );
 }
 
@@ -375,8 +382,8 @@ cv::Point Parameters::index_tip() {
     }
 
     return cv::Point(
-        std::get<0>(m_points[m_base_id][8])*m_frame_width,
-        std::get<1>(m_points[m_base_id][8])*m_frame_height
+        m_points[m_base_id][8].x() * m_frame_width,
+        m_points[m_base_id][8].y() * m_frame_height
     );
 }
 
@@ -388,7 +395,21 @@ cv::Point Parameters::thumb_base() {
     }
 
     return cv::Point(
-        std::get<0>(m_points[m_base_id][2])*m_frame_width,
-        std::get<1>(m_points[m_base_id][2])*m_frame_height
+        m_points[m_base_id][2].x() * m_frame_width,
+        m_points[m_base_id][2].y() * m_frame_height
     );
 }
+
+
+std::vector<std::vector<std::tuple<double, double, double>>> Parameters::get_points() {
+    std::vector<std::vector<std::tuple<double, double, double>>> ret (2);
+    for (int i = 0; i < 2; i ++) {
+        ret[i] = std::vector<std::tuple<double, double, double>> (21);
+        for (int j = 0; j < 21; j ++) {
+            ret[i][j] = m_points[i][j].get();
+        }
+    }
+
+    return ret;
+}
+

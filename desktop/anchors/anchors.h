@@ -7,6 +7,7 @@
 #include <tuple>
 #include <vector>
 #include <iostream>
+#include <utility>
 
 #include "mediapipe/framework/port/opencv_imgproc_inc.h" // most likely contains headers for cv::types
 #include "mediapipe/framework/port/opencv_highgui_inc.h"
@@ -95,6 +96,9 @@ class Anchor { // interface via abstract class
 
     bool m_selection_locked;
 
+    std::vector<std::pair<int, int>> m_past_selections;
+    int m_cur_time_id, m_past_selections_size;
+    
     Anchor();
     virtual ~Anchor();
 
@@ -144,6 +148,9 @@ class Anchor { // interface via abstract class
     void unlock_selection();
     void draw_main_grid_layout(cv::Mat & src, const Grid & grid);
     void draw_cells(cv::Mat & src, const Grid & grid);
+
+    bool is_selection_changed();
+    void reset_selection_prior_trigger();
 };
 
 

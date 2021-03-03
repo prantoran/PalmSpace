@@ -2,59 +2,14 @@
 #define TRIGGERS_H
 
 
-#include <tuple>
-#include <vector>
-#include <chrono>
-#include <string>
-#include <iostream>
 
-
-// opencv
-#include "mediapipe/framework/port/opencv_imgproc_inc.h"
-
-#include "desktop/config/config.h"
-
+#include "trigger.h"
+#include "tap.h"
 
 // TODO remove unused triggers
 
 constexpr char trackbarWindowName[] = "Index Marker Tuning";
 
-
-namespace TRIGGER {
-    typedef enum{
-        OPEN,
-        PRESSED, 
-        RELEASED,
-        INVALID
-    } state;
-}
-
-std::chrono::milliseconds cur_time();
-
-class Trigger {
-    public:
-    int width, height;
-
-    // TODO rename to m_cur_state
-    TRIGGER::state cur_state;
-
-    std::string state_str(); 
-
-    bool m_debug;
-
-    Trigger();
-
-    virtual ~Trigger();
-    
-
-    virtual void update(
-        const cv::Mat & input_image,
-        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        Parameters & params) = 0;
-
-    TRIGGER::state status();
-    void reset_status();
-};
 
 class TriggerThumb: public Trigger {
     public:
@@ -120,21 +75,6 @@ class TriggerWait: public Trigger {
 
 };
 
-class TriggerTap: public Trigger {
-    public:
-    int m_cnt;
-
-    int m_base_rel_depth, m_diff;
-
-
-    TriggerTap();
-    
-    void update(
-        const cv::Mat & input_image,
-        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        Parameters & params);
-
-};
 
 class TriggerTapPalm: public Trigger {
 

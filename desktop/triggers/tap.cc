@@ -1,11 +1,13 @@
-#include "triggers.h"
+#include "tap.h"
 
 
 TriggerTap::TriggerTap() {
     cur_state = TRIGGER::OPEN;
     m_cnt = 0;
+    m_cnt_positive = 0;
     m_base_rel_depth = -1;
     m_diff = 0;
+    m_debug = true;
 }
 
 
@@ -22,28 +24,40 @@ void TriggerTap::update(
         std::cerr << "trigger/tap size:" << rel_depth << "\tm_diff:" << m_diff << "\n";
     }
     
-    if (m_diff < -2) {
+    if (m_diff < -1) {
         if (cur_state != TRIGGER::PRESSED) {
-            cur_state = TRIGGER::PRESSED;
-            m_cnt = 0;
-        } else {
+            m_cnt_positive ++;
+            if (m_cnt_positive > 2) {
+                cur_state = TRIGGER::PRESSED;
+                m_cnt = 0;
+                m_cnt_positive = 0;
+            } 
+        } else if (cur_state == TRIGGER::PRESSED) {
             m_cnt ++;
         }
-    } else if (m_diff > 2) {
+    } else if (m_diff > 1) {
         if (cur_state == TRIGGER::PRESSED) {
-            cur_state = TRIGGER::RELEASED;
-            m_cnt = 0;
-        } else {
+            m_cnt_positive ++;
+
+            if (m_cnt_positive > 2) {
+                cur_state = TRIGGER::RELEASED;
+                m_cnt = 0;
+                m_cnt_positive = 0;
+            }
+        
+        } else if (cur_state == TRIGGER::RELEASED) {
             m_cnt ++;
         }
     } else {
         m_cnt ++;
+        m_cnt_positive = 0;
     }
 
     m_base_rel_depth = 0.2*m_base_rel_depth + 0.8*rel_depth;
 
-    if (m_cnt > 10) {
+    if (m_cnt > 3) {
         m_cnt = 0;
+        m_cnt_positive = 0;
         cur_state = TRIGGER::OPEN;
     } 
 }

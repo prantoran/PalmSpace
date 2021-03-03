@@ -3,6 +3,9 @@
 InitiatorDefault::InitiatorDefault() {
     name = "Initiator_Default";
     pointsConvex.resize(2);
+    for (int i = 0; i < 2; i ++) {
+      pointsConvex[i] = std::vector<std::tuple<double, double, double>> (21);
+    }
     strict = false;
 }
 
@@ -14,32 +17,21 @@ bool InitiatorDefault::inspect(
         std::vector<std::vector<std::tuple<double, double, double>>> & points,
         Parameters & params) {
     // may modify the position of vectors within points
-    
+
+    for (int i = 0; i < 2; i ++) {
+      pointsConvex[i].resize(points[i].size());
+      for (int j = 0; j < points[i].size(); j ++) {
+        pointsConvex[i][j] = points[i][j];
+      }
+    }
+
     valid[0] = true;
     valid[1] = true;
 
-
-    for (int i = 0; i < 2; i ++) {
-        pointsConvex[i].clear();
-        for (int j = 0; valid[i] && j < points[i].size(); j ++) {
-            auto & u = points[i][j];
-            pointsConvex[i].emplace_back(u);
-            // if (std::get<0>(u) < 0.01 && std::get<1>(u) < 0.01) {
-            //   valid[i] = false;
-            // }
-
-            // if (std::get<0>(u) > 0.99 && std::get<1>(u) > 0.99) {
-            //   valid[i] = false;
-            // }
-        }
-    }
-
     for (int i = 0; i < 2; i ++) {
       areas[i] = 0;
-      if (points[i].size() > 2) {
-        convex_hull(pointsConvex[i]);
-        areas[i] = area(pointsConvex[i]);
-      }
+      convex_hull(pointsConvex[i]);
+      areas[i] = area(pointsConvex[i]);
 
       if (areas[i] < SMALLAREA_THRESHOLD) {
         valid[i] = false;
@@ -47,10 +39,10 @@ bool InitiatorDefault::inspect(
     }
 
     params.m_base_id = 0;
-    if (valid[1] && params.hand[1] == handedness::LEFT) {      
-      std::cerr << "switching\n";
-      params.m_base_id = 1;
-    }
+    // if (valid[1] && params.hand[1] == handedness::LEFT) {      
+    //   std::cerr << "switching\n";
+    //   params.m_base_id = 1;
+    // }
 
     if (m_debug) {
       std::cerr << "base_id:" << params.m_base_id << "\thand:" << params.hand[params.m_base_id] << "\n";

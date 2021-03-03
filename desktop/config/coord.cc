@@ -2,21 +2,27 @@
 
 SmoothCoord::SmoothCoord() {
     m_momentum = 0;
-    init(15);
+    init(15, 15);
     reset();
 }
 
 
-SmoothCoord::SmoothCoord(std::string _name, double _momentum, type_t _diff_drop_thresh) {
+SmoothCoord::SmoothCoord(
+    std::string _name, 
+    double _momentum, 
+    type_t _diff_drop_thresh,
+    int _max_drop_cnt) {
+
     m_momentum = _momentum;
     m_name = _name;
-    init(_diff_drop_thresh);
+    init(_diff_drop_thresh, _max_drop_cnt);
     reset();
 }
 
-void SmoothCoord::init(type_t _diff_drop_thresh) {
-    m_max_drop_cnt = 15;
+void SmoothCoord::init(type_t _diff_drop_thresh, int _max_drop_cnt) {
+    m_max_drop_cnt = _max_drop_cnt;
     m_diff_drop_thresh = _diff_drop_thresh;
+    m_diff_ratio_drop_thresh = 50;
 }
 
 
@@ -42,16 +48,29 @@ void SmoothCoord::update_velocity() {
 void SmoothCoord::_update_v(type_t & _d, type_t & _d_p) {
     _d_p = _d;
     if (_d_p == -1) return;
+    // std::cout << "using momentum\n";
     _d = (1-m_momentum)*_d + m_momentum*_d_p;  
+}
+
+
+bool SmoothCoord::_check_thresh(type_t _d, type_t _d_p) const {
+    // if (_d_p && ((_d/_d_p) > m_diff_ratio_drop_thresh || (_d/_d_p) < -m_diff_ratio_drop_thresh)) {
+    //     return true;
+    // }
+
+    return _d > m_diff_drop_thresh || _d < -m_diff_drop_thresh;
 }
 
 
 void SmoothCoord::set(const std::tuple<type_t, type_t, type_t> & _new_point) {
     m_prev = m_cur; 
-    if (std::get<0>(m_prev) < 0.01) {
+    if(std::get<0>(_new_point) < 0) {
+        // std::cout << "m_name:" << m_name << "\n";
+        // if (m_name == "H_0_L_8") {
+        //     std::cout << m_name << "WARN config/coord.cc set(): resetting NOT expected behaviour\n";
+        // }
         m_cur = _new_point;
-    } else if(std::get<0>(_new_point) < 0) {
-        std::cout << m_name << ": resetting in set func() NOT expected behaviour\n";
+    } else if (std::get<0>(m_prev) < 0.001) {
         m_cur = _new_point;
     } else {
 
@@ -61,10 +80,12 @@ void SmoothCoord::set(const std::tuple<type_t, type_t, type_t> & _new_point) {
         m_dy = std::get<1>(_new_point) - std::get<1>(m_prev);
         m_dz = std::get<2>(_new_point) - std::get<2>(m_prev);
 
-        if ((m_dx > m_diff_drop_thresh || m_dx < -m_diff_drop_thresh) ||
-            (m_dx > m_diff_drop_thresh || m_dx < -m_diff_drop_thresh) ||
-            (m_dx > m_diff_drop_thresh || m_dx < -m_diff_drop_thresh)) {
-            
+        // if (m_name == "H_0L_8") {
+        //     std::cout << "m_dx:" << m_dx << "\tm_dy:" << m_dy << "\td_dz:" << m_dz << "\n";
+        // }
+
+        if (_check_thresh(m_dx, m_dx_p) || _check_thresh(m_dy, m_dy_p) || _check_thresh(m_dz, m_dz_p)) {
+
             m_drop_cnt ++;
             if (m_drop_cnt < m_max_drop_cnt) {
                 return;
@@ -73,9 +94,10 @@ void SmoothCoord::set(const std::tuple<type_t, type_t, type_t> & _new_point) {
             reset_velocity();
         }
 
+        m_drop_cnt = 0;
+        
         update_velocity();
 
-        m_drop_cnt = 0;
 
         update_pos();
     }
@@ -100,7 +122,11 @@ void SmoothCoord::_update_pos(type_t & _pos, type_t _pos_p, type_t _velocity) {
         return;
     }
 
-    _pos = _pos_p + _velocity;
+    // if (m_name == "H_0L_8") {
+        // std::cout << "using velocity to update pos v:" << _velocity << "\t_pos_p:" << _pos_p << "\n";
+    // }
+
+    _pos = _pos_p + 0.5*_velocity;
 }
 
 
@@ -123,6 +149,11 @@ void SmoothCoord::get(type_t & x_col, type_t & y_row) {
 
 void SmoothCoord::get(std::tuple<type_t, type_t, type_t> & _point) {
     _point = m_cur;
+}
+
+
+std::tuple<double, double, double> SmoothCoord::get() const {
+    return m_cur;
 }
 
 

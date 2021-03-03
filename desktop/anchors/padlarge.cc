@@ -54,7 +54,7 @@ void AnchorPadLarge::initiate() {
 
     indexbase_x = 0, indexbase_y = 0;
     palmbase_x = 0, palmbase_y = 0;
-    m_indexbase = SmoothCoord("indexbase", 0.9, 240);
+    m_indexbase = SmoothCoord("indexbase", 0.9, 240, 15);
 
     m_selection_locked = false;
     

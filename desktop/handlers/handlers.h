@@ -51,7 +51,7 @@ class MediaPipeMultiHandGPU {
     
     void debug(
         cv::Mat & output_frame_mat, 
-        std::vector<std::vector<std::tuple<double, double, double>>> & points,
+        std::vector<std::vector<SmoothCoord>> & points,
         Parameters & params);
 
     void combine_output_frames();

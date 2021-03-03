@@ -192,7 +192,7 @@ namespace userstudies {
         
         auto diff =  (std::chrono::steady_clock::now() - m_last_trial_end_time).count();
         // std::cout << "diff:" << diff <<  "\n";
-        if (m_state == TrialState::OPEN and diff < 2000000000) {
+        if (m_state == TrialState::OPEN and diff < 1500000000) {
             return ;
         }
 

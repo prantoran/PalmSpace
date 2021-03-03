@@ -227,7 +227,7 @@ int main(int argc, char** argv) {
       mp_graph->initiator = new InitiatorDefault();
       break;
     case 2:
-      mp_graph->initiator = new InitiatorTwoHand();
+      // mp_graph->initiator = new InitiatorTwoHand();
       break;
     default:
       std::cout << "ERROR main.cc invalid initiator choice\n";

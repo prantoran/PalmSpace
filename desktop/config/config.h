@@ -48,6 +48,7 @@ namespace handedness {
   typedef enum {
     LEFT,
     RIGHT,
+    UNDEFINED,
   } hand;
 }
 
@@ -102,12 +103,15 @@ class Parameters {
   int m_base_id; // m_base_hand_id_set_by_initiator;
 
   handedness::hand hand[4];
+  int m_hand_mask;
 
   std::pair<double, double> m_hand_landmarks_relative_depth_minmax[4];
   int m_hand_color_scale[4], m_hand_size_scale[4];
 
-  std::vector<std::vector<std::tuple<double, double, double>>> m_points;
+  // std::vector<std::vector<std::tuple<double, double, double>>> m_points;
+  std::vector<std::vector<SmoothCoord>> m_points;
 
+  bool m_selection_changed;
 
   void get_raw_dimensions(double & _width, double _height);
   void set_raw_dimensions(double _width, double _height);
@@ -181,6 +185,8 @@ class Parameters {
   cv::Point thumb_tip();
   cv::Point index_tip();
   cv::Point thumb_base();
+
+  std::vector<std::vector<std::tuple<double, double, double>>> get_points();
 };
 
 
