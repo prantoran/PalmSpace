@@ -36,6 +36,8 @@ class MediaPipeMultiHandGPU {
 
     userstudies::Trial * trial;
 
+    bool m_debug;
+
     MediaPipeMultiHandGPU(const std::string & _window_name, const std::string & _output_video_path);
     ~MediaPipeMultiHandGPU();
 

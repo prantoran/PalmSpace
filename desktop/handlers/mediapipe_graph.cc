@@ -56,6 +56,7 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(
   m_output_video_path = _output_video_path;
   // curImageID = 1;
   camera = NULL;
+  m_debug = false;
 
   std::cerr << "m_output_video_path:" << m_output_video_path << "\n";
 }
@@ -289,6 +290,8 @@ void MediaPipeMultiHandGPU::debug(
     const int debug_mode,
     const bool load_video,
     const bool save_video) {
+
+  m_debug = debug_mode;
 
   std::string calculator_graph_config_contents;
   MP_RETURN_IF_ERROR(mediapipe::file::GetContents(
@@ -728,6 +731,9 @@ void MediaPipeMultiHandGPU::debug(
           m_primary_output,
           interface_scaling_factor,
           cursor_x, cursor_y, params);
+      
+
+
 
       if (trial) {
         if (trial->started()) {
@@ -772,6 +778,47 @@ void MediaPipeMultiHandGPU::debug(
       } else {
         trial->update_start_button_input_loc(anchor->m_grid);
         trial->draw_start_button(m_primary_output);
+      }
+
+
+      if (anchor->m_type != choices::anchor::DYNAMIC) {
+
+        int g_c_x, g_c_y, go_c_x, go_c_y;
+
+        anchor->m_grid.get_center_cv(g_c_x, g_c_y);
+        anchor->m_grid_out.get_center_cv(go_c_x, go_c_y);
+
+        int g_w   = anchor->m_grid.m_width;
+        int g_h   = anchor->m_grid.m_height;
+        int go_w  = anchor->m_grid_out.m_width;
+        int go_h  = anchor->m_grid_out.m_height;
+
+        int c_dx = cursor_x - g_c_x;
+        int c_dy = cursor_y - g_c_y;
+
+        c_dx = c_dx*((double)go_w/g_w);
+        c_dy = c_dy*((double)go_h/g_h);
+        
+        int c_go_x = go_w + c_dx;
+        int c_go_y = go_h + c_dy;
+
+        if ((c_go_x >= 0 && c_go_x <= frame_width) &&
+          (c_go_y >= 0 && c_go_y <= frame_height)) {
+          
+          cv::circle(
+            m_primary_output,
+            cv::Point(c_go_x, c_go_y),
+            params.primary_cursor_size(),
+            cv::Scalar(
+              params.primary_cursor_color_size(), 
+              params.primary_cursor_color_size(), 
+              params.primary_cursor_color_size()            
+            ),
+            -1,
+            cv::LINE_8,
+            0  
+          );
+        }
       }
 
       
@@ -872,7 +919,7 @@ void MediaPipeMultiHandGPU::debug(
 
 
 void MediaPipeMultiHandGPU::combine_output_frames() {
-  if (m_depth_map.empty()) {
+  if (m_depth_map.empty() || !m_debug) {
     m_combined_output = m_primary_output;
   } else {
     cv::Size sz1 = m_primary_output.size();

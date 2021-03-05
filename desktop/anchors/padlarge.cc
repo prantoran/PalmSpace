@@ -114,7 +114,7 @@ void AnchorPadLarge::calculate(
     m_palm_x = params.palm_width();
     m_palm_y = params.palm_height();
     
-    m_grid.m_width_min = std::min((double)params.m_frame_width, m_palm_x.second - m_palm_x.first);
+    m_grid.m_width_min  = std::min((double)params.m_frame_width, m_palm_x.second  - m_palm_x.first);
     m_grid.m_height_min = std::min((double)params.m_frame_height, m_palm_y.second - m_palm_y.first);
 
     indexbase_x = params.m_indexbase.x();

@@ -3,7 +3,6 @@
 
 #include "mediapipe/framework/port/opencv_imgproc_inc.h"
 
-
 class Grid {
   public:
   int m_divisions;
@@ -17,10 +16,11 @@ class Grid {
   cv::Point get_top_left() const;
   cv::Rect get_bound_rect() const;
   void reset();
-  int arg_x(int pointer_x);
-  int arg_y(int pointer_y);
+  int arg_x(int pointer_x) const;
+  int arg_y(int pointer_y) const;
   void align(double topleft_x, double topleft_y);
   cv::Rect get_cell(int i, int j) const;
+  void get_center_cv(int & _col_width, int & _row_height);
 };
 
 

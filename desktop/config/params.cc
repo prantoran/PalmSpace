@@ -25,10 +25,10 @@ Parameters::Parameters(int _frame_width, int _frame_height, bool _load_video, Ca
 
     m_camera = _camera;
 
-    m_indexbase = SmoothCoord("indexbase", 0.9, 5, 15);
-    m_palmbase = SmoothCoord("palmbase", 0.9, 5, 15);
-    m_primary_cursor = SmoothCoord("primary_cursor", 0.9, 2, 15);
-    m_primary_cursor_middlefinger_base = SmoothCoord("primary_cursor_middlefinger_base", 0.9, 5, 15);
+    m_indexbase                         = SmoothCoord("indexbase"                       , 0.9999, 5, 15);
+    m_palmbase                          = SmoothCoord("palmbase"                        , 0.9999, 5, 15);
+    m_primary_cursor                    = SmoothCoord("primary_cursor"                  , 0.9999, 2, 15);
+    m_primary_cursor_middlefinger_base  = SmoothCoord("primary_cursor_middlefinger_base", 0.9999, 5, 15);
 
     reset();
     init(_load_video);

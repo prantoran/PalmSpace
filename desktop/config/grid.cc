@@ -43,7 +43,7 @@ void Grid::reset() {
 }
 
 
-int Grid::arg_x(int pointer_x) {
+int Grid::arg_x(int pointer_x) const {
     for (int j = 1;j <= m_divisions; j ++) {
         if (pointer_x >= m_x_cols[j] && pointer_x <= m_x_cols[j] + m_dx_col) {
             return j;
@@ -54,7 +54,7 @@ int Grid::arg_x(int pointer_x) {
 }
 
 
-int Grid::arg_y(int pointer_y) {
+int Grid::arg_y(int pointer_y) const {
     for (int i = 1;i <= m_divisions; i ++) {
         if (pointer_y >= m_y_rows[i] && pointer_y <= m_y_rows[i] + m_dy_row) {
         return i;
@@ -93,4 +93,10 @@ cv::Rect Grid::get_cell(int i, int j) const {
         cv::Point(m_x_cols[i], m_y_rows[j]), 
         cv::Point(m_x_cols[i]+m_dx_col, m_y_rows[j]+m_dy_row)
     );
+}
+
+
+void Grid::get_center_cv(int & _col_width, int & _row_height) {
+    _col_width  = m_x_cols[0] +  m_width/2;
+    _row_height = m_y_rows[0] + m_height/2;
 }

@@ -39,7 +39,7 @@ void TriggerTap::update(
         if (cur_state == TRIGGER::PRESSED) {
             m_cnt_positive ++;
 
-            if (m_cnt_positive > 2) {
+            if (m_cnt_positive > 1) {
                 cur_state = TRIGGER::RELEASED;
                 m_cnt = 0;
                 m_cnt_positive = 0;
@@ -55,7 +55,7 @@ void TriggerTap::update(
 
     m_base_rel_depth = 0.2*m_base_rel_depth + 0.8*rel_depth;
 
-    if (m_cnt > 3) {
+    if (m_cnt > 2) {
         m_cnt = 0;
         m_cnt_positive = 0;
         cur_state = TRIGGER::OPEN;
