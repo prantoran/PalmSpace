@@ -7,10 +7,11 @@
 #include "desktop/initiators/initiators.h"
 #include "desktop/handlers/handlers.h" 
 #include "desktop/ui/menu.h"
-#include "desktop/config/config.h"
-
-#include "desktop/config/choices.h"
 #include "desktop/camera/camera.h"
+
+#include "desktop/config/config.h"
+#include "desktop/config/colors.h"
+#include "desktop/config/choices.h"
 
 #include "desktop/userstudies/trial.h"
 
@@ -42,8 +43,8 @@ DEFINE_string(output_video_path,
               "Full path of where to save result (.mp4 only). "
               "If not provided, show result in a window.");
 
-DEFINE_int32(frame_width, 640, "frame/screen width in pixels."); // 640 // 1280 // 848
-DEFINE_int32(frame_height, 480, "frame/screen height in pixels."); // 480 // 720 // 480
+DEFINE_int32(frame_width, 640, "frame/screen width in pixels."); // 640 // 1280 // 848 // 1920
+DEFINE_int32(frame_height, 480, "frame/screen height in pixels."); // 480 // 720 // 480 // 1080
 DEFINE_int32(fps, 30, "frames per second.");
 DEFINE_int32(debug, 0, "debug mode");
 
@@ -124,18 +125,18 @@ int main(int argc, char** argv) {
   }
 
   
-  int choice_anchor = 5;
+  int choice_anchor = 3;
   int choice_trigger = 5; // 5 tap z 6 tap depth cam 8 dwell
   int choice_initiator = 1;
   int choice_divisions = 5;
   int choice_screensize = 2;
-  int choice_debug = 1;
-  int choice_visibility = 2;
+  int choice_debug = 0;
+  int choice_visibility = 1;
   int choice_depth = 1;
   int choice_trial_start_btn_location = 4;
   bool choice_trial_pause_before_each_target = true;
   bool choice_trial_show_button_during_trial = false;
-
+  int choice_targets_cnt = 20;
   #ifndef REALSENSE_CAM
     if (choice_depth == 8)
       choice_depth = 0;
@@ -155,6 +156,7 @@ int main(int argc, char** argv) {
     choice_trial_start_btn_location,
     choice_trial_pause_before_each_target,
     choice_trial_show_button_during_trial,
+    choice_targets_cnt,
     APP_NAME);
 
   menu.run();
@@ -170,7 +172,8 @@ int main(int argc, char** argv) {
     choice_depth,
     choice_trial_start_btn_location,
     choice_trial_pause_before_each_target,
-    choice_trial_show_button_during_trial);
+    choice_trial_show_button_during_trial,
+    choice_targets_cnt);
   
 
   mp_graph->trial = new userstudies::Trial(
@@ -196,7 +199,7 @@ int main(int argc, char** argv) {
 
 
   mp_graph->trial->generate_sample_space();
-  mp_graph->trial->generate_random_target_sequence(7);
+  mp_graph->trial->generate_random_target_sequence(choice_targets_cnt);
 
   std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
 
@@ -236,32 +239,35 @@ int main(int argc, char** argv) {
 
   switch (choice_anchor) {
     case 1:
-      mp_graph->anchor = new AnchorDynamic(cv::Scalar(25, 25, 255), cv::Scalar(255, 25, 25));
+      mp_graph->anchor = new AnchorDynamic(COLORS_red, COLORS_royalblue);
       break;
     case 2:
       mp_graph->anchor = new AnchorStatic(
-        cv::Scalar(25, 25, 255), 
-        cv::Scalar(255, 25, 25), 
+        COLORS_red, 
+        COLORS_royalblue, 
         get_current_dir() + "/desktop/anchors/Hand.png");
       break;
     case 3:
       mp_graph->anchor = new AnchoHandToScreen(
-        cv::Scalar(25, 25, 255), 
-        cv::Scalar(255, 25, 25), 
-        get_current_dir() + "/desktop/anchors/Hand.png");
+        FLAGS_frame_width,
+        FLAGS_frame_height,
+        COLORS_red, 
+        COLORS_royalblue, 
+        get_current_dir() + "/desktop/anchors/Hand_full.png",
+        get_current_dir() + "/desktop/anchors/bg.jpg");
       break;
     case 4:
       mp_graph->anchor = new AnchorPad(
-        cv::Scalar(25, 25, 255), 
-        cv::Scalar(255, 25, 25), 
+        COLORS_red, 
+        COLORS_royalblue, 
         get_current_dir() + "/desktop/anchors/Hand.png");
       break;
     case 5:
       mp_graph->anchor = new AnchorPadLarge(
         FLAGS_frame_width,
         FLAGS_frame_height,
-        cv::Scalar(25, 25, 255), 
-        cv::Scalar(255, 25, 25), 
+        COLORS_red, 
+        COLORS_royalblue, 
         get_current_dir() + "/desktop/anchors/Hand.png",
         get_current_dir() + "/desktop/anchors/bg.jpg");
       break;

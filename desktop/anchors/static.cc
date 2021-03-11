@@ -40,9 +40,9 @@ void AnchorStatic::initiate() {
     color_blue = COLORS_blue;
     color_green = COLORS_darkgreen;
 
-    m_selected_i_prv = -1, m_selected_j_prv = -1;
-    m_selected_i = -1, m_selected_j = -1;
-    green_i = -1, green_j = -1;
+    reset_selection();
+
+    reset_marked_cell();
 
     m_static_display = false;
 
@@ -143,8 +143,8 @@ void AnchorStatic::calculate(
 
         setupSelection(pointer_x, pointer_y, m_selected_i, m_selected_j); // defined in parent anchor class
         
-        if (green_i != -1 && green_j != -1) {
-            // ensureMarkedCellWithinPalm(green_i, green_j);
+        if (m_marked_i != -1 && m_marked_j != -1) {
+            // ensureMarkedCellWithinPalm(m_marked_i, m_marked_j);
         }
 
         params.set_selected_cell(m_selected_i, m_selected_j);
@@ -244,6 +244,6 @@ void AnchorStatic::draw(
 
     drawProgressBar(overlay, params);
 
-    cv::addWeighted(overlay, alpha, input, 1-alpha, 0, output);
+    cv::addWeighted(overlay, TRANSPARENCY_ALPHA, input, 1-TRANSPARENCY_ALPHA, 0, output);
 }
 

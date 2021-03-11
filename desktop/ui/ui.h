@@ -24,6 +24,12 @@ namespace ui {
         cv::Point p3,
         cv::Point p4,
         cv::Scalar color);
+
+    void clear_rect(
+        cv::Mat& src,
+        cv::Point topleft,
+        cv::Point bottomright,
+        cv::Scalar color);
 }
 
 #endif

@@ -21,6 +21,7 @@ namespace PalmSpaceUI {
 			int trial_start_btn_location,
 			bool trial_pause_before_each_target,
 			bool trial_show_button_during_trial,
+			int targets_cnt,
 			std::string window_name
 		) {
 		
@@ -151,7 +152,7 @@ namespace PalmSpaceUI {
 		m_trial_show_button_during_trial = false;
 		if (trial_show_button_during_trial) m_trial_show_button_during_trial = true;
 
-		
+		m_targetscnt = targets_cnt;
 	}
 
 
@@ -169,33 +170,34 @@ namespace PalmSpaceUI {
 			#ifdef REALSENSE_CAM
 				cvui::checkbox(frame, width - 120, height - 130, "Depth", &_depth);
 			#endif
-			cvui::window(frame, scalex + 10, scaley + 10, 100, 80, "Initiator");
-			cvui::checkbox(frame, scalex + 15, scaley + 30, "One Hand", &onehand);
-			cvui::checkbox(frame, scalex + 15, scaley + 50, "Two Hand", &twohand);
+			// cvui::window(frame, scalex + 10, scaley + 10, 100, 80, "Initiator");
+			// cvui::checkbox(frame, scalex + 15, scaley + 30, "One Hand", &onehand);
+			// cvui::checkbox(frame, scalex + 15, scaley + 50, "Two Hand", &twohand);
 
 
-			cvui::window(frame, scalex - 20, scaley + 100, 130, 140, "Anchor");
-			cvui::checkbox(frame, scalex - 15, scaley + 130, "Dynamic", &ancdyn);
-			cvui::checkbox(frame, scalex - 15, scaley + 150, "Static", &ancstat);
+			cvui::window(frame, scalex - 20, scaley + 10, 130, 100, "Anchor");
+			cvui::checkbox(frame, scalex - 15, scaley + 30, "S2H - relative", &ancdyn);
+			// cvui::checkbox(frame, scalex - 15, scaley + 150, "H2S - absolute", &ancstat);
 			// cvui::checkbox(frame, scalex - 15, scaley + 170, "MidAir", &ancmid);
-			cvui::checkbox(frame, scalex - 15, scaley + 170, "Hand to screen", &anchandtoscreen);
-			cvui::checkbox(frame, scalex - 15, scaley + 190, "Pad", &ancpad);
-			cvui::checkbox(frame, scalex - 15, scaley + 210, "Large Pad", &ancpadlarge);
+			// cvui::checkbox(frame, scalex - 15, scaley + 190, "Pad", &ancpad);
+			cvui::checkbox(frame, scalex - 15, scaley + 50, "S2H - absolute", &ancpadlarge);
+			cvui::checkbox(frame, scalex - 15, scaley + 70, "H2S - absolute", &anchandtoscreen);
 
+			
 
 			cvui::window(frame, scalex + 120, scaley + 10, 200, 80, "Trigger");
 			cvui::checkbox(frame, scalex + 125, scaley + 30, "Dwell", &trigdwell);
 			
-			cvui::checkbox(frame, scalex + 125, scaley + 50, "Tap Depth", &trigtapdepth);
-			cvui::checkbox(frame, scalex + 125, scaley + 70, "Tap", &trigtap);
+			// cvui::checkbox(frame, scalex + 125, scaley + 50, "Tap Depth", &trigtapdepth);
+			cvui::checkbox(frame, scalex + 125, scaley + 50, "Tap", &trigtap);
 			// cvui::checkbox(frame, scalex + 125, scaley + 30, "Thumb of base palm", &trigpalmbase);
 			// cvui::checkbox(frame, scalex + 125, scaley + 50, "Shoot", &trigpalmfree); // "Thumb of free palm"
 			// cvui::checkbox(frame, scalex + 125, scaley + 70, "Pinch with free palm", &trigpinch);
 			// cvui::checkbox(frame, scalex + 125, scaley + 90, "Tap Depth Distance", &trigdepthdistance);
 			// cvui::checkbox(frame, scalex + 125, scaley + 170, "Tap Depth Single", &trigtapdepthsingle);
 
-			if (cellcnt < 3) cellcnt = 3;
-			if (cellcnt > 9) cellcnt = 9;
+			if (cellcnt < 3) cellcnt = 9;
+			if (cellcnt > 9) cellcnt = 3;
 			cvui::window(frame, scalex + 120, scaley + 100, 200, 50, "Number of cells per row/col");
 			cvui::counter(frame, scalex + 175, scaley + 125, &cellcnt, 2);
 			
@@ -203,6 +205,12 @@ namespace PalmSpaceUI {
 			cvui::checkbox(frame, scalex + 125, scaley + 190, "Pause before each target", &m_trial_pause_before_each_target);
 			cvui::checkbox(frame, scalex + 125, scaley + 220, "Show button during trial", &m_trial_show_button_during_trial);
 			
+			cvui::window(frame, scalex + 120, scaley + 250, 200, 50, "Number of targets");
+			cvui::counter(frame, scalex + 175, scaley + 275, &m_targetscnt, 1);
+			if (m_targetscnt > 20) m_targetscnt = 1;
+			if (m_targetscnt < 1) m_targetscnt = 20;
+
+
 			cvui::window(frame, scalex + 330, scaley + 10, 100, 80, "Screen Size");
 			cvui::checkbox(frame, scalex + 330, scaley + 30, "Small", &screen_small);
 			cvui::checkbox(frame, scalex + 330, scaley + 50, "Large", &screen_large);
@@ -212,11 +220,11 @@ namespace PalmSpaceUI {
 			cvui::checkbox(frame, scalex + 330, scaley + 120, "Fixed", &visibility_fixed);
 			cvui::checkbox(frame, scalex + 330, scaley + 140, "Conditional", &visibility_conditional);
 
-			cvui::window(frame, scalex + 330, scaley + 180, 100, 100, "Start Button");
-			cvui::checkbox(frame, scalex + 330, scaley + 200, " Left", &trial_start_btn_location_left);
-			cvui::checkbox(frame, scalex + 330, scaley + 220, "Center", &trial_start_btn_location_center);
-			cvui::checkbox(frame, scalex + 330, scaley + 240, "Left Center", &trial_start_btn_location_left_center);
-			cvui::checkbox(frame, scalex + 330, scaley + 260, "Right Center", &trial_start_btn_location_right_center);
+			// cvui::window(frame, scalex + 330, scaley + 180, 100, 100, "Start Button");
+			// cvui::checkbox(frame, scalex + 330, scaley + 200, " Left", &trial_start_btn_location_left);
+			// cvui::checkbox(frame, scalex + 330, scaley + 220, "Center", &trial_start_btn_location_center);
+			// cvui::checkbox(frame, scalex + 330, scaley + 240, "Left Center", &trial_start_btn_location_left_center);
+			// cvui::checkbox(frame, scalex + 330, scaley + 260, "Right Center", &trial_start_btn_location_right_center);
 
 			if (cvui::button(frame, width - 120, height - 50, 100, 30, "Next")) {
 				if (is_valid()) {
@@ -258,7 +266,8 @@ namespace PalmSpaceUI {
 		int & depth,
 		int & trial_start_btn_location,
 		bool & trial_pause_before_each_target,
-		bool & trial_show_button_during_trial) {
+		bool & trial_show_button_during_trial,
+		int &targets_cnt) {
 
 		if (onehand) initiator = 1;
 		if (twohand) initiator = 2;
@@ -298,6 +307,7 @@ namespace PalmSpaceUI {
 		else if (trial_start_btn_location_left_center) trial_start_btn_location = 3;
 		else if (trial_start_btn_location_right_center) trial_start_btn_location = 4;
 
+		targets_cnt = m_targetscnt;
 	}
 
 
@@ -381,6 +391,13 @@ namespace PalmSpaceUI {
 			if (cnt != 1) {
 				valid = 0;
 				errormsg = "Select exactly 1 location for trial start button.";
+			}
+		}
+
+		if (valid) {
+			if (ancdyn && screen_large) {
+				valid = 0;
+				errormsg = "Better to use small screan size for relative hand to screen.";
 			}
 		}
 

@@ -27,7 +27,7 @@ void TriggerTap::update(
     if (m_diff < -1) {
         if (cur_state != TRIGGER::PRESSED) {
             m_cnt_positive ++;
-            if (m_cnt_positive > 2) {
+            if (m_cnt_positive > 1) {
                 cur_state = TRIGGER::PRESSED;
                 m_cnt = 0;
                 m_cnt_positive = 0;

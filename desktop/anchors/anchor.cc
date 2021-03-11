@@ -1,8 +1,4 @@
-#include "anchors.h"
-
-#include "mediapipe/framework/port/opencv_highgui_inc.h"
-#include "mediapipe/framework/port/opencv_imgproc_inc.h"
-#include "mediapipe/framework/port/opencv_video_inc.h"
+#include "anchor.h"
 
 
 Anchor::Anchor() {
@@ -28,10 +24,10 @@ std::tuple<int, int> Anchor::selectedIndexes() {
 }
 
 void Anchor::highlightSelected() {
-    green_i = m_selected_i;
-    green_j = m_selected_j;
+    m_marked_i = m_selected_i;
+    m_marked_j = m_selected_j;
 
-    message_selected = "Selected: " + std::to_string(m_grid.m_divisions*(green_j-1) + green_i);
+    message_selected = "Selected: " + std::to_string(m_grid.m_divisions*(m_marked_j-1) + m_marked_i);
 }
 
 void Anchor::setDivisions(int _divisions) {
@@ -145,7 +141,7 @@ void Anchor::drawTextHighlighted(cv::Mat & overlay) {
 
 
 void Anchor::drawTextSelected(cv::Mat & overlay) {
-    if (green_i != -1) {
+    if (m_marked_i != -1) {
         cv::putText(overlay, //target image
             message_selected, //text
             cv::Point(5, 80), //top-left position
@@ -239,7 +235,7 @@ void Anchor::draw_cells(cv::Mat & src, const Grid & grid) {
     for (int i = 1; i <= grid.m_divisions; i ++ ) {
         for (int j = 1; j <= grid.m_divisions; j ++) {
             color_cur = color_red;
-            if (i == green_i && j == green_j) {
+            if (i == m_marked_i && j == m_marked_j) {
                 color_cur = color_green;
             }
 
@@ -274,7 +270,30 @@ bool Anchor::is_selection_changed() {
 }
 
 
-void Anchor::reset_selection_prior_trigger() {
+void Anchor::adjust_selection_prior_trigger() {
     m_selected_i = m_past_selections[(m_cur_time_id+3)%m_past_selections_size].first;
     m_selected_j = m_past_selections[(m_cur_time_id+3)%m_past_selections_size].second;
+}
+
+
+void Anchor::reset_selection() {
+    m_selected_i_prv = -1, m_selected_j_prv = -1;
+    m_selected_i = -1, m_selected_j = -1;
+}
+
+
+void Anchor::reset_marked_cell() {
+    m_marked_i = -1, m_marked_j = -1;
+}
+
+
+
+void Anchor::setup_background(cv::Mat & _background, std::string _imagePath, int _width, int _height) {
+    _background = cv::imread(_imagePath, CV_LOAD_IMAGE_UNCHANGED);
+    cv::resize(_background, _background, cv::Size(_width, _height));
+}
+
+
+bool Anchor::is_anycell_marked() {
+    return (m_marked_i != -1 && m_marked_j != -1);
 }

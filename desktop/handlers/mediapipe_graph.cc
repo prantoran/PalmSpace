@@ -404,7 +404,8 @@ void MediaPipeMultiHandGPU::debug(
     camera->rgb(camera_frame);
 
 
-    if (anchor->m_type == choices::anchor::PADLARGE) {
+    if (anchor->m_type == choices::anchor::PADLARGE || 
+        anchor->m_type == choices::anchor::HANDTOSCREEN) {
       camera_frame.copyTo(m_depth_map);
     }
 
@@ -700,7 +701,7 @@ void MediaPipeMultiHandGPU::debug(
         
         case TRIGGER::PRESSED:
 
-          anchor->reset_selection_prior_trigger();
+          anchor->adjust_selection_prior_trigger();
 
           anchor->lock_selection();
         
@@ -738,7 +739,6 @@ void MediaPipeMultiHandGPU::debug(
       if (trial) {
         if (trial->started()) {
             trial->draw_target(m_primary_output, anchor->m_grid_out);
-
         }
       }
       if (anchor->m_type == choices::anchor::PADLARGE) {
@@ -775,13 +775,37 @@ void MediaPipeMultiHandGPU::debug(
               std::max(index_tip.x + 100, thumb_tip.x + 10),
               std::max(index_tip.y + 100, std::max(thumb_base.y + 10, thumb_tip.y + 10))));
         }
+      } else if (anchor->m_type == choices::anchor::HANDTOSCREEN) {
+        
+        trial->update_start_button_input_loc(
+          cv::Point(
+            anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10,
+            anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 - anchor->m_grid_out.m_dy_row
+          ),
+          cv::Point(
+            anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 2*anchor->m_grid_out.m_dx_col,
+            anchor->m_grid_out.m_y_rows[0] + + anchor->m_grid_out.m_height/2 + anchor->m_grid_out.m_dy_row
+          )
+        );
+
+        trial->draw_start_button(
+          m_primary_output,
+          cv::Point(
+            anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10,
+            anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 - anchor->m_grid_out.m_dy_row
+          ),
+          cv::Point(
+            anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + anchor->m_grid_out.m_dx_col,
+            anchor->m_grid_out.m_y_rows[0] + + anchor->m_grid_out.m_height/2 + anchor->m_grid_out.m_dy_row
+          )
+        );
       } else {
         trial->update_start_button_input_loc(anchor->m_grid);
         trial->draw_start_button(m_primary_output);
       }
 
 
-      if (anchor->m_type != choices::anchor::DYNAMIC) {
+      if (anchor->m_type == choices::anchor::PADLARGE) {
 
         int g_c_x, g_c_y, go_c_x, go_c_y;
 

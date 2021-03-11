@@ -44,6 +44,8 @@ namespace PalmSpaceUI {
         bool m_trial_pause_before_each_target;
         bool m_trial_show_button_during_trial;
 
+        int m_targetscnt;
+
         public:
         
         Menu(
@@ -60,6 +62,7 @@ namespace PalmSpaceUI {
             int trial_start_btn_location,
             bool trial_pause_before_each_target,
 			bool trial_show_button_during_trial,
+            int targets_cnt,
             std::string window_name
         );
 
@@ -76,7 +79,8 @@ namespace PalmSpaceUI {
             int & depth,
             int & trial_start_btn_location,
             bool & trial_pause_before_each_target,
-            bool & trial_show_button_during_trial);
+            bool & trial_show_button_during_trial,
+            int & targets_cnt);
 
         bool is_valid();
     };

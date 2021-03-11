@@ -38,9 +38,9 @@ void AnchorDynamic::initiate() {
   
   color_green = COLORS_darkgreen;
 
-  m_selected_i_prv = -1, m_selected_j_prv = -1;
-  m_selected_i = -1, m_selected_j = -1;
-  green_i = -1, green_j = -1;
+  reset_selection();
+  
+  reset_marked_cell();
 
   m_static_display = false;
 
@@ -126,7 +126,7 @@ void AnchorDynamic::draw(
 
     drawProgressBar(overlay, params);
     
-    cv::addWeighted(overlay, alpha, input, 1-alpha, 0, output);
+    cv::addWeighted(overlay, TRANSPARENCY_ALPHA, input, 1-TRANSPARENCY_ALPHA, 0, output);
 }
 
 

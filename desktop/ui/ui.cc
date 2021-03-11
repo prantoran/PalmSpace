@@ -71,4 +71,21 @@ namespace ui {
             0
         );
     }
+
+
+    void clear_rect(
+        cv::Mat& src,
+        cv::Point topleft,
+        cv::Point bottomright,
+        cv::Scalar color) {
+
+        clear_rectangle(
+            src,
+            topleft,
+            cv::Point(topleft.x, bottomright.y),
+            bottomright,
+            cv::Point(bottomright.x, topleft.y),
+            color
+        );
+    }
 }

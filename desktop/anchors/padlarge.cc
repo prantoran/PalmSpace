@@ -26,12 +26,16 @@ AnchorPadLarge::AnchorPadLarge(
     color_blue = blue;
 
     setup_palmiamge(imagePath, _width, _height);
-    setup_background(imagePathBackground, _width, _height);
+    setup_background(m_background, imagePathBackground, _width, _height);
+
+
+    m_grid_out.m_width_min  = std::max(0, (0*image_palm.cols/150) + ((2*image_palm.cols)/5));
+    m_grid_out.m_height_min = std::max(0, (image_palm.rows/10) + (image_palm.rows/2));
 }
 
 
 void AnchorPadLarge::initiate() {
-    name = "pad large";
+    name = "padlarge";
     m_type = choices::anchor::PADLARGE;
 
     width = 0;
@@ -44,13 +48,11 @@ void AnchorPadLarge::initiate() {
     color_blue = COLORS_blue;
     color_green = COLORS_darkgreen;
 
-    m_selected_i_prv = -1, m_selected_j_prv = -1;
-    m_selected_i = -1, m_selected_j = -1;
-    green_i = -1, green_j = -1;
+    reset_selection();
+    
+    reset_marked_cell();
 
     m_static_display = false;
-
-    palm_ubx = 0, palm_uby = 0; // used as bounds for palm image
 
     indexbase_x = 0, indexbase_y = 0;
     palmbase_x = 0, palmbase_y = 0;
@@ -61,12 +63,6 @@ void AnchorPadLarge::initiate() {
     reset_grids();
 }
 
-void AnchorPadLarge::setup_background(std::string _imagePath, int _width, int _height) {
-    m_background = cv::imread(_imagePath, CV_LOAD_IMAGE_UNCHANGED);
-    // cv::imshow("test", m_background);
-    // cv::waitKey(0);
-    cv::resize(m_background, m_background, cv::Size(_width, _height));
-}
 
 void AnchorPadLarge::setup_palmiamge(std::string imagePath, int _width, int _height) {
     // only take .png as it has alpha channel for transparency
@@ -88,14 +84,6 @@ void AnchorPadLarge::setup_palmiamge(std::string imagePath, int _width, int _hei
     cv::Mat cs[3] = { rgbLayer[0],rgbLayer[1],rgbLayer[2] };
     cv::merge(cs, 3, image_palm);  // glue together again
     mask = rgbLayer[3];       // png's alpha channel used as mask
-
-
-    // cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-    // cv::imshow("Display window", mask);                   // Show our image inside it.
-    // cv::waitKey(0);
-
-    m_grid_out.m_width_min  = std::max(0, (0*image_palm.cols/150) + ((2*image_palm.cols)/5));
-    m_grid_out.m_height_min = std::max(0, (image_palm.rows/10) + (image_palm.rows/2));
 }
 
 
@@ -109,13 +97,16 @@ void AnchorPadLarge::calculate(
     if (!width || !height) {
         setConfig(input.size().width, input.size().height);
         m_grid_out.align((image_palm.cols/40) + image_palm.cols/5, params.m_frame_height-(5*image_palm.rows/7));
+
     }
     
-    m_palm_x = params.palm_width();
-    m_palm_y = params.palm_height();
-    
-    m_grid.m_width_min  = std::min((double)params.m_frame_width, m_palm_x.second  - m_palm_x.first);
-    m_grid.m_height_min = std::min((double)params.m_frame_height, m_palm_y.second - m_palm_y.first);
+    {   // adaptive input surface    
+        m_palm_x = params.palm_width();
+        m_palm_y = params.palm_height();
+        
+        m_grid.m_width_min  = std::min((double)params.m_frame_width, m_palm_x.second  - m_palm_x.first);
+        m_grid.m_height_min = std::min((double)params.m_frame_height, m_palm_y.second - m_palm_y.first);
+    }
 
     indexbase_x = params.m_indexbase.x();
     indexbase_y = params.m_indexbase.y();
@@ -140,8 +131,6 @@ void AnchorPadLarge::calculate(
         params.set_selected_cell(m_selected_i, m_selected_j);
     } else {
         m_indexbase.reset();
-        // m_grid.reset();
-        // m_grid_out.reset();
     }
 }
 
@@ -162,19 +151,9 @@ void AnchorPadLarge::draw(
         cv::Scalar(0, 0, 0)
     );
 
-
     m_background.copyTo(output);
 
-    // output = cv::Mat(
-    //     input.rows,
-    //     input.cols,
-    //     CV_8UC3,
-    //     cv::Scalar(0, 0, 0)
-    // );
-
-
-
-    if (params.m_palmbase.x() != -1) { // putting palm when palm coord detected
+    if (params.m_palmbase.x() > 0) { // putting palm when palm coord detected
         image_palm.copyTo(
             output(
                 cv::Rect(
@@ -186,18 +165,8 @@ void AnchorPadLarge::draw(
             ), 
             mask
         );
-
-        // ui::clear_rectangle(
-        //     overlay,
-        //     cv::Point(m_grid.m_x_cols[0], m_grid.m_y_rows[0]),                            // start & end points 
-        //     cv::Point(m_grid.m_x_cols[0], m_grid.m_y_rows[0]+m_grid.m_height),
-        //     cv::Point(m_grid.m_x_cols[0] + m_grid.m_width, m_grid.m_y_rows[0]+m_grid.m_height),                            // start & end points 
-        //     cv::Point(m_grid.m_x_cols[0] + m_grid.m_width, m_grid.m_y_rows[0]),                            // start & end points 
-        //     COLORS_floralwhite
-        // );
     }
     
-
     draw_main_grid_layout(overlay, m_grid_out);
 
     draw_cells(overlay, m_grid_out);
@@ -207,7 +176,7 @@ void AnchorPadLarge::draw(
 
     drawProgressBar(overlay, params);
 
-    cv::addWeighted(overlay, alpha, output, 1-alpha, 0, output);
+    cv::addWeighted(overlay, TRANSPARENCY_ALPHA, output, 1-TRANSPARENCY_ALPHA, 0, output);
     // cv::addWeighted(overlay, alpha, input, 1-alpha, 0, output);
 }
 

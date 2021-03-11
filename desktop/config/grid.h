@@ -14,6 +14,9 @@ class Grid {
   void reset_dimensions();
   cv::Point get_bottom_right() const;
   cv::Point get_top_left() const;
+  cv::Point get_bottom_left() const;
+  cv::Point get_top_right() const;
+
   cv::Rect get_bound_rect() const;
   void reset();
   int arg_x(int pointer_x) const;

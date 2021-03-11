@@ -23,9 +23,18 @@ cv::Point Grid::get_bottom_right() const {
 }
 
 
-
 cv::Point Grid::get_top_left() const {
     return cv::Point(m_x_cols[0], m_y_rows[0]);
+}
+
+
+cv::Point Grid::get_top_right() const {
+    return cv::Point(m_x_cols[0]+m_width, m_y_rows[0]);
+}
+
+
+cv::Point Grid::get_bottom_left() const {
+    return cv::Point(m_x_cols[0], m_y_rows[0]+m_height);
 }
 
 
