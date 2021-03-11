@@ -65,7 +65,7 @@ class Anchor { // interface via abstract class
 
     std::tuple<int, int> selectedIndexes();
 
-    void highlightSelected();
+    void markSelected();
     void setDivisions(int _divisions);
     int getDivisions();
     void drawProgressBar(cv::Mat & _image, Parameters & params);
@@ -94,7 +94,6 @@ class Anchor { // interface via abstract class
     void draw_main_grid_layout(cv::Mat & src, const Grid & grid);
     void draw_cells(cv::Mat & src, const Grid & grid);
 
-    bool is_selection_changed();
     void adjust_selection_prior_trigger();
 
     void reset_selection();
@@ -104,8 +103,6 @@ class Anchor { // interface via abstract class
         std::string _imagePath, 
         int _width, 
         int _height);
-    
-    bool is_anycell_marked();
 };
 
 
