@@ -13,8 +13,8 @@ class ScreenSize {
         int max_height) {
         switch (size) {
             case choices::SMALL:
-                min_width = max_width/5;
-                min_height = max_height/5;
+                min_width = max_width/4;
+                min_height = max_height/4;
                 break;
             case choices::LARGE:
                 min_width = (3*max_width)/5;

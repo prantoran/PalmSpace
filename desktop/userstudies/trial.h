@@ -60,7 +60,7 @@ namespace userstudies {
             cv::Point _topleft,
             cv::Point _bottomright);
         void draw_start_button(cv::Mat & output_frame);
-        void process_is_button_clicked(int cursor_x_col, int cursor_y_row);
+        bool process_is_button_clicked(int cursor_x_col, int cursor_y_row);
         void generate_sample_space();
         void generate_random_target_sequence(int n);
         std::pair<int, int> current_target();

@@ -120,55 +120,6 @@ void MediaPipeMultiHandGPU::debug(
       2);
   }
 
-
-  // cv::putText(
-  //   m_primary_output,
-  //   "pbidx",
-  //   cv::Point(
-  //     std::get<0>(points[params.m_base_id][0]) * params.m_frame_width,
-  //     std::get<1>(points[params.m_base_id][0]) * params.m_frame_height
-  //   ),
-  //   cv::FONT_HERSHEY_DUPLEX,
-  //   1.0,
-  //   cv::Scalar(0, 255, 0),
-  //   2 
-  // );
-
-  // cv::putText(
-  //   m_primary_output,
-  //   "ibidx",
-  //   cv::Point(
-  //     std::get<0>(points[params.m_base_id][17]) * params.m_frame_width,
-  //     std::get<1>(points[params.m_base_id][17]) * params.m_frame_height
-  //   ),
-  //   cv::FONT_HERSHEY_DUPLEX,
-  //   1.0,
-  //   cv::Scalar(0, 255, 0),
-  //   2
-  // );
-
-  int x_col, y_row;
-  params.get_primary_cursor_cv_indices(x_col, y_row);
-
-  cv::circle(
-    m_primary_output,
-    cv::Point(x_col, y_row), // cv::Point takex x(col) axis, y(row) axis
-    10,
-    cv::Scalar(0, 255, 0),
-    cv::FILLED,
-    cv::LINE_8
-  );
-
-  // cv::rectangle(
-  //   m_primary_output,
-  //   cv::Point(params.m_flood_width.m_lower_bound, params.m_flood_height.m_lower_bound),
-  //   cv::Point(params.m_flood_width.m_upper_bound, params.m_flood_height.m_upper_bound),
-  //   cv::Scalar(255, 255, 0), 
-  //   2, 
-  //   8, 
-  //   0
-  // );
-
   if (!m_depth_map.empty()) { 
     cv::rectangle(
       m_depth_map,
@@ -180,14 +131,15 @@ void MediaPipeMultiHandGPU::debug(
       0
     );
 
-
-    ui::clear_rectangle(
-      m_depth_map,
-      cv::Point(anchor->m_grid.m_x_cols[0],  anchor->m_grid.m_y_rows[0]),                            // start & end points 
-      cv::Point(anchor->m_grid.m_x_cols[0],  anchor->m_grid.m_y_rows[0] + anchor->m_grid.m_height),
-      cv::Point(anchor->m_grid.m_x_cols[0] + anchor->m_grid.m_width,      anchor->m_grid.m_y_rows[0] + anchor->m_grid.m_height),                            // start & end points 
-      cv::Point(anchor->m_grid.m_x_cols[0] + anchor->m_grid.m_width,      anchor->m_grid.m_y_rows[0]),                            // start & end points 
-      COLORS_floralwhite);
+    if (anchor->m_type == choices::anchor::PADLARGE) {
+      ui::clear_rectangle(
+        m_depth_map,
+        cv::Point(anchor->m_grid.m_x_cols[0],  anchor->m_grid.m_y_rows[0]),                            // start & end points 
+        cv::Point(anchor->m_grid.m_x_cols[0],  anchor->m_grid.m_y_rows[0] + anchor->m_grid.m_height),
+        cv::Point(anchor->m_grid.m_x_cols[0] + anchor->m_grid.m_width,      anchor->m_grid.m_y_rows[0] + anchor->m_grid.m_height),                            // start & end points 
+        cv::Point(anchor->m_grid.m_x_cols[0] + anchor->m_grid.m_width,      anchor->m_grid.m_y_rows[0]),                            // start & end points 
+        COLORS_floralwhite);
+    }
 
     if (params.is_set_primary_cursor()) {
       cv::circle(
@@ -206,50 +158,6 @@ void MediaPipeMultiHandGPU::debug(
     }
   }
 
-  // std::cerr << "about to print palmbase\n";
-  // if (params.m_palmbase.is_set()) {
-  //   cv::putText(
-  //     m_primary_output,
-  //     "palmbs",
-  //     cv::Point(
-  //       params.m_palmbase.x() * params.m_frame_width,
-  //       params.m_palmbase.y() * params.m_frame_height
-  //     ),
-  //     cv::FONT_HERSHEY_DUPLEX,
-  //     1.0,
-  //     cv::Scalar(139, 0, 139),
-  //     2
-  //   );
-  // }
-
-
-  // std::cerr << "about to print indexbase\n";
-  // if (params.m_indexbase.is_set()) {
-  //   cv::putText(
-  //     m_primary_output,
-  //     "indexbs",
-  //     cv::Point(
-  //       params.m_indexbase.x() * params.m_frame_width,
-  //       params.m_indexbase.y() * params.m_frame_height
-  //     ),
-  //     cv::FONT_HERSHEY_DUPLEX,
-  //     1.0,
-  //     cv::Scalar(139, 0, 139),
-  //     2
-  //   );
-  // }
-
-  // int xcol, yrow;
-  // params.get_primary_cursor_cv_indices(xcol, yrow);
-  // cv::putText(
-  //   m_primary_output,
-  //   "primary cursor",
-  //   cv::Point(xcol, yrow),
-  //   cv::FONT_HERSHEY_DUPLEX,
-  //   1.0,
-  //   cv::Scalar(139, 0, 139),
-  //   2);
-
   if (params.m_show_depth_txt) {
     int xcol, yrow;
     params.get_primary_cursor_cv_indices(xcol, yrow);
@@ -262,22 +170,6 @@ void MediaPipeMultiHandGPU::debug(
       cv::Scalar(139, 0, 139),
       2);
   }
-
-
-  // int x_col_palmid, y_row_palmid;
-  // params.get_palmbase_middle_cv_indices(x_col_palmid, y_row_palmid);
-  // cv::putText(
-  //   m_primary_output,
-  //   "palmmid",
-  //   cv::Point(
-  //     x_col_palmid,
-  //     y_row_palmid
-  //   ),
-  //   cv::FONT_HERSHEY_DUPLEX,
-  //   1.0,
-  //   cv::Scalar(139, 0, 139),
-  //   2
-  // );
 }
 
 
@@ -690,8 +582,6 @@ void MediaPipeMultiHandGPU::debug(
       interface_scaling_factor,
       cursor_x, cursor_y, params); 
 
-
-    params.m_selection_changed = anchor->is_selection_changed();
     
     if (show_display || anchor->m_static_display) {
 
@@ -706,14 +596,17 @@ void MediaPipeMultiHandGPU::debug(
           anchor->lock_selection();
         
         case TRIGGER::RELEASED:
+
           if (!trial || trial->started()) {
             
-            anchor->highlightSelected();
+            anchor->markSelected();
             anchor->unlock_selection();
           }
 
           if (trial) {
-            trial->process_is_button_clicked(cursor_x, cursor_y);
+            if (trial->process_is_button_clicked(cursor_x, cursor_y)) {
+              anchor->reset_selection();
+            }
             
             if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
               trial->process_correct_selection();

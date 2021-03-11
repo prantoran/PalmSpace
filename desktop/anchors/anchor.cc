@@ -23,7 +23,7 @@ std::tuple<int, int> Anchor::selectedIndexes() {
     return std::make_tuple(m_selected_i, m_selected_j);
 }
 
-void Anchor::highlightSelected() {
+void Anchor::markSelected() {
     m_marked_i = m_selected_i;
     m_marked_j = m_selected_j;
 
@@ -264,12 +264,6 @@ void Anchor::draw_cells(cv::Mat & src, const Grid & grid) {
 }
 
 
-
-bool Anchor::is_selection_changed() {
-    return !((m_selected_i == m_selected_i_prv) && (m_selected_j == m_selected_j_prv));
-}
-
-
 void Anchor::adjust_selection_prior_trigger() {
     m_selected_i = m_past_selections[(m_cur_time_id+3)%m_past_selections_size].first;
     m_selected_j = m_past_selections[(m_cur_time_id+3)%m_past_selections_size].second;
@@ -293,7 +287,3 @@ void Anchor::setup_background(cv::Mat & _background, std::string _imagePath, int
     cv::resize(_background, _background, cv::Size(_width, _height));
 }
 
-
-bool Anchor::is_anycell_marked() {
-    return (m_marked_i != -1 && m_marked_j != -1);
-}

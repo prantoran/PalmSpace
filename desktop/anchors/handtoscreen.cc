@@ -269,6 +269,7 @@ void AnchoHandToScreen::draw(
         );
     }
 
+
     draw_main_grid_layout(overlay, m_grid_out);
 
     draw_cells(overlay, m_grid_out);
