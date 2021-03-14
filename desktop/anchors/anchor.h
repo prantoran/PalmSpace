@@ -22,6 +22,7 @@ class Anchor { // interface via abstract class
     Grid m_grid, m_grid_out;
 
     double palmbase_x, palmbase_y;
+    double palmbase_right_x, palmbase_right_y;
     double indexbase_x, indexbase_y;
 
     cv::Scalar color_red, color_blue, color_green, color_cur;
@@ -44,6 +45,8 @@ class Anchor { // interface via abstract class
     std::vector<std::pair<int, int>> m_past_selections;
     int m_cur_time_id, m_past_selections_size;
     
+    int m_visited_cells;
+
     Anchor();
     virtual ~Anchor();
 
@@ -71,13 +74,14 @@ class Anchor { // interface via abstract class
     void drawProgressBar(cv::Mat & _image, Parameters & params);
 
     void setupGrid(double enlarged_topleft_x, double enlarged_topleft_y);
-    void setupSelection(int index_pointer_x, int index_pointer_y, 
+    void setupSelection(int cursor_x, int cursor_y, 
         int & selected_row_i, int & selected_col_j);
     
     void drawTextHighlighted(cv::Mat & overlay);
     void drawTextSelected(cv::Mat & overlay);
     
     void reset_palmbase();
+    void reset_palmbase_right();
     void reset_indexbase();
     void reset_grids();
 

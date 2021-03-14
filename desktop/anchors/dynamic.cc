@@ -54,7 +54,10 @@ void AnchorDynamic::initiate() {
 
   reset_grids();
   reset_palmbase();
+  reset_palmbase_right();
   reset_indexbase();
+
+  m_visited_cells = 0;
 }
 
 

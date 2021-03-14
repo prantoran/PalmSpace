@@ -38,7 +38,6 @@ namespace userstudies {
             m_topleft,
             m_bottomright
         );
-
     }
 
 
@@ -106,8 +105,6 @@ namespace userstudies {
         cv::Point _topleft,
         cv::Point _bottomright) {
         
-        
-        
         if (m_state == TrialState::STARTED) {
             m_btn_color = cv::Scalar(220,248,255);
         }
@@ -139,7 +136,6 @@ namespace userstudies {
 
             if (m_button_state == ButtonState::OPEN) {
                 m_button_state = ButtonState::READY;
-                // std::cout << "button state from open to ready\n";
                 m_last_trial_end_time = std::chrono::steady_clock::now();
             }
         } 
@@ -188,9 +184,11 @@ namespace userstudies {
 
 
 
-    bool Trial::process_is_button_clicked(int cursor_x_col, int cursor_y_row) {
-        
+    bool Trial::is_button_clicked(int cursor_x_col, int cursor_y_row) {
+
+
         auto diff =  (std::chrono::steady_clock::now() - m_last_trial_end_time).count();
+        
         // std::cout << "diff:" << diff <<  "\n";
         if (m_state == TrialState::OPEN and diff < 1050000000) {
             return false;
@@ -200,17 +198,9 @@ namespace userstudies {
                 return false;
         }
         
-        
         if (m_start_btn.contains(
             cv::Point(cursor_x_col, cursor_y_row)
         )) {
-            m_state = TrialState::STARTED;
-            if (m_trial_pause_before_each_target) {
-                m_start_btn_label = "NEXT";
-            }
-            
-            _set_cur_target_start_time();
-
 
             return true;
         } 
@@ -219,22 +209,41 @@ namespace userstudies {
     }
 
 
-    void Trial::generate_random_target_sequence(int n) {
+    void Trial::process_button_clicked() {
+        m_state = TrialState::STARTED;
+        if (m_trial_pause_before_each_target) {
+            m_start_btn_label = "NEXT";
+        }
+        
+        _set_cur_target_start_time();
+    }
+
+
+    void Trial::init_datastores(int n) {
         m_target_sequence.resize(n);
         m_time_taken.resize(n);
         m_trial_start_times.resize(
             n, std::chrono::time_point<std::chrono::steady_clock>());
         m_trial_end_times.resize(
             n, std::chrono::time_point<std::chrono::steady_clock>());
+        m_dist_traveled_px.resize(n, 0);
+
+        m_last_cursor_pos_for_targets.resize(n, std::make_pair(-1, -1));
+
+        m_attempts.resize(n, 0);
+        m_visited_cells.resize(n, 0);
 
         for (int i = 0; i < n; i ++) {
-            int j = rand() % (m_sample_space_size-i) + i;
-            std::cout << "j:" << j << "\n";
-            m_target_sequence[i] = m_sample_space[j];
+            m_target_sequence[i] = m_sample_space[i];
         }
 
         m_target_sequence_size = n;
         m_target_id = 0;
+    
+        for (int i = 0;i < 2; i ++) {
+            m_dist_travelled_palms[i].resize(n, 0);
+            m_palm_base_last_pos[i].resize(n, std::make_pair(-1, -1));
+        }
     }
 
 
@@ -246,14 +255,10 @@ namespace userstudies {
             m_sample_space_size = m_divisions*m_divisions;
         }
 
-        // std::cerr << "m_sample_space_size:" << m_sample_space_size << "\n";
         m_sample_space.resize(m_sample_space_size);
 
-
         for (int i = 0; i < m_divisions; i ++) {
-            // std::cerr << "i:" << i << "\n";
             for (int j = 0; j < m_divisions; j ++) {
-                // std::cerr << "\tj:" << j << "\n";
                 if (i == (m_divisions/2) && j == (m_divisions/2) && m_start_btn_loc == Location::CENTER) {
                     continue;
                 }
@@ -262,9 +267,10 @@ namespace userstudies {
             }
         }
 
-        // for (int i = 0 ;  i < m_sample_space_size; i ++) {
-        //     std::cerr << "(" << m_sample_space[i].first << ", " << m_sample_space[i].second << ")\n"; 
-        // }
+        for (int i = 0; i < m_sample_space_size; i ++) {
+            int j = rand() % (m_sample_space_size-i) + i;
+            std::swap(m_sample_space[i], m_sample_space[j]);
+        }
     }
 
 
@@ -308,22 +314,25 @@ namespace userstudies {
     }
 
 
-    void Trial::process_correct_selection() {
+    void Trial::update_cur_target_time() {
         
         m_trial_end_times[m_target_id] = std::chrono::steady_clock::now();
 
         m_time_taken[m_target_id] = 
                 m_trial_end_times[m_target_id] - m_trial_start_times[m_target_id];
-        
-        m_target_id ++;
 
+        m_last_trial_end_time = std::chrono::steady_clock::now(); 
+    }
+
+
+    void Trial::move_to_next_target() {
+        m_target_id ++;
+        
         if (m_trial_pause_before_each_target) {
             m_state = TrialState::PAUSED;
         } else {
             _set_cur_target_start_time();
         }
-
-        m_last_trial_end_time = std::chrono::steady_clock::now(); 
     }
 
     
@@ -336,5 +345,64 @@ namespace userstudies {
         if (done()) return;
         m_trial_start_times[m_target_id] = std::chrono::steady_clock::now();;
     }
+
+    void Trial::update_cur_target_distance_traveled(int cursor_x_col, int cursor_y_row) {
+
+        const std::pair<int, int> & p = m_last_cursor_pos_for_targets[m_target_id];
+
+        if (p.first > 0 && p.second > 0) {
+            m_dist_traveled_px[m_target_id] += sqrt(
+                                                    (cursor_x_col-p.first)*(cursor_x_col-p.first) + 
+                                                    (cursor_y_row-p.second)*(cursor_y_row-p.second)
+                                                );
+        } else {
+            m_dist_traveled_px[m_target_id] = 0;
+        }
+
+        m_last_cursor_pos_for_targets[m_target_id] = {cursor_x_col, cursor_y_row};
+    }
+
+
+    void Trial::increment_attempts() {
+        m_attempts[m_target_id] ++;
+    }
+
+    
+    void Trial::update_left_palm_distance(int palmbase_x, int palmbase_y) {
+        _upd_palm_dist(0, palmbase_x, palmbase_y);
+    }
+
+
+    void Trial::update_right_palm_distance(int palmbase_x, int palmbase_y) {
+        _upd_palm_dist(1, palmbase_x, palmbase_y);
+    }
+
+
+    void Trial::_upd_palm_dist(int palm_id, int _x, int _y) {
+        
+        const std::pair<int, int> & p = m_palm_base_last_pos[palm_id][m_target_id];
+        
+        if (p.first >= 0 && p.second >= 0 && _x >= 0 && _y >= 0) {
+            m_dist_travelled_palms[palm_id][m_target_id] += sqrt(
+                                                    (_x - p.first)  * (_x - p.first) +
+                                                    (_y - p.second) * (_y - p.second)
+                                                );   
+        }
+
+        m_palm_base_last_pos[palm_id][m_target_id] = {_x, _y};
+    }
+
+
+    void Trial::draw_completed_targets_text(cv::Mat & output_frame) {
+        cv::putText(
+            output_frame,
+            std::to_string(m_target_id) + "/" + std::to_string(m_target_sequence_size),
+            cv::Point(output_frame.cols-110, output_frame.rows-20),
+            cv::FONT_HERSHEY_DUPLEX,
+            1.0,
+            cv::Scalar(240, 240, 200),
+            2);
+    }
+
 };
 

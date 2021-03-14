@@ -82,7 +82,7 @@ void Anchor::drawProgressBar(cv::Mat & _image, Parameters & params) {
 
 
 void Anchor::setupSelection(
-    int index_pointer_x, int index_pointer_y, 
+    int cursor_x, int cursor_y, 
     int & selected_row_i, int & selected_col_j) {
     // checks whether index_pointer is within a til in the grid,
     // if yes then setup selected i,j and message
@@ -95,10 +95,10 @@ void Anchor::setupSelection(
         return; 
     } 
 
-    if (index_pointer_x != -1 && index_pointer_y != -1) {
+    if (cursor_x != -1 && cursor_y != -1) {
 
-        selected_row_i = m_grid.arg_x(index_pointer_x);
-        selected_col_j = m_grid.arg_y(index_pointer_y);
+        selected_row_i = m_grid.arg_x(cursor_x);
+        selected_col_j = m_grid.arg_y(cursor_y);
 
         if (selected_row_i == -1 || selected_col_j == -1) {
             selected_row_i = -1;
@@ -109,20 +109,20 @@ void Anchor::setupSelection(
             if (selected_row_i != m_selected_i_prv || selected_col_j != m_selected_j_prv) {
                 message = "Highlighted: ";
                 message += std::to_string((selected_col_j-1)*m_grid.m_divisions + selected_row_i);
+                m_visited_cells ++;
             }
         } else {
             selected_row_i = m_selected_i_prv;
             selected_col_j = m_selected_j_prv;
         }
 
-        m_past_selections[m_cur_time_id] = {selected_row_i, selected_col_j};
-
+        if (selected_row_i >= 0 && selected_col_j >= 0) {
+            m_past_selections[m_cur_time_id] = {selected_row_i, selected_col_j};
         // selected_row_i = m_past_selections[(m_cur_time_id-1+m_past_selections_size)%m_past_selections_size].first;
         // selected_col_j = m_past_selections[(m_cur_time_id-1+m_past_selections_size)%m_past_selections_size].second;
-        
-        m_cur_time_id = (m_cur_time_id + 1) % m_past_selections_size;
+            m_cur_time_id = (m_cur_time_id + 1) % m_past_selections_size;
+        }
     }
-
 }
 
 
@@ -160,6 +160,12 @@ void Anchor::reset_palmbase() {
     // TODO check whether logical to reset grid dimensions
     m_grid.reset_dimensions();
     m_grid_out.reset_dimensions();
+}
+
+
+void Anchor::reset_palmbase_right() {
+    palmbase_right_x = -1;
+    palmbase_right_y = -1;
 }
 
 

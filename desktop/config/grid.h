@@ -24,6 +24,7 @@ class Grid {
   void align(double topleft_x, double topleft_y);
   cv::Rect get_cell(int i, int j) const;
   void get_center_cv(int & _col_width, int & _row_height);
+  bool is_inside_cv(int _col_x, int _row_y) const;
 };
 
 

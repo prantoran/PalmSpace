@@ -17,6 +17,8 @@ namespace choices {
             PAD,
             PADLARGE
         };
+
+        std::string str(const types & a);
     }
 
     // TODO clean up unused
@@ -55,24 +57,15 @@ namespace choices {
         CONDITIONAL,
     };
 
+
     eScreenSize getScreenSize(int choice_screensize);
 
-    // external linkage, to make it visible to linker when processing other translation units,
-    // apart from the one this header file will be a part of.
     extern std::unordered_map <int, choices::eScreenSize> from_int_to_eScreenSize;
    
 
     eVisibility getVisibility(int choice_visibility);
 
     extern std::unordered_map <int, choices::eVisibility> from_int_to_eVisibility;
-
-    // extern std::unordered_map <eInitiators, std::string> eInitiators_strmap;
-
-    // extern std::unordered_map <eAnchors, char*> eAnchors_strmap;
-
-    // extern std::unordered_map <eTriggers,std::string> eTriggers_strmap;
-
-    // extern std::unordered_map <eScreenSize,std::string> eScreenSize_strmap;
 }
 
 #endif

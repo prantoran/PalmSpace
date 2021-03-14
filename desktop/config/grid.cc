@@ -1,5 +1,7 @@
 #include "grid.h"
 
+#include <iostream>
+
 Grid::Grid() {
     m_gap = 1;
     m_dynamic_dimensions = false;
@@ -108,4 +110,13 @@ cv::Rect Grid::get_cell(int i, int j) const {
 void Grid::get_center_cv(int & _col_width, int & _row_height) {
     _col_width  = m_x_cols[0] +  m_width/2;
     _row_height = m_y_rows[0] + m_height/2;
+}
+
+
+bool Grid::is_inside_cv(int _col_x, int _row_y) const {
+    std::cout << "is_inside_cv() _col_x:" << _col_x << "\t_row_y:" << _row_y << 
+        "\tm_x_cols[0]:" << m_x_cols[0] << "\t(m_x_cols[0] + m_width + 10):"  << (m_x_cols[0] + m_width + 10)  << 
+        "\tm_y_rows[0]:" << m_y_rows[0] << "\t(m_y_rows[0] + m_height + 10):" << (m_y_rows[0] + m_height + 10) << "\n";
+    return _col_x >= m_x_cols[0] && _col_x <= (m_x_cols[0] + m_width + 10) && 
+        _row_y >= m_y_rows[0] && _row_y <= (m_y_rows[0] + m_height + 10);
 }

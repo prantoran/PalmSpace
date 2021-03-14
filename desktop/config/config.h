@@ -72,7 +72,7 @@ class Parameters {
   std::tuple<double, double, double> m_other_index;
 
   public:
-  SmoothCoord m_indexbase, m_palmbase;
+  SmoothCoord m_indexbase, m_palmbase, m_palmbase_right;
   SmoothCoord m_primary_cursor, m_primary_cursor_middlefinger_base;
   
   using index_t = int;
@@ -111,6 +111,7 @@ class Parameters {
   // std::vector<std::vector<std::tuple<double, double, double>>> m_points;
   std::vector<std::vector<SmoothCoord>> m_points;
 
+
   void get_raw_dimensions(double & _width, double _height);
   void set_raw_dimensions(double _width, double _height);
   
@@ -124,13 +125,10 @@ class Parameters {
   void get_palmbase(double &x_col, double &y_row);
   void get_palmbase(std::tuple<double, double, double> & p);
   void set_palmbase(const std::tuple<double, double, double> & p);
-  // void set_palmbase(double x_col, double y_row);
 
   void get_indexbase(double &x_col, double &y_row);
   void get_indexbase(std::tuple<double, double, double> & p);
   void set_indexbase(const std::tuple<double, double, double> & p);
-  // void set_indexbase(double x_col, double y_row);
-
 
   void get_palmbase_middle_cv_indices(index_t &x_col, index_t &y_row);
 
@@ -155,7 +153,16 @@ class Parameters {
   void get_primary_cursor_cv_indices(index_t & x_col, index_t & y_row);
   bool is_set_primary_cursor();
   cv::Point cursor_cvpoint();
+
+
+  bool is_set_leftpalm_base();
+  void get_leftpalm_base_cv_indices(index_t & leftpalm_x_col, index_t & leftpalm_y_row);
   
+  bool is_set_rightpalm_base();
+  void get_rightpalm_base_cv_indices(index_t &rigthpalm_x_col, index_t & rightpalm_y_row);
+
+  void set_palmbase_right(const std::tuple<double, double, double> & p);
+
   void set_primary_cursor_middlefinger_base(const std::tuple<double, double, double> & p);
   void get_primary_cursor_middlefinger_base_cv_indices(index_t & x_col, index_t & y_row);
 
@@ -185,6 +192,10 @@ class Parameters {
   cv::Point thumb_base();
 
   std::vector<std::vector<std::tuple<double, double, double>>> get_points();
+
+  std::string lefthand_landmarks_str();
+  std::string righthand_landmarks_str();
+  std::string _get_landmarks(int palm_id);
 };
 
 

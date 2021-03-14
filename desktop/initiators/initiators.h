@@ -61,6 +61,7 @@ class InitiatorDefault: public Initiator {
         Parameters & params);
 };
 
+// TODO remove twohand
 class InitiatorTwoHand: public Initiator {
     double topleft_x, topleft_y, bottomright_x, bottomright_y;
     double raw_width, raw_height, raw_width_half;

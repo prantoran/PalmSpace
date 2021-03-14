@@ -58,6 +58,9 @@ void AnchoHandToScreen::initiate() {
     m_selection_locked = false;
     
     reset_grids();
+
+
+    m_visited_cells = 0;
 }
 
 void AnchoHandToScreen::setup_palmiamge(std::string imagePath) {

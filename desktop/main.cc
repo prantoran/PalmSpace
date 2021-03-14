@@ -112,6 +112,8 @@ int main(int argc, char** argv) {
   const bool save_video = !FLAGS_output_video_path.empty();
 
   // analogous to structural pattern
+
+
    
   if (mp_graph == NULL) {
     mp_graph = std::make_shared<MediaPipeMultiHandGPU>(
@@ -174,7 +176,49 @@ int main(int argc, char** argv) {
     choice_trial_pause_before_each_target,
     choice_trial_show_button_during_trial,
     choice_targets_cnt);
+
+
+  std::string technique_str, selection_str;
+
+  switch (choice_anchor) {
+    case 1:
+      technique_str = "S2H_REL";
+      break;
+    case 3:
+      technique_str = "S2H_ABS";
+      break;
+    case 5:
+      technique_str = "H2S";
+      break;
+    default:
+      technique_str = "undefined";
+      break;
+  }
+
+  switch (choice_trigger) {
+    case 5:
+      selection_str = "dwell";
+      break;
+    case 6:
+      selection_str = "tap";
+      break;
+    default:
+      selection_str = "undefined";
+      break;
+  }
   
+  
+
+  // s.init_file_with_headers();
+
+  mp_graph->study1 = new userstudies::Study1(
+      "desktop/userstudies/log/study1.csv",
+      "desktop/userstudies/study1_trial_counter.txt",
+      "desktop/userstudies/events/study1",
+      technique_str,
+      selection_str,
+      choice_divisions
+    );
 
   mp_graph->trial = new userstudies::Trial(
     choice_divisions, 
@@ -199,7 +243,7 @@ int main(int argc, char** argv) {
 
 
   mp_graph->trial->generate_sample_space();
-  mp_graph->trial->generate_random_target_sequence(choice_targets_cnt);
+  mp_graph->trial->init_datastores(choice_targets_cnt);
 
   std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
 

@@ -21,7 +21,7 @@
 #include "mediapipe/framework/formats/classification.pb.h"
 
 #include "desktop/ui/cvui.h"
-
+#include "desktop/util/timer.h"
 
 // constexpr allows compiler to run statement/function at compile time.
 constexpr char kInputStream[] = "input_video";
@@ -278,6 +278,30 @@ void MediaPipeMultiHandGPU::debug(
 
   LOG(INFO) << "Start grabbing and processing frames.";
 
+
+  Timer timer = Timer();
+
+  timer.setInterval([&]() {
+    if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
+      if (trial && trial->started()) {
+        study1->update_event(
+          trial->m_target_id,
+          trial->m_target_sequence[trial->m_target_id],
+          trial->m_time_taken[trial->m_target_id].count() * 1000, // converting to millisec
+          trial->m_dist_traveled_px[trial->m_target_id],
+          trial->m_attempts[trial->m_target_id],
+          trial->m_visited_cells[trial->m_target_id],
+          trial->m_dist_travelled_palms[0][trial->m_target_id],
+          trial->m_dist_travelled_palms[1][trial->m_target_id],
+          params.lefthand_landmarks_str(),
+          params.righthand_landmarks_str()
+        );
+      }
+      
+    }
+  }, 50);
+
+
   while (!isDone && m_grab_frames) {
 
     if (trial && trial->done()) {
@@ -510,14 +534,6 @@ void MediaPipeMultiHandGPU::debug(
         ++hand_id;
       }
 
-
-      // for (int i = 0; i < 2; i ++) {
-      //   std::cout << "hand " << i << "\n";
-      //   for (int j = 0 ; j < 21; j ++) {
-      //     std::cout << "\t(" << params.m_points[i][j].x() << ", " << params.m_points[i][j].y() << ")\n";
-      //   }
-      // }
-
     }
 
     for (int i = 0; i < 2; i ++) {
@@ -576,6 +592,36 @@ void MediaPipeMultiHandGPU::debug(
     if (params.is_set_primary_cursor()) {
       params.get_primary_cursor_cv_indices(cursor_x, cursor_y);
     } 
+
+    int leftpalm_x = -1, leftpalm_y = -1;
+    if (params.is_set_leftpalm_base()) {
+      params.get_leftpalm_base_cv_indices(leftpalm_x, leftpalm_y);
+    }
+
+    int rightpalm_x = -1, rightpalm_y = -1;
+    if (params.is_set_rightpalm_base()) {
+      params.get_rightpalm_base_cv_indices(rightpalm_x, rightpalm_y);
+    }
+
+    if (trial && trial->started()) {
+      trial->update_cur_target_distance_traveled(cursor_x, cursor_y);
+      trial->update_left_palm_distance(leftpalm_x, leftpalm_y);
+      trial->update_right_palm_distance(rightpalm_x, rightpalm_y);
+      trial->update_cur_target_time();
+
+      study1->update_event(
+        trial->m_target_id,
+        trial->m_target_sequence[trial->m_target_id],
+        trial->m_time_taken[trial->m_target_id].count() * 1000, // converting to millisec
+        trial->m_dist_traveled_px[trial->m_target_id],
+        trial->m_attempts[trial->m_target_id],
+        trial->m_visited_cells[trial->m_target_id],
+        trial->m_dist_travelled_palms[0][trial->m_target_id],
+        trial->m_dist_travelled_palms[1][trial->m_target_id],
+        params.lefthand_landmarks_str(),
+        params.righthand_landmarks_str()
+      );
+    }
     
     anchor->calculate(
       camera_frame, 
@@ -599,18 +645,48 @@ void MediaPipeMultiHandGPU::debug(
 
           if (!trial || trial->started()) {
             
-            anchor->markSelected();
-            anchor->unlock_selection();
+            if (anchor->m_grid.is_inside_cv(cursor_x, cursor_y)) {
+              anchor->markSelected();
+              anchor->unlock_selection();
+            }
           }
 
           if (trial) {
-            if (trial->process_is_button_clicked(cursor_x, cursor_y)) {
+            if (trial->is_button_clicked(cursor_x, cursor_y)) {
+              trial->process_button_clicked();
               anchor->reset_selection();
-            }
-            
-            if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
-              trial->process_correct_selection();
-              anchor->unlock_selection();
+            } else {
+              
+              if (anchor->m_grid.is_inside_cv(cursor_x, cursor_y)) {
+                
+                trial->increment_attempts();
+              } else {
+                std::cout << "cursor not inside grid\n";
+              }
+
+              if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
+                trial->update_cur_target_time();
+                
+                trial->m_visited_cells[trial->m_target_id] = anchor->m_visited_cells;
+                anchor->m_visited_cells = 0;
+
+                study1->save(
+                  trial->m_target_id,
+                  trial->m_target_sequence[trial->m_target_id],
+                  trial->m_time_taken[trial->m_target_id].count() * 1000, // converting to millisec
+                  trial->m_dist_traveled_px[trial->m_target_id],
+                  trial->m_attempts[trial->m_target_id],
+                  trial->m_visited_cells[trial->m_target_id],
+                  trial->m_dist_travelled_palms[0][trial->m_target_id],
+                  trial->m_dist_travelled_palms[1][trial->m_target_id]
+                );
+
+                study1->increment_trial_counter();
+                anchor->reset_selection();
+                anchor->reset_marked_cell();
+                trial->move_to_next_target();
+                anchor->unlock_selection();
+              }
             }
           }
 
@@ -637,8 +713,8 @@ void MediaPipeMultiHandGPU::debug(
       if (anchor->m_type == choices::anchor::PADLARGE) {
         // trial->update_start_button_input_loc(anchor->m_grid);
 
-        const cv::Point & index_tip = params.index_tip(); 
-        const cv::Point & thumb_tip = params.thumb_tip();
+        const cv::Point & index_tip  = params.index_tip(); 
+        const cv::Point & thumb_tip  = params.thumb_tip();
         const cv::Point & thumb_base = params.thumb_base();
 
         trial->update_start_button_input_loc(
@@ -692,11 +768,14 @@ void MediaPipeMultiHandGPU::debug(
             anchor->m_grid_out.m_y_rows[0] + + anchor->m_grid_out.m_height/2 + anchor->m_grid_out.m_dy_row
           )
         );
+
+        
       } else {
         trial->update_start_button_input_loc(anchor->m_grid);
         trial->draw_start_button(m_primary_output);
       }
 
+      trial->draw_completed_targets_text(m_primary_output);
 
       if (anchor->m_type == choices::anchor::PADLARGE) {
 

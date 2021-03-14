@@ -26,10 +26,10 @@ Parameters::Parameters(int _frame_width, int _frame_height, bool _load_video, Ca
     m_camera = _camera;
 
     m_indexbase                         = SmoothCoord("indexbase"                       , 0.9999, 5, 15);
-    m_palmbase                          = SmoothCoord("palmbase"                        , 0.9999, 5, 15);
+    m_palmbase                          = SmoothCoord("palmbase_left"                   , 0.9999, 5, 15);
     m_primary_cursor                    = SmoothCoord("primary_cursor"                  , 0.9999, 2, 15);
     m_primary_cursor_middlefinger_base  = SmoothCoord("primary_cursor_middlefinger_base", 0.9999, 5, 15);
-
+    m_palmbase_right                    = SmoothCoord("palmbase_right"                  , 0.9999, 5, 15);
     reset();
     init(_load_video);
 }
@@ -70,9 +70,9 @@ void Parameters::set_palmbase(const std::tuple<double, double, double> & p) {
 }
 
 
-// void Parameters::set_palmbase(double x_col, double y_row) {
-//     m_palmbase.set(x_col, y_row);
-// }
+void Parameters::set_palmbase_right(const std::tuple<double, double, double> & p) {
+    m_palmbase_right.set(p);
+}
 
 
 void Parameters::get_indexbase(std::tuple<double, double, double> & p) {
@@ -210,6 +210,26 @@ cv::Point Parameters::cursor_cvpoint() {
     get_cv_indices(m_primary_cursor, x, y);
     
     return cv::Point(x, y);
+}
+
+
+void Parameters::get_leftpalm_base_cv_indices(index_t & leftpalm_x_col, index_t & leftpalm_y_row) {
+    get_cv_indices(m_palmbase, leftpalm_x_col, leftpalm_y_row);
+}
+
+
+bool Parameters::is_set_leftpalm_base() {
+    return m_palmbase.is_set();
+}
+
+
+void Parameters::get_rightpalm_base_cv_indices(index_t &rigthpalm_x_col, index_t & rightpalm_y_row) {
+    get_cv_indices(m_palmbase_right, rigthpalm_x_col, rightpalm_y_row);
+}
+
+
+bool Parameters::is_set_rightpalm_base() {
+    return m_palmbase_right.is_set();
 }
 
 
@@ -413,3 +433,32 @@ std::vector<std::vector<std::tuple<double, double, double>>> Parameters::get_poi
     return ret;
 }
 
+
+std::string Parameters::lefthand_landmarks_str() {
+    if (!(m_hand_mask & (1<<0))) return ""; // left palm (0) not detected
+
+    return _get_landmarks(0);
+}
+
+
+std::string Parameters::righthand_landmarks_str() {
+    if (!(m_hand_mask & (1<<1))) return ""; // left palm (0) not detected
+
+    return _get_landmarks(1);
+}
+
+
+std::string Parameters:: _get_landmarks(int palm_id) {
+    std::string ret = "\"";
+
+    const std::vector<SmoothCoord> & p = m_points[0];
+
+    for (int i = 0; i < 21; i ++) {
+        if (i) ret = ret + ",";
+        ret = ret + "(" + std::to_string(p[i].x()) + "," + std::to_string(p[i].y()) + ")";
+    }
+
+    ret = ret + "\"";
+
+    return ret;
+}

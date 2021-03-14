@@ -85,6 +85,7 @@ void InitiatorDefault::params(
     m0 = points[params.m_base_id].size();
   }
 
+  std::cout << "initiator_default params tot hands detected:" << params.total_hands_detected() << "\n";
   if (params.total_hands_detected() >= 2) {
     m1 = points[1-params.m_base_id].size();
   }
@@ -95,6 +96,15 @@ void InitiatorDefault::params(
       std::get<1>(points[params.m_base_id][PALMBASE_IDX]) > 0) {
       
       params.set_palmbase(points[params.m_base_id][PALMBASE_IDX]);
+    }
+  }
+
+  if (m1 > PALMBASE_IDX) {
+    if (
+      std::get<0>(points[1][PALMBASE_IDX]) > 0 && 
+      std::get<1>(points[1][PALMBASE_IDX]) > 0) {
+      
+      params.set_palmbase_right(points[1][PALMBASE_IDX]);
     }
   }
 
