@@ -35,6 +35,7 @@ namespace userstudies {
 
         std::vector<std::pair<int, int>> m_sample_space;
         int m_sample_space_size;
+        int m_sample_space_id;
 
         cv::Scalar m_target_color;
 
@@ -60,12 +61,14 @@ namespace userstudies {
         std::vector<double> m_dist_travelled_palms[2]; // 0 = left, 1 = right
         std::vector<std::pair<int, int>> m_palm_base_last_pos[2];
 
+
         Trial(int _divisions, int _view_width, int _view_height);
         ~Trial();
         void update_start_button_input_loc(
             const cv::Point & _topleft, 
             const cv::Point & _bottomright);
         void update_start_button_input_loc(Grid & grid);
+        void update_start_button_input_loc(cv::Mat & output_frame);
         void draw_start_button(
             cv::Mat & output_frame,
             cv::Point _topleft,
@@ -81,7 +84,7 @@ namespace userstudies {
         bool started();
         void _set_cur_target_start_time();
         void process_button_clicked();
-        void move_to_next_target();
+        void move_to_next_target(int prev_marked_i, int prev_marked_j);
         void update_cur_target_distance_traveled(int cursor_x_col, int cursor_y_row);
         void increment_attempts();
         void update_left_palm_distance(int palmbase_x, int palmbase_y);

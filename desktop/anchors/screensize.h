@@ -17,8 +17,8 @@ class ScreenSize {
                 min_height = max_height/4;
                 break;
             case choices::LARGE:
-                min_width = (3*max_width)/5;
-                min_height = (3*max_height)/5;
+                min_width = (3*max_width)/7;
+                min_height = (3*max_height)/7;
                 break; 
             case choices::FULL:
                 min_width = max_width;

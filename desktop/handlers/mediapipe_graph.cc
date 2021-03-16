@@ -655,6 +655,8 @@ void MediaPipeMultiHandGPU::debug(
             if (trial->is_button_clicked(cursor_x, cursor_y)) {
               trial->process_button_clicked();
               anchor->reset_selection();
+              anchor->reset_marked_cell();
+              anchor->unlock_selection();
             } else {
               
               if (anchor->m_grid.is_inside_cv(cursor_x, cursor_y)) {
@@ -682,10 +684,13 @@ void MediaPipeMultiHandGPU::debug(
                 );
 
                 study1->increment_trial_counter();
+                std::cerr << "marked_i:" << anchor->m_marked_i << "\tmarked_j:" << anchor->m_marked_j << "\n";
+                trial->move_to_next_target(anchor->m_marked_i-1, anchor->m_marked_j-1);
+                
                 anchor->reset_selection();
                 anchor->reset_marked_cell();
-                trial->move_to_next_target();
-                anchor->unlock_selection();
+
+                anchor->lock_selection();
               }
             }
           }
@@ -703,13 +708,11 @@ void MediaPipeMultiHandGPU::debug(
           cursor_x, cursor_y, params);
       
 
-
-
-      if (trial) {
-        if (trial->started()) {
-            trial->draw_target(m_primary_output, anchor->m_grid_out);
-        }
+      if (trial->started()) {
+          trial->draw_target(m_primary_output, anchor->m_grid_out);
       }
+      
+
       if (anchor->m_type == choices::anchor::PADLARGE) {
         // trial->update_start_button_input_loc(anchor->m_grid);
 
@@ -736,6 +739,10 @@ void MediaPipeMultiHandGPU::debug(
             )
           );
 
+        // trial->update_start_button_input_loc(m_primary_output);
+
+        // trial->draw_start_button(m_primary_output);
+
         if (!m_depth_map.empty()) {
           trial->draw_start_button(
             m_depth_map,
@@ -743,6 +750,8 @@ void MediaPipeMultiHandGPU::debug(
               cv::Point(
               std::max(index_tip.x + 100, thumb_tip.x + 10),
               std::max(index_tip.y + 100, std::max(thumb_base.y + 10, thumb_tip.y + 10))));
+          // trial->draw_start_button(m_depth_map);
+  
         }
       } else if (anchor->m_type == choices::anchor::HANDTOSCREEN) {
         
@@ -769,13 +778,20 @@ void MediaPipeMultiHandGPU::debug(
           )
         );
 
+        // trial->update_start_button_input_loc(m_primary_output);
+
+        // trial->draw_start_button(m_primary_output);
         
       } else {
-        trial->update_start_button_input_loc(anchor->m_grid);
+        // trial->update_start_button_input_loc(anchor->m_grid);
+        trial->update_start_button_input_loc(m_primary_output);
+
         trial->draw_start_button(m_primary_output);
       }
 
-      trial->draw_completed_targets_text(m_primary_output);
+      if (trial->m_state == userstudies::TrialState::STARTED) {
+        trial->draw_completed_targets_text(m_primary_output);
+      }
 
       if (anchor->m_type == choices::anchor::PADLARGE) {
 
@@ -818,7 +834,7 @@ void MediaPipeMultiHandGPU::debug(
       }
 
       
-      if (params.is_set_primary_cursor() && anchor->m_type != choices::anchor::PADLARGE) {
+      if (params.is_set_primary_cursor() && (anchor->m_type != choices::anchor::PADLARGE)) {
         cv::circle(
           m_primary_output,
           cv::Point(cursor_x, cursor_y),

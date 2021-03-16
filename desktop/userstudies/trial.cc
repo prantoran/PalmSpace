@@ -41,6 +41,17 @@ namespace userstudies {
     }
 
 
+    void Trial::update_start_button_input_loc(cv::Mat & output_frame) {
+        m_topleft     = cv::Point(-100 + output_frame.cols/2, -50 + output_frame.rows/2);
+        m_bottomright = cv::Point(+100 + output_frame.cols/2, +50 + output_frame.rows/2); 
+
+        m_start_btn = cv::Rect(
+            m_topleft,
+            m_bottomright
+        );
+    }
+
+
     void Trial::update_start_button_input_loc(Grid & grid) {
 
         std::cerr << "trial updloc grid width:" << grid.m_width << "\theight:" << grid.m_height << "\twidth_min:" << grid.m_width_min << "\theight_min:" << grid.m_height_min << "\n";
@@ -113,6 +124,17 @@ namespace userstudies {
             m_state == TrialState::PAUSED || 
             m_trial_show_button_during_trial) {
             
+            std::cerr << "entered draw button\n";
+            
+            // output_frame = cv::Mat(
+            //     output_frame.rows,
+            //     output_frame.cols,
+            //     CV_8UC3,
+            //     cv::Scalar(0, 0, 0)
+            // );
+
+            // _topleft     = cv::Point(-100 + output_frame.cols/2, -50 + output_frame.rows/2);
+            // _bottomright = cv::Point(+100 + output_frame.cols/2, +50 + output_frame.rows/2); 
 
             ui::rounded_rectangle(
                 output_frame,
@@ -127,7 +149,7 @@ namespace userstudies {
             cv::putText(
                 output_frame,
                 m_start_btn_label,
-                cv::Point(_topleft.x + 5, (_topleft.y+_bottomright.y+10)/2),
+                cv::Point(-30 + (_topleft.x + _bottomright.x)/2, (_topleft.y+_bottomright.y+10)/2),
                 cv::FONT_HERSHEY_SIMPLEX,
                 0.5,
                 cv::Scalar(0, 0, 0),
@@ -143,45 +165,8 @@ namespace userstudies {
 
 
     void Trial::draw_start_button(cv::Mat & output_frame) {
-
-        if (m_state == TrialState::STARTED) {
-            m_btn_color = cv::Scalar(220,248,255);
-        }
-
-        if (m_state == TrialState::OPEN || 
-            m_state == TrialState::PAUSED || 
-            m_trial_show_button_during_trial) {
-
-            ui::rounded_rectangle(
-                output_frame,
-                m_topleft,
-                m_bottomright,
-                m_btn_color,
-                5,
-                cv::LINE_8,
-                5
-            );
-
-            cv::putText(
-                output_frame,
-                m_start_btn_label,
-                cv::Point(m_topleft.x + 5, (m_topleft.y+m_bottomright.y+10)/2),
-                cv::FONT_HERSHEY_SIMPLEX,
-                0.5,
-                cv::Scalar(0, 0, 0),
-                2
-            );
-
-            if (m_button_state == ButtonState::OPEN) {
-                m_button_state = ButtonState::READY;
-                // std::cout << "button state from open to ready\n";
-                m_last_trial_end_time = std::chrono::steady_clock::now();
-            }
-        } 
+        draw_start_button(output_frame, m_topleft, m_bottomright); 
     }
-
-
-
 
 
     bool Trial::is_button_clicked(int cursor_x_col, int cursor_y_row) {
@@ -232,13 +217,13 @@ namespace userstudies {
 
         m_attempts.resize(n, 0);
         m_visited_cells.resize(n, 0);
-
-        for (int i = 0; i < n; i ++) {
-            m_target_sequence[i] = m_sample_space[i];
-        }
+        
+        m_target_sequence[0] = m_sample_space[0];
+        
 
         m_target_sequence_size = n;
         m_target_id = 0;
+        m_sample_space_id = 0;
     
         for (int i = 0;i < 2; i ++) {
             m_dist_travelled_palms[i].resize(n, 0);
@@ -325,8 +310,22 @@ namespace userstudies {
     }
 
 
-    void Trial::move_to_next_target() {
+    void Trial::move_to_next_target(int prev_marked_i, int prev_marked_j) {
+        // prev marked i, j indices start from 1
+        // trial i, j indices start from 0
         m_target_id ++;
+
+        while (true) {
+            m_sample_space_id = (m_sample_space_id + 1) % m_sample_space_size;
+            
+            const std::pair<int, int> & p = m_sample_space[m_sample_space_id];
+
+            std::cerr << "m_sample_space_id:" << m_sample_space_id << "\tp.first:" << p.first << "\tp.second:" << p.second << "\tprev_marked_i:" << prev_marked_i << "\tprev_marked_j:" << prev_marked_j << "\n";
+            if (p.first != (prev_marked_i) || p.second != (prev_marked_j)) {
+                m_target_sequence[m_target_id] = p;
+                break;
+            }
+        }
         
         if (m_trial_pause_before_each_target) {
             m_state = TrialState::PAUSED;

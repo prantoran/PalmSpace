@@ -100,6 +100,8 @@ void Grid::align(double topleft_x, double topleft_y) {
 
 
 cv::Rect Grid::get_cell(int i, int j) const {
+    // grid indices start from 1 and includes n
+    // index 0 is leftmost/topmost point
     return cv::Rect(
         cv::Point(m_x_cols[i], m_y_rows[j]), 
         cv::Point(m_x_cols[i]+m_dx_col, m_y_rows[j]+m_dy_row)
