@@ -761,7 +761,7 @@ void MediaPipeMultiHandGPU::debug(
             anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 - anchor->m_grid_out.m_dy_row
           ),
           cv::Point(
-            anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 2*anchor->m_grid_out.m_dx_col,
+            anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 3*anchor->m_grid_out.m_dx_col,
             anchor->m_grid_out.m_y_rows[0] + + anchor->m_grid_out.m_height/2 + anchor->m_grid_out.m_dy_row
           )
         );
@@ -773,7 +773,7 @@ void MediaPipeMultiHandGPU::debug(
             anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 - anchor->m_grid_out.m_dy_row
           ),
           cv::Point(
-            anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + anchor->m_grid_out.m_dx_col,
+            anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 3*anchor->m_grid_out.m_dx_col,
             anchor->m_grid_out.m_y_rows[0] + + anchor->m_grid_out.m_height/2 + anchor->m_grid_out.m_dy_row
           )
         );
@@ -783,8 +783,8 @@ void MediaPipeMultiHandGPU::debug(
         // trial->draw_start_button(m_primary_output);
         
       } else {
-        // trial->update_start_button_input_loc(anchor->m_grid);
-        trial->update_start_button_input_loc(m_primary_output);
+        trial->update_start_button_input_loc(anchor->m_grid);
+        // trial->update_start_button_input_loc(m_primary_output);
 
         trial->draw_start_button(m_primary_output);
       }
