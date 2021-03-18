@@ -74,7 +74,7 @@ namespace userstudies {
             cv::Point _topleft,
             cv::Point _bottomright);
         void draw_start_button(cv::Mat & output_frame);
-        bool is_button_clicked(int cursor_x_col, int cursor_y_row);
+        bool is_cursor_over_trial_button(int cursor_x_col, int cursor_y_row);
         void generate_sample_space();
         void init_datastores(int n);
         std::pair<int, int> current_target();

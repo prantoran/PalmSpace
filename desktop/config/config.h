@@ -111,6 +111,7 @@ class Parameters {
   // std::vector<std::vector<std::tuple<double, double, double>>> m_points;
   std::vector<std::vector<SmoothCoord>> m_points;
 
+  bool m_is_cursor_over_trial_button;
 
   void get_raw_dimensions(double & _width, double _height);
   void set_raw_dimensions(double _width, double _height);

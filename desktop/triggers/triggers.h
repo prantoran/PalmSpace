@@ -5,6 +5,7 @@
 
 #include "trigger.h"
 #include "tap.h"
+#include "dwell.h"
 
 // TODO remove unused triggers
 
@@ -100,21 +101,6 @@ class TriggerTapPalm: public Trigger {
 
 };
 
-
-class TriggerDwell: public Trigger {
-    std::chrono::milliseconds _timestamp[11][11], ctime, ptime;
-    int selected_i, selected_j, selected_i_prv, selected_j_prv; 
-        
-    public:
-
-    TriggerDwell();
-
-    void update(
-        const cv::Mat & input_image,
-        const std::vector<std::vector<std::tuple<double, double, double>>> & points,
-        Parameters & params);
-
-};
 
 class TriggerTapDepthArea: public Trigger {
     public:

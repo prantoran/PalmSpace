@@ -169,7 +169,7 @@ namespace userstudies {
     }
 
 
-    bool Trial::is_button_clicked(int cursor_x_col, int cursor_y_row) {
+    bool Trial::is_cursor_over_trial_button(int cursor_x_col, int cursor_y_row) {
 
 
         auto diff =  (std::chrono::steady_clock::now() - m_last_trial_end_time).count();

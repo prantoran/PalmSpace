@@ -603,7 +603,9 @@ void MediaPipeMultiHandGPU::debug(
       params.get_rightpalm_base_cv_indices(rightpalm_x, rightpalm_y);
     }
 
-    if (trial && trial->started()) {
+    params.m_is_cursor_over_trial_button = false;
+  
+    if (trial->started()) {
       trial->update_cur_target_distance_traveled(cursor_x, cursor_y);
       trial->update_left_palm_distance(leftpalm_x, leftpalm_y);
       trial->update_right_palm_distance(rightpalm_x, rightpalm_y);
@@ -621,6 +623,9 @@ void MediaPipeMultiHandGPU::debug(
         params.lefthand_landmarks_str(),
         params.righthand_landmarks_str()
       );
+    } else {
+      params.m_is_cursor_over_trial_button =
+        trial->is_cursor_over_trial_button(cursor_x, cursor_y);
     }
     
     anchor->calculate(
@@ -628,6 +633,8 @@ void MediaPipeMultiHandGPU::debug(
       interface_scaling_factor,
       cursor_x, cursor_y, params); 
 
+    params.m_is_cursor_over_trial_button =
+      trial->is_cursor_over_trial_button(cursor_x, cursor_y);
     
     if (show_display || anchor->m_static_display) {
 
@@ -652,7 +659,7 @@ void MediaPipeMultiHandGPU::debug(
           }
 
           if (trial) {
-            if (trial->is_button_clicked(cursor_x, cursor_y)) {
+            if (params.m_is_cursor_over_trial_button) {
               trial->process_button_clicked();
               anchor->reset_selection();
               anchor->reset_marked_cell();
