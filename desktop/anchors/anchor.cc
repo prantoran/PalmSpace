@@ -27,7 +27,11 @@ void Anchor::markSelected() {
     m_marked_i = m_selected_i;
     m_marked_j = m_selected_j;
 
-    message_selected = "Selected: " + std::to_string(m_grid.m_divisions*(m_marked_j-1) + m_marked_i);
+    if (m_marked_i > 0 && m_marked_j > 0) {
+        msg_marked = "Marked: " + std::to_string(m_grid.m_divisions*(m_marked_j-1) + m_marked_i);
+    } else {
+        msg_marked = "Marked -";
+    }
 }
 
 void Anchor::setDivisions(int _divisions) {
@@ -91,7 +95,7 @@ void Anchor::setupSelection(
     m_selected_j_prv = selected_col_j;
 
     if (m_selection_locked) {
-        // selection locked becaurse trigger is pressed
+        // selection locked because trigger is pressed
         return; 
     } 
 
@@ -105,7 +109,7 @@ void Anchor::setupSelection(
             selected_col_j = -1;
         }
 
-        if (selected_row_i != -1) {
+        if (selected_row_i != -1 && m_selected_i_prv != -1) {
             if (selected_row_i != m_selected_i_prv || selected_col_j != m_selected_j_prv) {
                 message = "Highlighted: ";
                 message += std::to_string((selected_col_j-1)*m_grid.m_divisions + selected_row_i);
@@ -140,10 +144,10 @@ void Anchor::drawTextHighlighted(cv::Mat & overlay) {
 }
 
 
-void Anchor::drawTextSelected(cv::Mat & overlay) {
+void Anchor::drawTextMarked(cv::Mat & overlay) {
     if (m_marked_i != -1) {
         cv::putText(overlay, //target image
-            message_selected, //text
+            msg_marked, //text
             cv::Point(5, 80), //top-left position
             cv::FONT_HERSHEY_DUPLEX,
             1.0,
@@ -183,25 +187,25 @@ void Anchor::reset_grids() {
 }
 
 
-void Anchor::setScreenSize(const choices::eScreenSize & size) {
+void Anchor::setScreenSize(const choices::screensize::types & size) {
     m_screen.size = size;
 }
 
-void Anchor::setVisibility(const choices::eVisibility & _visibility) {
+void Anchor::setVisibility(const choices::visibility::types & _visibility) {
     visibility = _visibility;
 }
 
 
-choices::eVisibility Anchor::getVisibility() {
+choices::visibility::types Anchor::getVisibility() {
     return visibility;
 }
 
 
 bool Anchor::isVisible(const Parameters & params) {
     switch (visibility) {
-        case choices::FIXED:
+        case choices::visibility::FIXED:
             return true;
-        case choices::CONDITIONAL:
+        case choices::visibility::CONDITIONAL:
             return (params.total_hands_detected() > 0);
         default:
             std::cout << "ERROR anchors/anchors.cc isVisible() invalid choice visibility\n.";

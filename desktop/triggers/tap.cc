@@ -16,7 +16,7 @@ void TriggerTap::update(
     const std::vector<std::vector<std::tuple<double, double, double>>> & points,
     Parameters & params) {
     
-    const int & rel_depth = params.m_hand_size_scale[params.cursor_hand_id()];
+    const int & rel_depth = params.m_hand_size_scale[handedness::RIGHT];
     if (m_base_rel_depth == -1) m_base_rel_depth = rel_depth; 
     m_diff = rel_depth - m_base_rel_depth;
 

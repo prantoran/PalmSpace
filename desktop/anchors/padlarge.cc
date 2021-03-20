@@ -29,8 +29,13 @@ AnchorPadLarge::AnchorPadLarge(
     setup_background(m_background, imagePathBackground, _width, _height);
 
 
+
+
+
     m_grid_out.m_width_min  = std::max(0, (0*image_palm.cols/150) + ((2*image_palm.cols)/5));
     m_grid_out.m_height_min = std::max(0, (image_palm.rows/10) + (image_palm.rows/2));
+
+    std::cerr << "m_grid_out width:" << m_grid_out.m_width_min << "\theight:" << m_grid_out.m_height_min << "\n";
 }
 
 
@@ -174,7 +179,7 @@ void AnchorPadLarge::draw(
     draw_cells(overlay, m_grid_out);
 
     drawTextHighlighted(overlay);
-    drawTextSelected(overlay);
+    drawTextMarked(overlay);
 
     drawProgressBar(overlay, params);
 

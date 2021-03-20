@@ -131,280 +131,310 @@ int main(int argc, char** argv) {
   int choice_trigger = 5; // 5 tap z 6 tap depth cam 8 dwell
   int choice_initiator = 1;
   int choice_divisions = 5;
-  int choice_screensize = 2;
+  int choice_screensize = 4;
   int choice_debug = 0;
   int choice_visibility = 1;
   int choice_depth = 1;
   int choice_trial_start_btn_location = 4;
   bool choice_trial_pause_before_each_target = true;
   bool choice_trial_show_button_during_trial = false;
-  int choice_targets_cnt = 20;
+  int choice_targets_cnt = 3;
+  int choice_inputspace = 2;
+
   #ifndef REALSENSE_CAM
     if (choice_depth == 8)
       choice_depth = 0;
   #endif
 
-  PalmSpaceUI::Menu menu = PalmSpaceUI::Menu(
-    FLAGS_frame_width,
-    FLAGS_frame_height,
-    choice_anchor,
-    choice_trigger,
-    choice_divisions,
-    choice_divisions,
-    choice_screensize,
-    choice_visibility,
-    choice_debug,
-    choice_depth,
-    choice_trial_start_btn_location,
-    choice_trial_pause_before_each_target,
-    choice_trial_show_button_during_trial,
-    choice_targets_cnt,
-    APP_NAME);
+  // bool valid = true;
+  // while (valid) {
+    PalmSpaceUI::Menu menu = PalmSpaceUI::Menu(
+      FLAGS_frame_width,
+      FLAGS_frame_height,
+      choice_anchor,
+      choice_trigger,
+      choice_divisions,
+      choice_divisions,
+      choice_screensize,
+      choice_visibility,
+      choice_debug,
+      choice_depth,
+      choice_trial_start_btn_location,
+      choice_trial_pause_before_each_target,
+      choice_trial_show_button_during_trial,
+      choice_targets_cnt,
+      choice_inputspace,
+      APP_NAME);
+    menu.run();
 
-  menu.run();
+    menu.get_choices(
+      choice_initiator,
+      choice_anchor,
+      choice_trigger,
+      choice_divisions,
+      choice_screensize,
+      choice_visibility,
+      choice_debug,
+      choice_depth,
+      choice_trial_start_btn_location,
+      choice_trial_pause_before_each_target,
+      choice_trial_show_button_during_trial,
+      choice_targets_cnt,
+      choice_inputspace);
+    
 
-  menu.get_choices(
-    choice_initiator,
-    choice_anchor,
-    choice_trigger,
-    choice_divisions,
-    choice_screensize,
-    choice_visibility,
-    choice_debug,
-    choice_depth,
-    choice_trial_start_btn_location,
-    choice_trial_pause_before_each_target,
-    choice_trial_show_button_during_trial,
-    choice_targets_cnt);
-
-
-  std::string technique_str, selection_str;
-
-  switch (choice_anchor) {
-    case 1:
-      technique_str = "S2H_REL";
-      break;
-    case 3:
-      technique_str = "S2H_ABS";
-      break;
-    case 5:
-      technique_str = "H2S";
-      break;
-    default:
-      technique_str = "undefined";
-      break;
-  }
-
-  switch (choice_trigger) {
-    case 5:
-      selection_str = "dwell";
-      break;
-    case 6:
-      selection_str = "tap";
-      break;
-    default:
-      selection_str = "undefined";
-      break;
-  }
-  
-  
-
-  // s.init_file_with_headers();
-
-  mp_graph->study1 = new userstudies::Study1(
-      "desktop/userstudies/log/study1.csv",
-      "desktop/userstudies/study1_trial_counter.txt",
-      "desktop/userstudies/events/study1",
-      technique_str,
-      selection_str,
-      choice_divisions
-    );
-
-  mp_graph->trial = new userstudies::Trial(
-    choice_divisions, 
-    FLAGS_frame_width,
-    FLAGS_frame_height);
-
-  switch (choice_trial_start_btn_location) {
-    case 1:
-      mp_graph->trial->m_start_btn_loc = userstudies::Location::LEFT;
-      break;
-    case 2:
-      mp_graph->trial->m_start_btn_loc = userstudies::Location::CENTER;
-      break;
-    case 3:
-      mp_graph->trial->m_start_btn_loc = userstudies::Location::LEFTCENTER;
-    case 4:
-      mp_graph->trial->m_start_btn_loc = userstudies::Location::RIGHTCENTER;
-  } 
-
-  mp_graph->trial->m_trial_pause_before_each_target = choice_trial_pause_before_each_target;
-  mp_graph->trial->m_trial_show_button_during_trial = choice_trial_show_button_during_trial;
+    // if (menu.m_exit) {
+    //   // exit program
+    //   valid = false;
+    //   break;
+    // }
 
 
-  mp_graph->trial->generate_sample_space();
-  mp_graph->trial->init_datastores(choice_targets_cnt);
+    std::string technique_str, selection_str;
 
-  std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
+    switch (choice_anchor) {
+      case 1:
+        technique_str = "S2H_REL";
+        break;
+      case 3:
+        technique_str = "S2H_ABS";
+        break;
+      case 5:
+        technique_str = "H2S";
+        break;
+      default:
+        technique_str = "undefined";
+        break;
+    }
 
-  if (choice_depth) {
-    #ifdef REALSENSE_CAM
-      mp_graph->camera = new CameraRealSense(
-        FLAGS_frame_width,
-        FLAGS_frame_height,
-        FLAGS_fps
+    switch (choice_trigger) {
+      case 5:
+        selection_str = "dwell";
+        break;
+      case 6:
+        selection_str = "tap";
+        break;
+      default:
+        selection_str = "undefined";
+        break;
+    }
+    
+    
+    // s.init_file_with_headers();
+
+    mp_graph->study1 = new userstudies::Study1(
+        "desktop/userstudies/log/study1.csv",
+        "desktop/userstudies/study1_trial_counter.txt",
+        "desktop/userstudies/events/study1",
+        technique_str,
+        selection_str,
+        choice_divisions
       );
-    #else 
+
+    mp_graph->trial = new userstudies::Trial(
+      choice_divisions, 
+      FLAGS_frame_width,
+      FLAGS_frame_height);
+
+    switch (choice_trial_start_btn_location) {
+      case 1:
+        mp_graph->trial->m_start_btn_loc = userstudies::Location::LEFT;
+        break;
+      case 2:
+        mp_graph->trial->m_start_btn_loc = userstudies::Location::CENTER;
+        break;
+      case 3:
+        mp_graph->trial->m_start_btn_loc = userstudies::Location::LEFTCENTER;
+      case 4:
+        mp_graph->trial->m_start_btn_loc = userstudies::Location::RIGHTCENTER;
+    } 
+
+    mp_graph->trial->m_trial_pause_before_each_target = choice_trial_pause_before_each_target;
+    mp_graph->trial->m_trial_show_button_during_trial = choice_trial_show_button_during_trial;
+
+
+    mp_graph->trial->generate_sample_space();
+    mp_graph->trial->init_datastores(choice_targets_cnt);
+
+    std::cout << "frame_width:" << FLAGS_frame_width << " frame_height:" << FLAGS_frame_height << "\n";
+
+    if (choice_depth) {
+      #ifdef REALSENSE_CAM
+        mp_graph->camera = new CameraRealSense(
+          FLAGS_frame_width,
+          FLAGS_frame_height,
+          FLAGS_fps
+        );
+      #else 
+        mp_graph->camera = new CameraOpenCV(
+          FLAGS_frame_width,
+          FLAGS_frame_height,
+          FLAGS_fps
+        );  
+      #endif  
+    } else {
       mp_graph->camera = new CameraOpenCV(
         FLAGS_frame_width,
         FLAGS_frame_height,
         FLAGS_fps
-      );  
-    #endif  
-  } else {
-    mp_graph->camera = new CameraOpenCV(
-      FLAGS_frame_width,
-      FLAGS_frame_height,
-      FLAGS_fps
-    );
-  }
-
-  switch (choice_initiator) {
-    case 1:
-      mp_graph->initiator = new InitiatorDefault();
-      break;
-    case 2:
-      // mp_graph->initiator = new InitiatorTwoHand();
-      break;
-    default:
-      std::cout << "ERROR main.cc invalid initiator choice\n";
-      return EXIT_FAILURE;
-  }
-
-  switch (choice_anchor) {
-    case 1:
-      mp_graph->anchor = new AnchorDynamic(COLORS_red, COLORS_royalblue);
-      break;
-    case 2:
-      mp_graph->anchor = new AnchorStatic(
-        COLORS_red, 
-        COLORS_royalblue, 
-        get_current_dir() + "/desktop/anchors/Hand.png");
-      break;
-    case 3:
-      mp_graph->anchor = new AnchoHandToScreen(
-        FLAGS_frame_width,
-        FLAGS_frame_height,
-        COLORS_red, 
-        COLORS_royalblue, 
-        get_current_dir() + "/desktop/anchors/Hand_full.png",
-        get_current_dir() + "/desktop/anchors/bg.jpg");
-      break;
-    case 4:
-      mp_graph->anchor = new AnchorPad(
-        COLORS_red, 
-        COLORS_royalblue, 
-        get_current_dir() + "/desktop/anchors/Hand.png");
-      break;
-    case 5:
-      mp_graph->anchor = new AnchorPadLarge(
-        FLAGS_frame_width,
-        FLAGS_frame_height,
-        COLORS_red, 
-        COLORS_royalblue, 
-        get_current_dir() + "/desktop/anchors/Hand.png",
-        get_current_dir() + "/desktop/anchors/bg.jpg");
-      break;
-    default:
-      std::cout << "ERROR main.cc invalid anchor choice\n";
-      return EXIT_FAILURE;
-  }
-
-  mp_graph->anchor->setDivisions(choice_divisions);
-    
-  std::cout << "choice_trigger:" << choice_trigger << "\n";
-
-  switch (choice_trigger) {
-    case 1:
-      mp_graph->trigger = new TriggerThumb(FLAGS_frame_width, FLAGS_frame_height);
-      break;
-    case 2:
-      mp_graph->trigger = new TriggerThumbOther(FLAGS_frame_width, FLAGS_frame_height);
-      break;
-    case 3:
-      mp_graph->trigger = new TriggerPinch(FLAGS_frame_width, FLAGS_frame_height);
-      break;
-    case 4:
-      mp_graph->trigger =  new TriggerWait(FLAGS_frame_width, FLAGS_frame_height, -1);
-      // mp_graph->trigger->set_anchor_choice(choice_anchor); // TODO inspect, needed by wait trigger
-      break;
-    case 5:
-      mp_graph->trigger = new TriggerTap();
-      break;
-    case 6:
-      mp_graph->trigger = new TriggerDwell();
-      break;
-    case 7:
-      mp_graph->trigger = new TriggerTapDepthArea(
-                                load_video, 
-                                save_video, 
-                                FLAGS_fps,
-                                FLAGS_frame_width, 
-                                FLAGS_frame_height);
-      break;
-    case 8:
-      // mp_graph->trigger = new TriggerTapDepth();
-      mp_graph->trigger = new TriggerTapDepthGradient();
-      break;
-    case 9:
-      mp_graph->trigger = new TriggerTapDepthSingle();
-      break;
-    case 10:
-      mp_graph->trigger = new TriggerTapDepthDistance();
-      break;
-    default:
-      std::cout << "invalid trigger choice\n";
-      return EXIT_FAILURE;
-  }
-  
-  choices::eScreenSize ssize = choices::getScreenSize(choice_screensize);
-  
-  choices::eVisibility _visibility = choices::getVisibility(choice_visibility);
-
-  mp_graph->anchor->setScreenSize(ssize);
-  mp_graph->anchor->setVisibility(_visibility);
-
-  if (choice_anchor == 1 && choice_initiator == 2) {
-    // throw std::invalid_argument("")
-    exit(-1);
-  }
-
-  std::cout << "setting up strict: whether or not to look for index pointer from 2nd hand only\n";
-  if (choice_trigger == 1 || choice_trigger == 5) {
-    mp_graph->initiator->strict = true; // only look for pointer in second hand
-  } else if (choice_trigger == 6) {
-    std::cout << "given dwell trigger, checking choice_anchor\n";
-    if (choice_anchor != 3) {      
-      mp_graph->initiator->strict = true; // only look for pointer in second hand
+      );
     }
-  }
 
-  ::mediapipe::Status run_status = mp_graph->run(
-      FLAGS_calculator_graph_config_file, 
-      FLAGS_input_video_path, 
-      FLAGS_frame_width, 
-      FLAGS_frame_height, 
-      FLAGS_fps,
-      choice_debug,
-      load_video,
-      save_video); 
-  
-  if (!run_status.ok()) {
-    LOG(ERROR) << "Failed to run the graph: " << run_status.message();
-    return EXIT_FAILURE; // probably defined in MediaPipe:ports
-  } else {
-    LOG(INFO) << "Success!";
-  }
+    switch (choice_initiator) {
+      case 1:
+        mp_graph->initiator = new InitiatorDefault();
+        break;
+      case 2:
+        // mp_graph->initiator = new InitiatorTwoHand();
+        break;
+      default:
+        std::cout << "ERROR main.cc invalid initiator choice\n";
+        return EXIT_FAILURE;
+    }
+
+    switch (choice_anchor) {
+      case 1:
+        mp_graph->anchor = new AnchorDynamic(COLORS_red, COLORS_royalblue);
+        break;
+      case 2:
+        mp_graph->anchor = new AnchorStatic(
+          COLORS_red, 
+          COLORS_royalblue, 
+          get_current_dir() + "/desktop/anchors/Hand.png");
+        break;
+      case 3:
+        mp_graph->anchor = new AnchoHandToScreen(
+          FLAGS_frame_width,
+          FLAGS_frame_height,
+          COLORS_red, 
+          COLORS_royalblue, 
+          get_current_dir() + "/desktop/anchors/Hand_full.png",
+          get_current_dir() + "/desktop/anchors/bg.jpg");
+        break;
+      case 4:
+        mp_graph->anchor = new AnchorPad(
+          COLORS_red, 
+          COLORS_royalblue, 
+          get_current_dir() + "/desktop/anchors/Hand.png");
+        break;
+      case 5:
+        // mp_graph->anchor = new AnchorPadLarge(
+        //   FLAGS_frame_width,
+        //   FLAGS_frame_height,
+        //   COLORS_red, 
+        //   COLORS_royalblue, 
+        //   get_current_dir() + "/desktop/anchors/Hand.png",
+        //   get_current_dir() + "/desktop/anchors/bg.jpg");
+        mp_graph->anchor = new AnchorS2HAbsolute(COLORS_red, COLORS_royalblue);
+        break;
+      default:
+        std::cout << "ERROR main.cc invalid anchor choice\n";
+        return EXIT_FAILURE;
+    }
+
+    switch (choice_inputspace) {
+      case 1:
+        mp_graph->anchor->m_inputspace_type = choices::inputspace::SAMEASSCREENSIZE;
+        break;
+      case 2:
+        mp_graph->anchor->m_inputspace_type = choices::inputspace::PALMSIZED;
+        break;
+      default:
+        std::cerr << "ERROR main.cc invalid inputchoice\n";
+        break;
+    }
+
+    mp_graph->anchor->setDivisions(choice_divisions);
+      
+    std::cout << "choice_trigger:" << choice_trigger << "\n";
+
+    switch (choice_trigger) {
+      case 1:
+        mp_graph->trigger = new TriggerThumb(FLAGS_frame_width, FLAGS_frame_height);
+        break;
+      case 2:
+        mp_graph->trigger = new TriggerThumbOther(FLAGS_frame_width, FLAGS_frame_height);
+        break;
+      case 3:
+        mp_graph->trigger = new TriggerPinch(FLAGS_frame_width, FLAGS_frame_height);
+        break;
+      case 4:
+        mp_graph->trigger =  new TriggerWait(FLAGS_frame_width, FLAGS_frame_height, -1);
+        // mp_graph->trigger->set_anchor_choice(choice_anchor); // TODO inspect, needed by wait trigger
+        break;
+      case 5:
+        mp_graph->trigger = new TriggerTap();
+        break;
+      case 6:
+        mp_graph->trigger = new TriggerDwell();
+        break;
+      case 7:
+        mp_graph->trigger = new TriggerTapDepthArea(
+                                  load_video, 
+                                  save_video, 
+                                  FLAGS_fps,
+                                  FLAGS_frame_width, 
+                                  FLAGS_frame_height);
+        break;
+      case 8:
+        // mp_graph->trigger = new TriggerTapDepth();
+        mp_graph->trigger = new TriggerTapDepthGradient();
+        break;
+      case 9:
+        mp_graph->trigger = new TriggerTapDepthSingle();
+        break;
+      case 10:
+        mp_graph->trigger = new TriggerTapDepthDistance();
+        break;
+      default:
+        std::cout << "invalid trigger choice\n";
+        return EXIT_FAILURE;
+    }
+
+    std::cerr << "choice_screensize:" << choice_screensize << "\n";
+    
+    choices::screensize::types ssize = choices::screensize::from_int(choice_screensize);
+
+    std::cerr << "ssize:" << ssize << "\n";
+    
+    choices::visibility::types _visibility = choices::visibility::from_int(choice_visibility);
+
+    mp_graph->anchor->setScreenSize(ssize);
+    mp_graph->anchor->setVisibility(_visibility);
+
+    if (choice_anchor == 1 && choice_initiator == 2) {
+      // throw std::invalid_argument("")
+      exit(-1);
+    }
+
+    std::cout << "setting up strict: whether or not to look for index pointer from 2nd hand only\n";
+    if (choice_trigger == 1 || choice_trigger == 5) {
+      mp_graph->initiator->strict = true; // only look for pointer in second hand
+    } else if (choice_trigger == 6) {
+      std::cout << "given dwell trigger, checking choice_anchor\n";
+      if (choice_anchor != 3) {      
+        mp_graph->initiator->strict = true; // only look for pointer in second hand
+      }
+    }
+
+    ::mediapipe::Status run_status = mp_graph->run(
+        FLAGS_calculator_graph_config_file, 
+        FLAGS_input_video_path, 
+        FLAGS_frame_width, 
+        FLAGS_frame_height, 
+        FLAGS_fps,
+        choice_debug,
+        load_video,
+        save_video); 
+    
+    if (!run_status.ok()) {
+      LOG(ERROR) << "Failed to run the graph: " << run_status.message();
+      return EXIT_FAILURE; // probably defined in MediaPipe:ports
+    } else {
+      LOG(INFO) << "Success!";
+    }
+
+  // }
 
   return EXIT_SUCCESS; // probably defined in MediaPipe:ports
 }

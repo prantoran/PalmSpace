@@ -38,10 +38,10 @@ void TriggerTapDepth::update(
     Parameters & params) {
 
     m_base_pts.backup_prev();   
-    m_base_pts.update_support(m_base_indices, points[params.m_base_id], params);
+    m_base_pts.update_support(m_base_indices, points[handedness::LEFT], params);
 
     m_cursor_pts.backup_prev();
-    m_cursor_pts.update_support(m_cursor_indices, points[1-params.m_base_id], params);
+    m_cursor_pts.update_support(m_cursor_indices, points[handedness::RIGHT], params);
 
     for (int i = 0; i < m_channel_cnt; i ++) {
         m_ch_medians[i] = 0;

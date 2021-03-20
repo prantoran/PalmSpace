@@ -81,8 +81,6 @@ class Parameters {
 
   int m_frame_width, m_frame_height;
   
-  // these are tuples from MediaPipe, NOT OpenCV Mat indices
-
   bool load_video; // used by trigger tap_depth_area
 
   DepthArea depth_area; // for area based depth calculation
@@ -100,8 +98,6 @@ class Parameters {
   bool m_show_depth_txt;
   std::string m_depth_txt;
 
-  int m_base_id; // m_base_hand_id_set_by_initiator;
-
   handedness::hand hand[4];
   int m_hand_mask;
 
@@ -110,6 +106,7 @@ class Parameters {
 
   // std::vector<std::vector<std::tuple<double, double, double>>> m_points;
   std::vector<std::vector<SmoothCoord>> m_points;
+  bool m_valid_points[4];
 
   bool m_is_cursor_over_trial_button;
 
@@ -179,8 +176,6 @@ class Parameters {
 
   void set_other_index(); // TODO need more inspection
   void get_other_index_z_value(double _z);
-
-  int cursor_hand_id();
 
   int primary_cursor_size();
   int primary_cursor_color_size();

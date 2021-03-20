@@ -15,57 +15,41 @@ namespace choices {
             MIDAIR,
             HANDTOSCREEN,
             PAD,
-            PADLARGE
+            PADLARGE,
+            S2HABSOLUTE
         };
 
         std::string str(const types & a);
     }
 
-    // TODO clean up unused
+    namespace inputspace {
+        enum types {
+            SAMEASSCREENSIZE = 1,
+            PALMSIZED
+        };
+    }
 
-    enum eInitiators {
-        DEFAULT = 1, 
-        TWOHAND
-    };
+    namespace screensize {
+        enum types {
+            INVALID,
+            SMALL = 1,
+            LARGE,
+            FULL,
+            FOURHUNDRED,
+        };
 
-    enum eAnchors {
-        DYNAMIC = 1, 
-        STATIC, 
-        MIDAIR
-    };
+        types from_int(int choice_screensize);
+    }
 
-    enum eTriggers {
-        THUMBBASEPALM = 1,
-        THUMBFREEPALM,
-        PINCHFREEPALM,
-        WAIT,
-        TAP,
-        DWELL
-    };
+    namespace visibility {
+        enum types {
+            INVALID,
+            FIXED = 1,
+            CONDITIONAL,
+        };   
 
-
-    enum eScreenSize {
-        INVALID,
-        SMALL = 1,
-        LARGE,
-        FULL,
-    };
-
-    enum eVisibility {
-        INVALID_VISIBILITY,
-        FIXED = 1,
-        CONDITIONAL,
-    };
-
-
-    eScreenSize getScreenSize(int choice_screensize);
-
-    extern std::unordered_map <int, choices::eScreenSize> from_int_to_eScreenSize;
-   
-
-    eVisibility getVisibility(int choice_visibility);
-
-    extern std::unordered_map <int, choices::eVisibility> from_int_to_eVisibility;
+        types from_int(int choice_visibility);
+    }
 }
 
 #endif

@@ -56,8 +56,8 @@ void TriggerWait::update(
         palmbase_x_prv = palmbase_x;
         palmbase_y_prv = palmbase_y;
 
-        palmbase_x_new = std::get<0>(points[params.m_base_id][0]);
-        palmbase_y_new = std::get<1>(points[params.m_base_id][0]);
+        palmbase_x_new = std::get<0>(points[handedness::LEFT][0]);
+        palmbase_y_new = std::get<1>(points[handedness::LEFT][0]);
 
         palmbase_x = palmbase_x_new;
         palmbase_y = palmbase_y_new;

@@ -38,22 +38,15 @@ bool InitiatorDefault::inspect(
       }
     }
 
-    params.m_base_id = 0;
-    // if (valid[1] && params.hand[1] == handedness::LEFT) {      
-    //   std::cerr << "switching\n";
-    //   params.m_base_id = 1;
-    // }
+    params.m_valid_points[0] = valid[0];
+    params.m_valid_points[1] = valid[1];
 
-    if (m_debug) {
-      std::cerr << "base_id:" << params.m_base_id << "\thand:" << params.hand[params.m_base_id] << "\n";
-    }
-    
     show_display = true;
-    if (areas[params.m_base_id] < AREA_THRESHOLD) {
+    if (areas[handedness::LEFT] < AREA_THRESHOLD) {
       show_display = false;
     }
 
-    if (areas[params.m_base_id] < SMALLAREA_THRESHOLD) {
+    if (areas[handedness::LEFT] < SMALLAREA_THRESHOLD) {
       valid[0] = false;
       valid[1] = false;
     }
@@ -82,20 +75,20 @@ void InitiatorDefault::params(
   int m0 = -1, m1 = -1;
     
   if (params.total_hands_detected() > 0) {
-    m0 = points[params.m_base_id].size();
+    m0 = points[handedness::LEFT].size();
   }
 
-  std::cout << "initiator_default params tot hands detected:" << params.total_hands_detected() << "\n";
+  // std::cout << "initiator_default params tot hands detected:" << params.total_hands_detected() << "\n";
   if (params.total_hands_detected() >= 2) {
-    m1 = points[1-params.m_base_id].size();
+    m1 = points[1-handedness::LEFT].size();
   }
   
   if (m0 > PALMBASE_IDX) {
     if (
-      std::get<0>(points[params.m_base_id][PALMBASE_IDX]) > 0 && 
-      std::get<1>(points[params.m_base_id][PALMBASE_IDX]) > 0) {
+      std::get<0>(points[handedness::LEFT][PALMBASE_IDX]) > 0 && 
+      std::get<1>(points[handedness::LEFT][PALMBASE_IDX]) > 0) {
       
-      params.set_palmbase(points[params.m_base_id][PALMBASE_IDX]);
+      params.set_palmbase(points[handedness::LEFT][PALMBASE_IDX]);
     }
   }
 
@@ -110,24 +103,24 @@ void InitiatorDefault::params(
 
   if (m0 > INDEXBASE_IDX) {
     if (
-      std::get<0>(points[params.m_base_id][INDEXBASE_IDX]) > 0 && 
-      std::get<1>(points[params.m_base_id][INDEXBASE_IDX]) > 0) {
+      std::get<0>(points[handedness::LEFT][INDEXBASE_IDX]) > 0 && 
+      std::get<1>(points[handedness::LEFT][INDEXBASE_IDX]) > 0) {
 
-      params.set_indexbase(points[params.m_base_id][INDEXBASE_IDX]);
+      params.set_indexbase(points[handedness::LEFT][INDEXBASE_IDX]);
     }
   }
 
   int idx = -1;
   switch(params.total_hands_detected()) {
     case 2:
-      if (m1 > INDEXTOP_IDX && valid[1-params.m_base_id]) {
-        idx = 1-params.m_base_id;
+      if (m1 > INDEXTOP_IDX && valid[1-handedness::LEFT]) {
+        idx = 1-handedness::LEFT;
       }
       break;
 
     case 1:
-      if (params.is_static() && m0 > INDEXTOP_IDX && valid[params.m_base_id]) { // used for static displays
-        idx = params.m_base_id;
+      if (params.is_static() && m0 > INDEXTOP_IDX && valid[handedness::LEFT]) { // used for static displays
+        idx = handedness::LEFT;
       }
       break;
 

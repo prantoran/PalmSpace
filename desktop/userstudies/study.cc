@@ -20,7 +20,7 @@ namespace userstudies {
 
     void Study::save_event_row(const std::string & _eventfile, const std::string & _row) {
         
-        std::cout << "save_event_row() _eventfile:" << _eventfile << "\n";
+        // std::cout << "save_event_row() _eventfile:" << _eventfile << "\n";
         
         if (!util::file_exists(_eventfile)) {
             init_file_with_event_headers(_eventfile);
@@ -35,7 +35,7 @@ namespace userstudies {
 
     void Study::init_file_with_headers() {
 
-        std::cout << "userstudies/study.cc init_file_with_headers() called m_filename:" << m_filename << "\n";
+        // std::cout << "userstudies/study.cc init_file_with_headers() called m_filename:" << m_filename << "\n";
         std::fstream fout;
         fout.open(m_filename, std::ios::out);
         
@@ -51,7 +51,7 @@ namespace userstudies {
 
 
     void Study::init_file_with_event_headers(const std::string & _eventfile) {
-        std::cout << "userstudies/study.cc init_file_with_event_headers() called _eventfile:" << _eventfile << "\n";
+        // std::cout << "userstudies/study.cc init_file_with_event_headers() called _eventfile:" << _eventfile << "\n";
         std::fstream fout;
         fout.open(_eventfile, std::ios::out);
         

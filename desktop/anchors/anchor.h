@@ -11,8 +11,11 @@
 #include "screensize.h"
 
 
+constexpr double TRANSPARENCY_ALPHA = 0.4;
+
+
 class Anchor { // interface via abstract class
-    choices::eVisibility visibility;
+    choices::visibility::types visibility;
     double m_progress_bar;
 
     public:
@@ -31,7 +34,7 @@ class Anchor { // interface via abstract class
 
     int m_marked_i, m_marked_j;
     
-    std::string message, message_selected;
+    std::string message, msg_marked;
 
     bool m_static_display; // if true then keep on showing display
 
@@ -47,6 +50,14 @@ class Anchor { // interface via abstract class
     
     int m_visited_cells;
 
+    bool m_absolute;
+
+    choices::inputspace::types m_inputspace_type;
+    std::pair<double, double> m_palm_x, m_palm_y;
+    double m_max_dim;
+
+    bool m_calculate_done;
+    
     Anchor();
     virtual ~Anchor();
 
@@ -78,17 +89,17 @@ class Anchor { // interface via abstract class
         int & selected_row_i, int & selected_col_j);
     
     void drawTextHighlighted(cv::Mat & overlay);
-    void drawTextSelected(cv::Mat & overlay);
+    void drawTextMarked(cv::Mat & overlay);
     
     void reset_palmbase();
     void reset_palmbase_right();
     void reset_indexbase();
     void reset_grids();
 
-    void setScreenSize(const choices::eScreenSize & size);
+    void setScreenSize(const choices::screensize::types & size);
 
-    void setVisibility(const choices::eVisibility & _visibility);
-    choices::eVisibility getVisibility();
+    void setVisibility(const choices::visibility::types & _visibility);
+    choices::visibility::types getVisibility();
     bool isVisible(const Parameters & params);
 
     choices::anchor::types type();

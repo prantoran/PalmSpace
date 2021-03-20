@@ -4,7 +4,7 @@
 // internal linkage, not visible outside
 // for external linkage, use extern
 constexpr int index_top = 8;
-constexpr int DWELLWAIT_MS = 1000;
+constexpr int DWELLWAIT_MS = 600;
 
 
 TriggerDwell::TriggerDwell() {

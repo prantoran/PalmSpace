@@ -2,33 +2,51 @@
 #include <utility>
 
 namespace choices {
-    eScreenSize getScreenSize(int choice_screensize) {
-        return from_int_to_eScreenSize[choice_screensize];
+    namespace screensize {
+        types from_int(int choice_screensize) {
+            switch (choice_screensize) {
+                case 1:
+                    return SMALL;
+                case 2:
+                    return LARGE;
+                case 3:
+                    return FULL;
+                case 4:
+                    return FOURHUNDRED;
+                default:
+                    return INVALID;
+            }
+        }
     }
 
-    std::unordered_map <int, eScreenSize> from_int_to_eScreenSize = {
-        {0, INVALID},
-        {1, SMALL},
-        {2, LARGE},
-        {3, FULL}
-    };
 
+    namespace visibility {
+        types from_int(int choice_visibility) {
+            switch (choice_visibility) {
+                case 1:
+                    return FIXED;
+                case 2:
+                    return CONDITIONAL;
+                default:
+                    return INVALID;
+            }
+        }
 
-    eVisibility getVisibility(int choice_visibility) {
-        return from_int_to_eVisibility[choice_visibility];
     }
-
-    std::unordered_map <int, eVisibility> from_int_to_eVisibility = {
-        {0, INVALID_VISIBILITY},
-        {1, FIXED},
-        {2, CONDITIONAL},
-    };
-
-    std::string anchor::str(const types & a) {
-        if (a == DYNAMIC) return "S2H_relative";
-        if (a == PADLARGE) return "S2H_absolute";
-        if (a == HANDTOSCREEN) return "H2S";
-        return "invalid";
+    
+    namespace anchor {
+        std::string str(const types & a) {
+            switch (a) {
+                case DYNAMIC:
+                    return "S2H_relative";
+                case PADLARGE:
+                    return "S2H_absolute";
+                case HANDTOSCREEN:
+                     return "H2S";
+                default:
+                    return "invalid";
+            }
+        }
     }
 }
 

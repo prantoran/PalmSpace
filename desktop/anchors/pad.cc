@@ -249,7 +249,7 @@ void AnchorPad::draw(
     draw_cells(overlay, m_grid_out);
 
     drawTextHighlighted(overlay);
-    drawTextSelected(overlay);
+    drawTextMarked(overlay);
 
     drawProgressBar(overlay, params);
 

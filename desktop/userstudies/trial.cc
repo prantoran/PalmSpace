@@ -42,8 +42,8 @@ namespace userstudies {
 
 
     void Trial::update_start_button_input_loc(cv::Mat & output_frame) {
-        m_topleft     = cv::Point(-100 + output_frame.cols/2, -50 + output_frame.rows/2);
-        m_bottomright = cv::Point(+100 + output_frame.cols/2, +50 + output_frame.rows/2); 
+        m_topleft     = cv::Point(-50 + output_frame.cols/2, -40 + output_frame.rows/2);
+        m_bottomright = cv::Point(+50 + output_frame.cols/2, +40 + output_frame.rows/2); 
 
         m_start_btn = cv::Rect(
             m_topleft,

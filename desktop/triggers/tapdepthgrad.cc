@@ -45,7 +45,7 @@ void TriggerTapDepthGradient::update(
     m_cursor_pts.backup_prev();
     std::cerr << "m_cursor_pts backuped\n";
 
-    m_cursor_pts.update_support(m_cursor_indices, points[1-params.m_base_id], params);
+    m_cursor_pts.update_support(m_cursor_indices, points[handedness::RIGHT], params);
 
     std::cerr << "m_cursor_pts updated\n";
 

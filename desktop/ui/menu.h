@@ -28,7 +28,7 @@ namespace PalmSpaceUI {
             trigdwell, trigtapdepth, trigtapdepthsingle, 
             trigdepthdistance;
 
-        bool screen_small, screen_large, screen_full;
+        bool screen_small, screen_large, screen_full, screen_400;
 
         int scalex, scaley; // to adjust topleft position of frame
 
@@ -46,7 +46,11 @@ namespace PalmSpaceUI {
 
         int m_targetscnt;
 
+
+        bool m_inputspace_sameasscreensize, m_inputspace_palmsized;
+
         public:
+        bool m_exit;
         
         Menu(
             int frame_width, 
@@ -63,6 +67,7 @@ namespace PalmSpaceUI {
             bool trial_pause_before_each_target,
 			bool trial_show_button_during_trial,
             int targets_cnt,
+            int inputspace,
             std::string window_name
         );
 
@@ -80,7 +85,8 @@ namespace PalmSpaceUI {
             int & trial_start_btn_location,
             bool & trial_pause_before_each_target,
             bool & trial_show_button_during_trial,
-            int & targets_cnt);
+            int & targets_cnt,
+            int & inputspace);
 
         bool is_valid();
     };

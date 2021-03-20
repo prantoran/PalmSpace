@@ -1,4 +1,4 @@
-#include "anchors.h"
+#include "handtoscreen.h"
 
 
 AnchoHandToScreen::~AnchoHandToScreen() {
@@ -24,7 +24,8 @@ AnchoHandToScreen::AnchoHandToScreen(
     color_red = red;
     color_blue = blue;
 
-    setup_palmiamge(imagePath);
+    m_image_path = imagePath;
+    setup_palmiamge(m_image_path, 250, 250);
     setup_background(m_background, imagePathBackground, _width, _height);
 }
 
@@ -63,7 +64,7 @@ void AnchoHandToScreen::initiate() {
     m_visited_cells = 0;
 }
 
-void AnchoHandToScreen::setup_palmiamge(std::string imagePath) {
+void AnchoHandToScreen::setup_palmiamge(std::string imagePath, int x_cols, int y_rows) {
     // only take .png as it has alpha channel for transparency
     image_palm = cv::imread(imagePath, CV_LOAD_IMAGE_UNCHANGED); 
     // CV_LOAD_IMAGE_COLOR ignores alpha transparency channel
@@ -74,7 +75,7 @@ void AnchoHandToScreen::setup_palmiamge(std::string imagePath) {
         return;
     }
 
-    cv::resize(image_palm, image_palm, cv::Size(250,250));
+    cv::resize(image_palm, image_palm, cv::Size(x_cols, y_rows));
     
     // https://answers.opencv.org/question/174551/how-to-show-transparent-images/
     std::vector<cv::Mat> rgbLayer;
@@ -91,13 +92,12 @@ void AnchoHandToScreen::calculate(
     double scale_ratio, 
     int pointer_x, int pointer_y,
     Parameters & params) {
-        
-    std::cerr << "anchor hand2screen calculate()\n";
+    
+    m_calculate_done = false;
 
     if (!width || !height) {
         setConfig(input.size().width, input.size().height);
                 
-
         m_screen.setMinWidthHeight(
             m_grid.m_width_min, 
             m_grid.m_height_min,
@@ -105,15 +105,23 @@ void AnchoHandToScreen::calculate(
             height
         );
         
-        // m_grid.m_width_min  = image_palm.cols;
-        // m_grid.m_height_min = image_palm.rows;
-
         m_screen.setMinWidthHeight(
             m_grid_out.m_width_min, 
             m_grid_out.m_height_min, 
             width, 
             height
         );
+
+        image_palm_dim_max = (double)std::min(width, height)/2;
+    }
+
+
+    if (m_inputspace_type == choices::inputspace::PALMSIZED) {
+        m_palm_x = params.palm_width();
+        m_palm_y = params.palm_height();
+        m_max_dim = std::min(image_palm_dim_max, std::max(64.0, std::max(m_palm_x.second  - m_palm_x.first, m_palm_y.second - m_palm_y.first)));
+
+        setup_palmiamge(m_image_path, m_max_dim*2, (m_max_dim*15)/8);        
     }
 
     if (!m_static_display) {
@@ -167,6 +175,8 @@ void AnchoHandToScreen::calculate(
         
         params.set_selected_cell(m_selected_i, m_selected_j);
     }
+
+    m_calculate_done = true;
 }
 
 
@@ -193,10 +203,8 @@ void AnchoHandToScreen::setupInputGrid(
         if (m_inputgrid_topleft_x < 0) m_inputgrid_topleft_x = 0;
         if (m_inputgrid_topleft_y < 0) m_inputgrid_topleft_y = 0;
 
-        if (!palm_ubx) {
-            palm_ubx = width  - image_palm.cols;
-            palm_uby = height - image_palm.rows;
-        }
+        palm_ubx = std::min(width,  std::max(0, width  - image_palm.cols));
+        palm_uby = std::min(height, std::max(0, height - image_palm.rows));
 
         if (m_inputgrid_topleft_x >= palm_ubx) {
             m_inputgrid_topleft_x = palm_ubx;
@@ -251,7 +259,7 @@ void AnchoHandToScreen::draw(
         cv::Scalar(0, 0, 0)
     );
 
-    if (params.m_palmbase.x() > 0) { // putting palm when palm coord detected
+    if (params.m_palmbase.x() > 0) { // putting palm when palm coord 
         image_palm.copyTo(
             output(
                 cv::Rect(
@@ -272,13 +280,12 @@ void AnchoHandToScreen::draw(
         );
     }
 
-
     draw_main_grid_layout(overlay, m_grid_out);
 
     draw_cells(overlay, m_grid_out);
 
     drawTextHighlighted(overlay);
-    drawTextSelected(overlay);
+    drawTextMarked(overlay);
 
     drawProgressBar(overlay, params);
 

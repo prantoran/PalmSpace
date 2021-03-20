@@ -33,6 +33,9 @@ constexpr char kHandedness[] = "handedness";
 constexpr int BLOB_AREA_THRESH = 100;
 constexpr int INFO_TXT_BOLDNESS = 2;
 
+constexpr int trial_btn_width = 60;
+constexpr int trial_btn_height = 60;
+
 
 unsigned int root(unsigned int x){
     unsigned int a,b;
@@ -708,92 +711,163 @@ void MediaPipeMultiHandGPU::debug(
           break;
       }
           
-      anchor->draw(
-          camera_frame, 
-          m_primary_output,
-          interface_scaling_factor,
-          cursor_x, cursor_y, params);
-      
-
-      if (trial->started()) {
-          trial->draw_target(m_primary_output, anchor->m_grid_out);
-      }
-      
-
-      if (anchor->m_type == choices::anchor::PADLARGE) {
-        // trial->update_start_button_input_loc(anchor->m_grid);
-
-        const cv::Point & index_tip  = params.index_tip(); 
-        const cv::Point & thumb_tip  = params.thumb_tip();
-        const cv::Point & thumb_base = params.thumb_base();
-
-        trial->update_start_button_input_loc(
-          index_tip, 
-          cv::Point(
-            std::max(index_tip.x + 100, thumb_tip.x + 10),
-            std::max(index_tip.y + 100, std::max(thumb_base.y + 10, thumb_tip.y + 10)))
-          );
+      if (anchor->m_calculate_done) {
+        anchor->draw(
+            camera_frame, 
+            m_primary_output,
+            interface_scaling_factor,
+            cursor_x, cursor_y, params);
         
-        trial->draw_start_button(
-          m_primary_output,
+
+        if (trial->started()) {
+            trial->draw_target(m_primary_output, anchor->m_grid_out);
+        }
+
+        // drawing trial button
+        if (anchor->m_type == choices::anchor::PADLARGE) {
+          // trial->update_start_button_input_loc(anchor->m_grid);
+
+          const cv::Point & index_tip  = params.index_tip(); 
+          const cv::Point & thumb_tip  = params.thumb_tip();
+          const cv::Point & thumb_base = params.thumb_base();
+
+          // trial->update_start_button_input_loc(
+          //   index_tip, 
+          //   cv::Point(
+          //     std::max(index_tip.x + 100, thumb_tip.x + 10),
+          //     std::max(index_tip.y + 100, std::max(thumb_base.y + 10, thumb_tip.y + 10)))
+          //   );
+          
+          trial->update_start_button_input_loc(
             cv::Point(
-              anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10,
-              anchor->m_grid_out.m_y_rows[0] - anchor->m_grid_out.m_dy_row - 5
+              anchor->m_grid.m_x_cols[0] + anchor->m_grid.m_width + 10,
+              anchor->m_grid.m_y_rows[0] + anchor->m_grid.m_height/2 - trial_btn_height/2
             ),
             cv::Point(
-              anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 2*anchor->m_grid_out.m_dx_col,
-              anchor->m_grid_out.m_y_rows[0]
+              anchor->m_grid.m_x_cols[0] + anchor->m_grid.m_width + 10 + trial_btn_width,
+              anchor->m_grid.m_y_rows[0] + anchor->m_grid.m_height/2 + trial_btn_height/2 
             )
           );
 
-        // trial->update_start_button_input_loc(m_primary_output);
-
-        // trial->draw_start_button(m_primary_output);
-
-        if (!m_depth_map.empty()) {
           trial->draw_start_button(
-            m_depth_map,
-              params.index_tip(), 
+            m_primary_output,
+            cv::Point(
+              anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10,
+              anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 - trial_btn_height/2
+            ),
+            cv::Point(
+              anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10 + trial_btn_width,
+              anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 + trial_btn_height/2
+            )
+          );
+
+          // trial->update_start_button_input_loc(m_primary_output);
+
+          // trial->draw_start_button(m_primary_output);
+
+          if (!m_depth_map.empty()) {
+            // trial->draw_start_button(
+            //   m_depth_map,
+            //     params.index_tip(), 
+            //     cv::Point(
+            //     std::max(index_tip.x + 100, thumb_tip.x + 10),
+            //     std::max(index_tip.y + 100, std::max(thumb_base.y + 10, thumb_tip.y + 10))));
+            // trial->draw_start_button(m_depth_map);
+
+            trial->draw_start_button(
+              m_depth_map,
               cv::Point(
-              std::max(index_tip.x + 100, thumb_tip.x + 10),
-              std::max(index_tip.y + 100, std::max(thumb_base.y + 10, thumb_tip.y + 10))));
-          // trial->draw_start_button(m_depth_map);
-  
+                anchor->m_grid.m_x_cols[0] + anchor->m_grid.m_width + 10,
+                anchor->m_grid.m_y_rows[0] + anchor->m_grid.m_height/2 - trial_btn_height/2
+              ),
+              cv::Point(
+                anchor->m_grid.m_x_cols[0] + anchor->m_grid.m_width + 10 + trial_btn_width,
+                anchor->m_grid.m_y_rows[0] + anchor->m_grid.m_height/2 + trial_btn_height/2 
+              )  
+            );
+          }
+        } else if (anchor->m_type == choices::anchor::HANDTOSCREEN) {
+          
+          // trial->update_start_button_input_loc(
+          //   cv::Point(
+          //     anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10,
+          //     anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 - anchor->m_grid_out.m_dy_row
+          //   ),
+          //   cv::Point(
+          //     anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 3*anchor->m_grid_out.m_dx_col,
+          //     anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 + anchor->m_grid_out.m_dy_row
+          //   )
+          // );
+
+          trial->update_start_button_input_loc(
+            cv::Point(
+              anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10,
+              anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 - trial_btn_height/2
+            ),
+            cv::Point(
+              anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10 + trial_btn_width,
+              anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 + trial_btn_height/2 
+            )
+          );
+
+          // trial->draw_start_button(
+          //   m_primary_output,
+          //   cv::Point(
+          //     anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10,
+          //     anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 - anchor->m_grid_out.m_dy_row
+          //   ),
+          //   cv::Point(
+          //     anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 3*anchor->m_grid_out.m_dx_col,
+          //     anchor->m_grid_out.m_y_rows[0] + + anchor->m_grid_out.m_height/2 + anchor->m_grid_out.m_dy_row
+          //   )
+          // );
+
+          trial->draw_start_button(
+            m_primary_output,
+            cv::Point(
+              anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10,
+              anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 - trial_btn_height/2
+            ),
+            cv::Point(
+              anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10 + trial_btn_width,
+              anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 + trial_btn_height/2 
+            )
+          );
+
+          // trial->update_start_button_input_loc(m_primary_output);
+
+          // trial->draw_start_button(m_primary_output);
+          
+        } else {
+          // trial->update_start_button_input_loc(anchor->m_grid);
+          // trial->update_start_button_input_loc(m_primary_output);
+
+          // trial->draw_start_button(m_primary_output);
+
+
+          trial->update_start_button_input_loc(
+            cv::Point(
+              anchor->m_grid.m_x_cols[0] + anchor->m_grid.m_width + 10,
+              anchor->m_grid.m_y_rows[0] + anchor->m_grid.m_height/2 - trial_btn_height/2
+            ),
+            cv::Point(
+              anchor->m_grid.m_x_cols[0] + anchor->m_grid.m_width + 10 + trial_btn_width,
+              anchor->m_grid.m_y_rows[0] + anchor->m_grid.m_height/2 + trial_btn_height/2 
+            )
+          );
+
+          trial->draw_start_button(
+            m_primary_output,
+            cv::Point(
+              anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10,
+              anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 - trial_btn_height/2
+            ),
+            cv::Point(
+              anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10 + trial_btn_width,
+              anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 + trial_btn_height/2
+            )
+          );
         }
-      } else if (anchor->m_type == choices::anchor::HANDTOSCREEN) {
-        
-        trial->update_start_button_input_loc(
-          cv::Point(
-            anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10,
-            anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 - anchor->m_grid_out.m_dy_row
-          ),
-          cv::Point(
-            anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 3*anchor->m_grid_out.m_dx_col,
-            anchor->m_grid_out.m_y_rows[0] + + anchor->m_grid_out.m_height/2 + anchor->m_grid_out.m_dy_row
-          )
-        );
-
-        trial->draw_start_button(
-          m_primary_output,
-          cv::Point(
-            anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 10,
-            anchor->m_grid_out.m_y_rows[0] + anchor->m_grid_out.m_height/2 - anchor->m_grid_out.m_dy_row
-          ),
-          cv::Point(
-            anchor->m_grid_out.m_x_cols[0] + anchor->m_grid_out.m_width + 3*anchor->m_grid_out.m_dx_col,
-            anchor->m_grid_out.m_y_rows[0] + + anchor->m_grid_out.m_height/2 + anchor->m_grid_out.m_dy_row
-          )
-        );
-
-        // trial->update_start_button_input_loc(m_primary_output);
-
-        // trial->draw_start_button(m_primary_output);
-        
-      } else {
-        trial->update_start_button_input_loc(anchor->m_grid);
-        // trial->update_start_button_input_loc(m_primary_output);
-
-        trial->draw_start_button(m_primary_output);
       }
 
       if (trial->m_state == userstudies::TrialState::STARTED) {
@@ -919,7 +993,7 @@ void MediaPipeMultiHandGPU::debug(
           std::min(15, camera->get_fps()), m_combined_output.size());
         RET_CHECK(m_writer.isOpened());
       }
-      for (int i = 0; i < 100; i ++) {
+      for (int i = 0; i < 20; i ++) {
         m_writer.write(m_combined_output);
 
       }
