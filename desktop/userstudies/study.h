@@ -14,6 +14,8 @@ namespace userstudies {
         std::vector<std::string> m_headers, m_event_headers;
         std::string m_trial_counter_file_loc;
 
+        std::string m_userID;
+
         void save_row(const std::string & _row);
         void init_file_with_headers();
 
@@ -31,6 +33,7 @@ namespace userstudies {
         int m_no_of_grids;
 
         Study1(
+            int _userID,
             std::string _filename, 
             std::string _trial_counter_file_loc,
             std::string _events_dir,

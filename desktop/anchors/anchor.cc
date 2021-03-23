@@ -98,35 +98,31 @@ void Anchor::setupSelection(
         // selection locked because trigger is pressed
         return; 
     } 
+    
+    selected_row_i = m_grid.arg_x(cursor_x);
+    selected_col_j = m_grid.arg_y(cursor_y);
+    
 
-    if (cursor_x != -1 && cursor_y != -1) {
-
-        selected_row_i = m_grid.arg_x(cursor_x);
-        selected_col_j = m_grid.arg_y(cursor_y);
-
-        if (selected_row_i == -1 || selected_col_j == -1) {
-            selected_row_i = -1;
-            selected_col_j = -1;
-        }
-
-        if (selected_row_i != -1 && m_selected_i_prv != -1) {
-            if (selected_row_i != m_selected_i_prv || selected_col_j != m_selected_j_prv) {
-                message = "Highlighted: ";
-                message += std::to_string((selected_col_j-1)*m_grid.m_divisions + selected_row_i);
-                m_visited_cells ++;
-            }
-        } else {
-            selected_row_i = m_selected_i_prv;
-            selected_col_j = m_selected_j_prv;
-        }
-
-        if (selected_row_i >= 0 && selected_col_j >= 0) {
-            m_past_selections[m_cur_time_id] = {selected_row_i, selected_col_j};
-        // selected_row_i = m_past_selections[(m_cur_time_id-1+m_past_selections_size)%m_past_selections_size].first;
-        // selected_col_j = m_past_selections[(m_cur_time_id-1+m_past_selections_size)%m_past_selections_size].second;
-            m_cur_time_id = (m_cur_time_id + 1) % m_past_selections_size;
-        }
+    if (selected_row_i == -1 || selected_col_j == -1) {
+        selected_row_i = -1;
+        selected_col_j = -1;
     }
+    
+    if (selected_row_i != -1) {
+        if (selected_row_i != m_selected_i_prv || selected_col_j != m_selected_j_prv) {
+            message = "Highlighted: ";
+            message += std::to_string((selected_col_j-1)*m_grid.m_divisions + selected_row_i);
+            m_visited_cells ++;
+        }
+    } 
+
+    if (selected_row_i >= 0 && selected_col_j >= 0) {
+        m_past_selections[m_cur_time_id] = {selected_row_i, selected_col_j};
+    // selected_row_i = m_past_selections[(m_cur_time_id-1+m_past_selections_size)%m_past_selections_size].first;
+    // selected_col_j = m_past_selections[(m_cur_time_id-1+m_past_selections_size)%m_past_selections_size].second;
+        m_cur_time_id = (m_cur_time_id + 1) % m_past_selections_size;
+    }
+     
 }
 
 

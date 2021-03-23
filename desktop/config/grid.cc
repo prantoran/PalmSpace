@@ -40,6 +40,11 @@ cv::Point Grid::get_bottom_left() const {
 }
 
 
+cv::Point Grid::get_bottom_middle() const {
+    return cv::Point(m_x_cols[0] + m_width/2, m_y_rows[0]+m_height);
+}
+
+
 cv::Rect Grid::get_bound_rect() const {
     return cv::Rect(get_top_left(), get_bottom_right());
 }

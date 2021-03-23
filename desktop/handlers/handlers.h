@@ -36,7 +36,7 @@ class MediaPipeMultiHandGPU {
 
     userstudies::Trial * trial;
 
-    bool m_debug;
+    bool m_debug, m_practice_mode;
 
     userstudies::Study1 *study1;
 

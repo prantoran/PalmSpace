@@ -99,6 +99,15 @@ void checkOpenCVHardwareSupport() {
   std::cout << "OpenCV is optimized code enabled: " << (cv::useOptimized()? "yes": "no") << "\n";
 }
 
+bool is_number(const std::string& s) {
+    
+    std::cerr << "checking s: " << s << "\tlength:" << s.length()<<"\n"; 
+    std::string::const_iterator it = s.begin();
+
+    while (it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
+}
+
 int main(int argc, char** argv) {
   /* initialize random seed: */
   srand (time(NULL));
@@ -113,8 +122,39 @@ int main(int argc, char** argv) {
 
   // analogous to structural pattern
 
+  int userID = -1;
+  bool userid_found = false;
+  while (!userid_found) {
+    FILE * pipe = popen("zenity  --title  \"Insert User ID\" --entry --text \"Enter User ID here (natural numbers, no negatives, fractions, etc)\"", "r");
+    if (!pipe)
+    {
+        std::cerr << "Couldn't start command." << std::endl;
+        return 0;
+    }
 
-   
+    std::array<char, 128> buffer;
+    while (fgets(buffer.data(), 128, pipe) != NULL) {
+        std::cout << "Reading userID..." << std::endl;
+        std::string result = buffer.data();
+
+        result.erase(
+          std::remove(
+            result.begin(), result.end(), '\n'
+          ),
+          result.end()
+        );
+
+        std::cerr << "userID:" << result << "\n";
+        if (is_number(result)) {
+          userID = std::atoi(result.c_str());
+          userid_found = true;
+        }
+
+        break;
+    }
+
+    auto returnCode = pclose(pipe);
+  } 
   if (mp_graph == NULL) {
     mp_graph = std::make_shared<MediaPipeMultiHandGPU>(
       APP_NAME, 
@@ -127,10 +167,10 @@ int main(int argc, char** argv) {
   }
 
   
-  int choice_anchor = 3;
+  int choice_anchor = 6;
   int choice_trigger = 5; // 5 tap z 6 tap depth cam 8 dwell
   int choice_initiator = 1;
-  int choice_divisions = 5;
+  int choice_divisions = 2;
   int choice_screensize = 4;
   int choice_debug = 0;
   int choice_visibility = 1;
@@ -140,6 +180,7 @@ int main(int argc, char** argv) {
   bool choice_trial_show_button_during_trial = false;
   int choice_targets_cnt = 3;
   int choice_inputspace = 2;
+  bool choice_practice = true;
 
   #ifndef REALSENSE_CAM
     if (choice_depth == 8)
@@ -153,7 +194,7 @@ int main(int argc, char** argv) {
       FLAGS_frame_height,
       choice_anchor,
       choice_trigger,
-      choice_divisions,
+      choice_initiator,
       choice_divisions,
       choice_screensize,
       choice_visibility,
@@ -164,6 +205,8 @@ int main(int argc, char** argv) {
       choice_trial_show_button_during_trial,
       choice_targets_cnt,
       choice_inputspace,
+      choice_practice,
+      userID,
       APP_NAME);
     menu.run();
 
@@ -180,8 +223,11 @@ int main(int argc, char** argv) {
       choice_trial_pause_before_each_target,
       choice_trial_show_button_during_trial,
       choice_targets_cnt,
-      choice_inputspace);
+      choice_inputspace,
+      choice_practice);
     
+
+    std::cerr << "choice_divisions:" << choice_divisions << "\n";
 
     // if (menu.m_exit) {
     //   // exit program
@@ -200,7 +246,10 @@ int main(int argc, char** argv) {
         technique_str = "S2H_ABS";
         break;
       case 5:
-        technique_str = "H2S";
+        technique_str = "H2S_ABS";
+        break;
+      case 6:
+        technique_str = "H2S_REL";
         break;
       default:
         technique_str = "undefined";
@@ -209,10 +258,10 @@ int main(int argc, char** argv) {
 
     switch (choice_trigger) {
       case 5:
-        selection_str = "dwell";
+        selection_str = "tap";
         break;
       case 6:
-        selection_str = "tap";
+        selection_str = "dwell";
         break;
       default:
         selection_str = "undefined";
@@ -222,7 +271,10 @@ int main(int argc, char** argv) {
     
     // s.init_file_with_headers();
 
+    mp_graph->m_practice_mode = choice_practice;
+
     mp_graph->study1 = new userstudies::Study1(
+        userID,
         "desktop/userstudies/log/study1.csv",
         "desktop/userstudies/study1_trial_counter.txt",
         "desktop/userstudies/events/study1",
@@ -326,6 +378,16 @@ int main(int argc, char** argv) {
         //   get_current_dir() + "/desktop/anchors/Hand.png",
         //   get_current_dir() + "/desktop/anchors/bg.jpg");
         mp_graph->anchor = new AnchorS2HAbsolute(COLORS_red, COLORS_royalblue);
+        break;
+      case 6:
+        mp_graph->anchor = new AnchorH2SRelative(
+          FLAGS_frame_width,
+          FLAGS_frame_height, 
+          COLORS_red, 
+          COLORS_royalblue,
+          get_current_dir() + "/desktop/anchors/Hand_full.png",
+          get_current_dir() + "/desktop/anchors/bg.jpg");
+          
         break;
       default:
         std::cout << "ERROR main.cc invalid anchor choice\n";

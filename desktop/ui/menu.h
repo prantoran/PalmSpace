@@ -23,7 +23,8 @@ namespace PalmSpaceUI {
         int low_threshold, high_threshold;
         int cellcnt;
         bool onehand, twohand;
-        bool ancdyn, ancstat, anchandtoscreen, ancpad, ancpadlarge; 
+        bool ancdyn, ancstat, anchandtoscreen, ancpad, ancpadlarge, anch2s_relative;
+
         bool trigpalmbase, trigpalmfree, trigpinch, trigtap, 
             trigdwell, trigtapdepth, trigtapdepthsingle, 
             trigdepthdistance;
@@ -51,7 +52,10 @@ namespace PalmSpaceUI {
 
         public:
         bool m_exit;
+        bool m_practice;
         
+        int m_userID;
+
         Menu(
             int frame_width, 
             int frame_height,
@@ -68,6 +72,8 @@ namespace PalmSpaceUI {
 			bool trial_show_button_during_trial,
             int targets_cnt,
             int inputspace,
+            bool _practice,
+            int userID,
             std::string window_name
         );
 
@@ -86,7 +92,8 @@ namespace PalmSpaceUI {
             bool & trial_pause_before_each_target,
             bool & trial_show_button_during_trial,
             int & targets_cnt,
-            int & inputspace);
+            int & inputspace,
+            bool & practice);
 
         bool is_valid();
     };

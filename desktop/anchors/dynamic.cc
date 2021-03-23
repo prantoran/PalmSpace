@@ -101,7 +101,10 @@ void AnchorDynamic::calculate(
 
     updateBase(params.m_palmbase, palmbase_x, palmbase_y);
     updateBase(params.m_indexbase, indexbase_x, indexbase_y);
+    std::cerr << "dynamic indexbase_x:" << indexbase_x << "\ty:" << indexbase_y << "\n";
 
+    std::cerr << "dynamic unscaled indexbase_x:" << indexbase_x << "\ty:" << indexbase_y << "\n";
+    
 
     indexbase_x *= width;
     indexbase_y *= height;
@@ -110,6 +113,8 @@ void AnchorDynamic::calculate(
       indexbase_x = m_palm_x.first;
       indexbase_y = m_palm_y.first;
     }
+
+    std::cerr << "dynamic indexbase_x:" << indexbase_x << "\ty:" << indexbase_y << "\n";
     
     if (indexbase_x > 0 && indexbase_y > 0) {
       // using palmbase
@@ -119,9 +124,13 @@ void AnchorDynamic::calculate(
       m_grid.align(indexbase_x, indexbase_y);
       m_grid_out.align(indexbase_x, indexbase_y);
       
+      std::cerr << "dynamic pointer x:" << pointer_x << "\t y:" << pointer_y << "\n";
+
       setupSelection(pointer_x, pointer_y, m_selected_i, m_selected_j); // defined in parent anchor class
 
+      
       params.set_selected_cell(m_selected_i, m_selected_j);
+      std::cerr << "dynamic m_selected i:" << m_selected_i << "\tj:" << m_selected_j << "\tm_selection_locked:" << m_selection_locked << "\n";
     }
 
     m_calculate_done = true;

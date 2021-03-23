@@ -49,6 +49,9 @@ void TriggerDwell::update(
 
     cur_state = TRIGGER::OPEN;
 
+
+    std::cerr << "dwel update selected i:" << selected_i << "\tj:" << selected_j << "\n";
+
     if (selected_i != -1) {
         if (selected_i_prv != -1) {
             if (selected_i_prv == selected_i && selected_j_prv == selected_j) {

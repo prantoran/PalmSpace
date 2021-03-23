@@ -23,10 +23,13 @@ namespace PalmSpaceUI {
 			bool trial_show_button_during_trial,
 			int targets_cnt,
 			int inputspace,
+			bool _practice,
+			int userID,
 			std::string window_name
 		) {
 
 		m_exit = false;
+		m_userID = userID;
 		
 		width = frame_width;
 		height = frame_height;
@@ -37,9 +40,9 @@ namespace PalmSpaceUI {
 		// bool use_canny = false;
 		low_threshold = 50, high_threshold = 150;
 		cellcnt = divisions;
-		if (!(cellcnt%2)) {
-			cellcnt ++;
-		} 
+		// if (!(cellcnt%2)) {
+		// 	cellcnt ++;
+		// } 
 
 		onehand = true, twohand = false;
 		if (initiator == 2) {
@@ -47,7 +50,7 @@ namespace PalmSpaceUI {
 			onehand = false;
 		}
 
-		ancdyn = false, ancstat  = false, anchandtoscreen = false, ancpad = false, ancpadlarge = false; 
+		ancdyn = false, ancstat  = false, anchandtoscreen = false, ancpad = false, ancpadlarge = false, anch2s_relative = false; 
 		switch (anchor) {
 			case 1:
 				ancdyn = true;
@@ -63,6 +66,9 @@ namespace PalmSpaceUI {
 				break;
 			case 5:
 				ancpadlarge = true;
+				break;
+			case 6:
+				anch2s_relative = true;
 				break;
 			default:
 				break;
@@ -173,6 +179,8 @@ namespace PalmSpaceUI {
 				std::cout << "ERROR menu.cc Menu() invalid inputspace choice\n";
 				break;
 		}
+
+		m_practice = _practice;
 	}
 
 
@@ -185,7 +193,20 @@ namespace PalmSpaceUI {
 			
 			// TODO make UI relative to width and height
 			
+
+			cvui::text (
+				frame,
+				20,
+				height-100,
+				"UserID: " + std::to_string(m_userID),
+				1.2,
+				0xCECECE
+			);
+
+
 			cvui::checkbox(frame, width - 120, height - 100, "Debug", &_debug);
+
+
 
 			#ifdef REALSENSE_CAM
 				cvui::checkbox(frame, width - 120, height - 130, "Depth", &_depth);
@@ -194,14 +215,17 @@ namespace PalmSpaceUI {
 			// cvui::checkbox(frame, scalex + 15, scaley + 30, "One Hand", &onehand);
 			// cvui::checkbox(frame, scalex + 15, scaley + 50, "Two Hand", &twohand);
 
+			cvui::window(frame, scalex - 20, scaley + 140, 130, 50, "Practice");
+			cvui::checkbox(frame, scalex - 15, scaley + 160, "Practice Mode", &m_practice);
 
-			cvui::window(frame, scalex - 20, scaley + 10, 130, 100, "Technique");
+			cvui::window(frame, scalex - 20, scaley + 10, 130, 120, "Technique");
 			cvui::checkbox(frame, scalex - 15, scaley + 30, "S2H - relative", &ancdyn);
 			// cvui::checkbox(frame, scalex - 15, scaley + 150, "H2S - absolute", &ancstat);
 			// cvui::checkbox(frame, scalex - 15, scaley + 170, "MidAir", &ancmid);
 			// cvui::checkbox(frame, scalex - 15, scaley + 190, "Pad", &ancpad);
 			cvui::checkbox(frame, scalex - 15, scaley + 50, "S2H - absolute", &ancpadlarge);
-			cvui::checkbox(frame, scalex - 15, scaley + 70, "H2S - absolute", &anchandtoscreen);
+			cvui::checkbox(frame, scalex - 15, scaley + 70, "H2S - relative", &anch2s_relative);
+			cvui::checkbox(frame, scalex - 15, scaley + 90, "H2S - absolute", &anchandtoscreen);
 
 			
 
@@ -216,8 +240,8 @@ namespace PalmSpaceUI {
 			// cvui::checkbox(frame, scalex + 125, scaley + 90, "Tap Depth Distance", &trigdepthdistance);
 			// cvui::checkbox(frame, scalex + 125, scaley + 170, "Tap Depth Single", &trigtapdepthsingle);
 
-			if (cellcnt < 3) cellcnt = 9;
-			if (cellcnt > 9) cellcnt = 3;
+			if (cellcnt < 2) cellcnt = 6;
+			if (cellcnt > 6) cellcnt = 2;
 			cvui::window(frame, scalex + 120, scaley + 100, 200, 50, "Number of cells per row/col");
 			cvui::counter(frame, scalex + 175, scaley + 125, &cellcnt, 2);
 			
@@ -232,11 +256,11 @@ namespace PalmSpaceUI {
 			
 
 
-			cvui::window(frame, scalex + 330, scaley + 10, 100, 100, "Screen Size");
-			cvui::checkbox(frame, scalex + 330, scaley + 30, "Small", &screen_small);
-			cvui::checkbox(frame, scalex + 330, scaley + 50, "Large", &screen_large);
-			cvui::checkbox(frame, scalex + 330, scaley + 70, "Fullscreen", &screen_full);
-			cvui::checkbox(frame, scalex + 330, scaley + 90, "128x128", &screen_400);
+			// cvui::window(frame, scalex + 330, scaley + 10, 100, 100, "Screen Size");
+			// cvui::checkbox(frame, scalex + 330, scaley + 30, "Small", &screen_small);
+			// cvui::checkbox(frame, scalex + 330, scaley + 50, "Large", &screen_large);
+			// cvui::checkbox(frame, scalex + 330, scaley + 70, "Fullscreen", &screen_full);
+			// cvui::checkbox(frame, scalex + 330, scaley + 90, "128x128", &screen_400);
 
 			// cvui::window(frame, scalex + 330, scaley + 120, 100, 70, "Visibility");
 			// cvui::checkbox(frame, scalex + 330, scaley + 140, "Fixed", &visibility_fixed);
@@ -248,9 +272,9 @@ namespace PalmSpaceUI {
 			// cvui::checkbox(frame, scalex + 330, scaley + 240, "Left Center", &trial_start_btn_location_left_center);
 			// cvui::checkbox(frame, scalex + 330, scaley + 260, "Right Center", &trial_start_btn_location_right_center);
 
-			cvui::window(frame, scalex + 330, scaley + 120, 160, 70, "Input Space");
-			cvui::checkbox(frame, scalex + 330, scaley + 140, "Same as screensize", &m_inputspace_sameasscreensize);
-			cvui::checkbox(frame, scalex + 330, scaley + 160, "Palm sized", &m_inputspace_palmsized);
+			// cvui::window(frame, scalex + 330, scaley + 120, 160, 70, "Input Space");
+			// cvui::checkbox(frame, scalex + 330, scaley + 140, "Same as screensize", &m_inputspace_sameasscreensize);
+			// cvui::checkbox(frame, scalex + 330, scaley + 160, "Palm sized", &m_inputspace_palmsized);
 
 
 			if (cvui::button(frame, width - 120, height - 50, 100, 30, "Next")) {
@@ -303,7 +327,8 @@ namespace PalmSpaceUI {
 		bool & trial_pause_before_each_target,
 		bool & trial_show_button_during_trial,
 		int & targets_cnt,
-		int & inputspace) {
+		int & inputspace,
+		bool & practice) {
 
 		if (onehand) initiator = 1;
 		if (twohand) initiator = 2;
@@ -313,6 +338,7 @@ namespace PalmSpaceUI {
 		if (anchandtoscreen) anchor = 3;
 		if (ancpad) anchor = 4;
 		if (ancpadlarge) anchor = 5;
+		if (anch2s_relative) anchor = 6;
 
 		if (trigpalmbase) trigger = 1;
 		if (trigpalmfree) trigger = 2;
@@ -348,6 +374,8 @@ namespace PalmSpaceUI {
 
 		if (m_inputspace_sameasscreensize) inputspace = 1;
 		else if (m_inputspace_palmsized) inputspace = 2;
+
+		practice = m_practice;
 	}
 
 
@@ -378,6 +406,7 @@ namespace PalmSpaceUI {
 			if (anchandtoscreen) cnt ++;
 			if (ancpad) cnt ++;
 			if (ancpadlarge) cnt ++;
+			if (anch2s_relative) cnt ++;
 			if (cnt != 1) {
 				valid = false;
 				errormsg = "Select exactly 1 anchor.";

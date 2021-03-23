@@ -79,6 +79,7 @@ namespace userstudies {
 
 
     Study1::Study1(
+        int _userID,
         std::string _filename, 
         std::string _trial_counter_file_loc, 
         std::string _events_dir,
@@ -86,6 +87,8 @@ namespace userstudies {
         std::string _selection, 
         int _no_of_grids) {
         
+        m_userID = std::to_string(_userID);
+
         m_filename                  = _filename;
         m_trial_counter_file_loc    = _trial_counter_file_loc;
         m_events_dir                = _events_dir;
@@ -94,6 +97,7 @@ namespace userstudies {
         m_selection     = _selection;
         m_no_of_grids   = _no_of_grids;
         m_headers = {
+            "user_id",
             "trial_id",
             "selection", "technique", "no_of_grids", 
             "target_no", "target_location", 
@@ -103,6 +107,7 @@ namespace userstudies {
         };
 
         m_event_headers = {
+            "user_id",
             "trial_id",
             "selection", "technique", "no_of_grids", 
             "target_no", "target_location", 
@@ -128,7 +133,7 @@ namespace userstudies {
 
         fin.close();
 
-        std::string row = trial_id + "," + m_selection + "," + m_technique + "," + std::to_string(m_no_of_grids);
+        std::string row = m_userID + "," + trial_id + "," + m_selection + "," + m_technique + "," + std::to_string(m_no_of_grids);
 
         row = row + "," + std::to_string(_target_id)                + ",\"("  + std::to_string(_target_loc_indices.first)  + "," + std::to_string(_target_loc_indices.second) + ")\"";
 
@@ -154,9 +159,9 @@ namespace userstudies {
         std::string trial_id;
         fin >> trial_id;
         fin.close();
-        std::string event_file = m_events_dir + "/" + trial_id + ".csv";
+        std::string event_file = m_events_dir + "/" + m_userID + "_" + trial_id + ".csv";
 
-        std::string row = trial_id  + "," + m_selection + "," + m_technique + "," + std::to_string(m_no_of_grids);
+        std::string row = m_userID + "," + trial_id  + "," + m_selection + "," + m_technique + "," + std::to_string(m_no_of_grids);
 
         row             = row + "," + std::to_string(_target_id)                + ",\"("  + std::to_string(_target_loc_indices.first)  + "," + std::to_string(_target_loc_indices.second) + ")\"";
 

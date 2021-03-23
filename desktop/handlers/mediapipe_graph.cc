@@ -33,8 +33,8 @@ constexpr char kHandedness[] = "handedness";
 constexpr int BLOB_AREA_THRESH = 100;
 constexpr int INFO_TXT_BOLDNESS = 2;
 
-constexpr int trial_btn_width = 60;
-constexpr int trial_btn_height = 60;
+constexpr int trial_btn_width = 70;
+constexpr int trial_btn_height = 50;
 
 
 unsigned int root(unsigned int x){
@@ -61,12 +61,10 @@ MediaPipeMultiHandGPU::MediaPipeMultiHandGPU(
   camera = NULL;
   m_debug = false;
 
-  std::cerr << "m_output_video_path:" << m_output_video_path << "\n";
 }
 
 
 MediaPipeMultiHandGPU::~MediaPipeMultiHandGPU() {
-  std::cerr << "MediaPipeMultiHandGPU destructor called\n";
   if (camera != NULL) {
     delete camera;
   }
@@ -87,7 +85,6 @@ MediaPipeMultiHandGPU::~MediaPipeMultiHandGPU() {
     cv::destroyWindow(m_window_name);
   }
 
-  std::cerr << "MediaPipeMultiHandGPU destructor successful\n";
 }
 
 
@@ -284,29 +281,32 @@ void MediaPipeMultiHandGPU::debug(
 
   Timer timer = Timer();
 
-  timer.setInterval([&]() {
-    if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
-      if (trial && trial->started()) {
-        study1->update_event(
-          trial->m_target_id,
-          trial->m_target_sequence[trial->m_target_id],
-          trial->m_time_taken[trial->m_target_id].count() * 1000, // converting to millisec
-          trial->m_dist_traveled_px[trial->m_target_id],
-          trial->m_attempts[trial->m_target_id],
-          trial->m_visited_cells[trial->m_target_id],
-          trial->m_dist_travelled_palms[0][trial->m_target_id],
-          trial->m_dist_travelled_palms[1][trial->m_target_id],
-          params.lefthand_landmarks_str(),
-          params.righthand_landmarks_str()
-        );
+  if (!m_practice_mode) {
+    timer.setInterval([&]() {
+      if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
+        if (trial && trial->started()) {
+          study1->update_event(
+            trial->m_target_id,
+            trial->m_target_sequence[trial->m_target_id],
+            trial->m_time_taken[trial->m_target_id].count() * 1000, // converting to millisec
+            trial->m_dist_traveled_px[trial->m_target_id],
+            trial->m_attempts[trial->m_target_id],
+            trial->m_visited_cells[trial->m_target_id],
+            trial->m_dist_travelled_palms[0][trial->m_target_id],
+            trial->m_dist_travelled_palms[1][trial->m_target_id],
+            params.lefthand_landmarks_str(),
+            params.righthand_landmarks_str()
+          );
+        }
+        
       }
-      
-    }
-  }, 50);
+    }, 50);
+  }
 
 
   while (!isDone && m_grab_frames) {
 
+    std::cerr << "m_practice_mode:" << m_practice_mode << "\n";
     if (trial && trial->done()) {
       break;
     }
@@ -355,6 +355,8 @@ void MediaPipeMultiHandGPU::debug(
       cv::Mat input_frame_mat = mediapipe::formats::MatView(input_frame.get());
       camera_frame.copyTo(input_frame_mat);
     }
+
+    
 
 
     // Prepare and add graph input packet.
@@ -427,6 +429,7 @@ void MediaPipeMultiHandGPU::debug(
       _handedness_found = false;
     }
 
+
     params.m_hand_mask = 0;
 
     if (_handedness_found) {
@@ -440,10 +443,8 @@ void MediaPipeMultiHandGPU::debug(
 
       for (int i = 0; i < 2 && i < handedness.size(); i ++) {
         auto& h = handedness[i];
-        // std::cerr << "h.classification_size:" << h.classification_size() << "\n";
         if (h.classification_size() > 0) {
           const mediapipe::Classification & c = h.classification(0);
-          // std::cerr << "i:" << i << " label:" << c.label() << "\tindex:" << c.index() << "\n";
           
           switch (c.index()) {
             case 0:
@@ -453,7 +454,7 @@ void MediaPipeMultiHandGPU::debug(
               params.hand[i] = handedness::RIGHT;
               break;
             default:
-              std::cerr << "invalid handedness\n";
+              std::cout << "ERROR: invalid handedness\n";
           }
 
           params.m_hand_mask |= (1 << (int)c.index());
@@ -496,7 +497,6 @@ void MediaPipeMultiHandGPU::debug(
       for (const auto& hand_landmarks : multi_hand_landmarks) {
         if (hand_id == 2) break; // considering only two hands
         int phand_id = params.hand[hand_id];
-        // std::cout << "hand_id:" << hand_id << "\tphand_id:" << phand_id << "\n";
         int j = 0;        
         for (const auto& landmark : hand_landmarks.landmark()) {
           
@@ -510,15 +510,11 @@ void MediaPipeMultiHandGPU::debug(
           ++ j;
         }
 
-        // std::cout << "setting params.m_points\n";
-
         for (int i = 0; i < 21; i ++) {
           params.m_points[phand_id][i].set(
             points[phand_id][i]
           );
         }
-
-        // std::cout << "setting params.m_points dpne\n";
 
         handlers::util::GetMinMaxZ(
           points[phand_id], 
@@ -530,7 +526,7 @@ void MediaPipeMultiHandGPU::debug(
           params.m_hand_landmarks_relative_depth_minmax[phand_id].first,
           params.m_hand_landmarks_relative_depth_minmax[phand_id].second,
           &params.m_hand_color_scale[phand_id],
-          1, 20,
+          1, 10,
           &params.m_hand_size_scale[phand_id]
         );
 
@@ -538,6 +534,7 @@ void MediaPipeMultiHandGPU::debug(
       }
 
     }
+
 
     for (int i = 0; i < 2; i ++) {
       if (params.m_hand_mask & (1 << i)) {
@@ -550,15 +547,9 @@ void MediaPipeMultiHandGPU::debug(
       }
     }
 
-    // std::cout << "hand_id:" << hand_id << "\n";
-    // for (int i =  0; i < 2; i ++ ) {
-    //   std::cout << "threshold :" << i << ": " << points_reset_counter[i] << "\n";
-    // }
-
     auto sm_points = params.get_points();
 
-    // std::cerr << "calling initiator->params(points, params)\n";
-    // std::cerr << "initiator null? " << (initiator == NULL) << "\n";
+
     initiator->params(sm_points, params);
 
     params.set_is_static(anchor->m_static_display);
@@ -573,11 +564,9 @@ void MediaPipeMultiHandGPU::debug(
       params.reset();
     }
 
-
-    
-    
     if (anchor->type() == choices::anchor::HANDTOSCREEN || 
-      anchor->type() == choices::anchor::PADLARGE) {
+      anchor->type() == choices::anchor::PADLARGE ||
+      anchor->type() == choices::anchor::H2SRELATIVE) {
       m_primary_output = cv::Mat(
           frame_height, 
           frame_width, 
@@ -614,18 +603,21 @@ void MediaPipeMultiHandGPU::debug(
       trial->update_right_palm_distance(rightpalm_x, rightpalm_y);
       trial->update_cur_target_time();
 
-      study1->update_event(
-        trial->m_target_id,
-        trial->m_target_sequence[trial->m_target_id],
-        trial->m_time_taken[trial->m_target_id].count() * 1000, // converting to millisec
-        trial->m_dist_traveled_px[trial->m_target_id],
-        trial->m_attempts[trial->m_target_id],
-        trial->m_visited_cells[trial->m_target_id],
-        trial->m_dist_travelled_palms[0][trial->m_target_id],
-        trial->m_dist_travelled_palms[1][trial->m_target_id],
-        params.lefthand_landmarks_str(),
-        params.righthand_landmarks_str()
-      );
+      
+      if (!m_practice_mode) {
+        study1->update_event(
+          trial->m_target_id,
+          trial->m_target_sequence[trial->m_target_id],
+          trial->m_time_taken[trial->m_target_id].count() * 1000, // converting to millisec
+          trial->m_dist_traveled_px[trial->m_target_id],
+          trial->m_attempts[trial->m_target_id],
+          trial->m_visited_cells[trial->m_target_id],
+          trial->m_dist_travelled_palms[0][trial->m_target_id],
+          trial->m_dist_travelled_palms[1][trial->m_target_id],
+          params.lefthand_landmarks_str(),
+          params.righthand_landmarks_str()
+        );
+      }
     } else {
       params.m_is_cursor_over_trial_button =
         trial->is_cursor_over_trial_button(cursor_x, cursor_y);
@@ -670,7 +662,6 @@ void MediaPipeMultiHandGPU::debug(
             } else {
               
               if (anchor->m_grid.is_inside_cv(cursor_x, cursor_y)) {
-                
                 trial->increment_attempts();
               } else {
                 std::cout << "cursor not inside grid\n";
@@ -682,19 +673,21 @@ void MediaPipeMultiHandGPU::debug(
                 trial->m_visited_cells[trial->m_target_id] = anchor->m_visited_cells;
                 anchor->m_visited_cells = 0;
 
-                study1->save(
-                  trial->m_target_id,
-                  trial->m_target_sequence[trial->m_target_id],
-                  trial->m_time_taken[trial->m_target_id].count() * 1000, // converting to millisec
-                  trial->m_dist_traveled_px[trial->m_target_id],
-                  trial->m_attempts[trial->m_target_id],
-                  trial->m_visited_cells[trial->m_target_id],
-                  trial->m_dist_travelled_palms[0][trial->m_target_id],
-                  trial->m_dist_travelled_palms[1][trial->m_target_id]
-                );
+                if (!m_practice_mode) {
+                  study1->save(
+                    trial->m_target_id,
+                    trial->m_target_sequence[trial->m_target_id],
+                    trial->m_time_taken[trial->m_target_id].count() * 1000, // converting to millisec
+                    trial->m_dist_traveled_px[trial->m_target_id],
+                    trial->m_attempts[trial->m_target_id],
+                    trial->m_visited_cells[trial->m_target_id],
+                    trial->m_dist_travelled_palms[0][trial->m_target_id],
+                    trial->m_dist_travelled_palms[1][trial->m_target_id]
+                  );
 
-                study1->increment_trial_counter();
-                std::cerr << "marked_i:" << anchor->m_marked_i << "\tmarked_j:" << anchor->m_marked_j << "\n";
+                  study1->increment_trial_counter();
+                }
+
                 trial->move_to_next_target(anchor->m_marked_i-1, anchor->m_marked_j-1);
                 
                 anchor->reset_selection();
@@ -712,13 +705,13 @@ void MediaPipeMultiHandGPU::debug(
       }
           
       if (anchor->m_calculate_done) {
+
         anchor->draw(
             camera_frame, 
             m_primary_output,
             interface_scaling_factor,
             cursor_x, cursor_y, params);
         
-
         if (trial->started()) {
             trial->draw_target(m_primary_output, anchor->m_grid_out);
         }

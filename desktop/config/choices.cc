@@ -42,7 +42,9 @@ namespace choices {
                 case PADLARGE:
                     return "S2H_absolute";
                 case HANDTOSCREEN:
-                     return "H2S";
+                    return "H2S_absolute";
+                case H2SRELATIVE:
+                    return "H2S_relative";
                 default:
                     return "invalid";
             }

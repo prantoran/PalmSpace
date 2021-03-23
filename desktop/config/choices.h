@@ -16,7 +16,8 @@ namespace choices {
             HANDTOSCREEN,
             PAD,
             PADLARGE,
-            S2HABSOLUTE
+            S2HABSOLUTE,
+            H2SRELATIVE
         };
 
         std::string str(const types & a);

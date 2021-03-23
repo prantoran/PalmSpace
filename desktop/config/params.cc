@@ -128,11 +128,15 @@ void Parameters::set_total_hands(int hands) {
 
 
 void Parameters::get_selected_cell(int &row_i, int &col_j) {
+
+
     row_i = std::get<0>(selected_cell);
     col_j = std::get<1>(selected_cell);
 }
 
 void Parameters::set_selected_cell(index_t row_i, index_t col_j) {
+
+    std::cerr << "set_selected_cell selected cell rowi:" << row_i << "\tcolj:" << col_j << "\n";
     selected_cell = std::make_tuple(row_i, col_j);
 }
 

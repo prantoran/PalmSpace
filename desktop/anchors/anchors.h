@@ -15,6 +15,7 @@
 #include "handtoscreen.h"
 #include "dynamic.h"
 #include "s2h_absolute.h"
+#include "h2s_relative.h"
 
 // forward declaration, defined in config/config.h
 // class Parameters;

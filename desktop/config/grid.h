@@ -16,6 +16,7 @@ class Grid {
   cv::Point get_top_left() const;
   cv::Point get_bottom_left() const;
   cv::Point get_top_right() const;
+  cv::Point get_bottom_middle() const;
 
   cv::Rect get_bound_rect() const;
   void reset();

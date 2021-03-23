@@ -112,14 +112,23 @@ void AnchoHandToScreen::calculate(
             height
         );
 
-        image_palm_dim_max = (double)std::min(width, height)/2;
+        m_image_palm_dim_max = (double)std::min(width, height)/2;
     }
 
 
     if (m_inputspace_type == choices::inputspace::PALMSIZED) {
         m_palm_x = params.palm_width();
         m_palm_y = params.palm_height();
-        m_max_dim = std::min(image_palm_dim_max, std::max(64.0, std::max(m_palm_x.second  - m_palm_x.first, m_palm_y.second - m_palm_y.first)));
+        m_max_dim = std::min(
+                        m_image_palm_dim_max, 
+                        std::max(
+                            64.0, 
+                            std::max(
+                                m_palm_x.second  - m_palm_x.first, 
+                                m_palm_y.second - m_palm_y.first
+                            )
+                        )
+                    );
 
         setup_palmiamge(m_image_path, m_max_dim*2, (m_max_dim*15)/8);        
     }
@@ -163,7 +172,7 @@ void AnchoHandToScreen::calculate(
         m_grid.align(indexbase_x*width, indexbase_y*height);
         // align_grid(m_grid, params.m_indexbase);
         m_grid_out.align(indexbase_x*width, indexbase_y*height);
-
+        
         setupInputGrid(pointer_x, pointer_y, params.m_palmbase);
 
         if (!isInside(pointer_x, pointer_y)) {
