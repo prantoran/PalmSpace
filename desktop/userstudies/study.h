@@ -42,18 +42,30 @@ namespace userstudies {
             int _no_of_grids);
         
         void save(
-            int _target_id, const std::pair<int, int> & _target_loc_indices, 
-            double _time_taken_ms, double _dist_traveled_px,
-            int _attempts, int _visited_cells,
-            double _dist_travelled_left_hand, double _dist_travelled_right_hand);
+            int                         _target_id, 
+            const std::pair<int, int> & _target_loc_indices, 
+            double                      _time_taken_ms, 
+            double                      _dist_traveled_px,
+            double                      _target_last_visit_time_ms,
+            int                         _attempts, 
+            int                         _visited_cells,
+            double                      _dist_travelled_left_hand, 
+            double                      _dist_travelled_right_hand
+        );
 
         void update_event(
-            int _target_id, const std::pair<int, int> & _target_loc_indices, 
-            double _time_taken_ms, double _dist_traveled_px,
-            int _attempts, int _visited_cells,
-            double _dist_travelled_left_hand, double _dist_travelled_right_hand,
-            const std::string & _lefthand_landmarks,
-            const std::string & _righthand_landmarks);
+            int                         _target_id, 
+            const std::pair<int, int> & _target_loc_indices, 
+            double                      _time_taken_ms, 
+            double                      _dist_traveled_px,
+            double                      _target_last_visit_time_ms,
+            int                         _attempts, 
+            int                         _visited_cells,
+            double                      _dist_travelled_left_hand, 
+            double                      _dist_travelled_right_hand,
+            const std::string &         _lefthand_landmarks,
+            const std::string &         _righthand_landmarks
+        );
 
     };
 }

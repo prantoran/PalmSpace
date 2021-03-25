@@ -26,7 +26,7 @@ namespace userstudies {
         int m_divisions;
         std::vector<std::pair<int, int>> m_target_sequence;
 
-        std::vector<std::chrono::duration<double>> m_time_taken; 
+        std::vector<double> m_time_taken_ms; 
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> 
             m_trial_start_times, m_trial_end_times;
 
@@ -61,13 +61,15 @@ namespace userstudies {
         std::vector<double> m_dist_travelled_palms[2]; // 0 = left, 1 = right
         std::vector<std::pair<int, int>> m_palm_base_last_pos[2];
 
+        // records the last time the cursor changed from another cell to target cell
+        // from the start of the trial of the current target
+        std::vector<double> m_targets_last_visited_time_ms;
 
         Trial(int _divisions, int _view_width, int _view_height);
         ~Trial();
         void update_start_button_input_loc(
             const cv::Point & _topleft, 
             const cv::Point & _bottomright);
-        void update_start_button_input_loc(Grid & grid);
         void update_start_button_input_loc(cv::Mat & output_frame);
         void draw_start_button(
             cv::Mat & output_frame,
@@ -92,6 +94,8 @@ namespace userstudies {
         void _upd_palm_dist(int palm_id, int _x, int _y);
         void update_cur_target_time();
         void draw_completed_targets_text(cv::Mat & output_frame);
+        void update_target_last_visited_time(const std::chrono::time_point<std::chrono::steady_clock> & _last_visited_time);
+        void draw_debug(cv::Mat & output_frame);
     };
 };
 

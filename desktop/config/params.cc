@@ -135,8 +135,6 @@ void Parameters::get_selected_cell(int &row_i, int &col_j) {
 }
 
 void Parameters::set_selected_cell(index_t row_i, index_t col_j) {
-
-    std::cerr << "set_selected_cell selected cell rowi:" << row_i << "\tcolj:" << col_j << "\n";
     selected_cell = std::make_tuple(row_i, col_j);
 }
 
@@ -307,7 +305,7 @@ int Parameters::primary_cursor_size() {
 
 int Parameters::primary_cursor_color_size() {
     if (!m_valid_points[handedness::RIGHT]) {
-        std::cout <<"WARNING: config/params.cc primary_cursor_size() m_valid_points[handedness::RIGHT] false\n";
+        // std::cout <<"WARNING: config/params.cc primary_cursor_size() m_valid_points[handedness::RIGHT] false\n";
         return 0;
     }
 
@@ -320,7 +318,7 @@ int palm_ids [] = {0, 1, 5, 9, 13, 17};
 
 std::pair<double, double> Parameters::palm_width() const {
     if (!m_valid_points[handedness::LEFT]) {
-        std::cout <<"WARNING: config/params.cc palm_width() m_valid_points[handedness::LEFT] false\n";
+        // std::cout <<"WARNING: config/params.cc palm_width() m_valid_points[handedness::LEFT] false\n";
         return {0, 0};
     }
 

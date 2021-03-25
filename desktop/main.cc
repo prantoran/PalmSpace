@@ -170,9 +170,9 @@ int main(int argc, char** argv) {
   int choice_anchor = 6;
   int choice_trigger = 5; // 5 tap z 6 tap depth cam 8 dwell
   int choice_initiator = 1;
-  int choice_divisions = 2;
+  int choice_divisions = 4;
   int choice_screensize = 4;
-  int choice_debug = 0;
+  int choice_debug = 1;
   int choice_visibility = 1;
   int choice_depth = 1;
   int choice_trial_start_btn_location = 4;
@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
   bool choice_trial_show_button_during_trial = false;
   int choice_targets_cnt = 3;
   int choice_inputspace = 2;
-  bool choice_practice = true;
+  bool choice_practice = false;
 
   #ifndef REALSENSE_CAM
     if (choice_depth == 8)
@@ -272,6 +272,8 @@ int main(int argc, char** argv) {
     // s.init_file_with_headers();
 
     mp_graph->m_practice_mode = choice_practice;
+    
+    std::cerr << "choice_divisions:" << choice_divisions << "\n";
 
     mp_graph->study1 = new userstudies::Study1(
         userID,
@@ -411,53 +413,18 @@ int main(int argc, char** argv) {
     std::cout << "choice_trigger:" << choice_trigger << "\n";
 
     switch (choice_trigger) {
-      case 1:
-        mp_graph->trigger = new TriggerThumb(FLAGS_frame_width, FLAGS_frame_height);
-        break;
-      case 2:
-        mp_graph->trigger = new TriggerThumbOther(FLAGS_frame_width, FLAGS_frame_height);
-        break;
-      case 3:
-        mp_graph->trigger = new TriggerPinch(FLAGS_frame_width, FLAGS_frame_height);
-        break;
-      case 4:
-        mp_graph->trigger =  new TriggerWait(FLAGS_frame_width, FLAGS_frame_height, -1);
-        // mp_graph->trigger->set_anchor_choice(choice_anchor); // TODO inspect, needed by wait trigger
-        break;
       case 5:
         mp_graph->trigger = new TriggerTap();
         break;
       case 6:
         mp_graph->trigger = new TriggerDwell();
         break;
-      case 7:
-        mp_graph->trigger = new TriggerTapDepthArea(
-                                  load_video, 
-                                  save_video, 
-                                  FLAGS_fps,
-                                  FLAGS_frame_width, 
-                                  FLAGS_frame_height);
-        break;
-      case 8:
-        // mp_graph->trigger = new TriggerTapDepth();
-        mp_graph->trigger = new TriggerTapDepthGradient();
-        break;
-      case 9:
-        mp_graph->trigger = new TriggerTapDepthSingle();
-        break;
-      case 10:
-        mp_graph->trigger = new TriggerTapDepthDistance();
-        break;
       default:
         std::cout << "invalid trigger choice\n";
         return EXIT_FAILURE;
     }
-
-    std::cerr << "choice_screensize:" << choice_screensize << "\n";
     
     choices::screensize::types ssize = choices::screensize::from_int(choice_screensize);
-
-    std::cerr << "ssize:" << ssize << "\n";
     
     choices::visibility::types _visibility = choices::visibility::from_int(choice_visibility);
 

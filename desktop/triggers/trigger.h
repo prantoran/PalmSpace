@@ -11,10 +11,11 @@
 
 namespace TRIGGER {
     typedef enum{
+        INVALID,
         OPEN,
+        ONHOLD,
         PRESSED, 
         RELEASED,
-        INVALID
     } state;
 }
 
@@ -44,7 +45,7 @@ class Trigger {
         Parameters & params) = 0;
 
     TRIGGER::state status();
-    void reset_status();
+    virtual void reset() = 0;
 };
 
 

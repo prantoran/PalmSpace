@@ -59,7 +59,6 @@ void InitiatorDefault::params(
   const std::vector<std::vector<std::tuple<double, double, double>>> & points,
   Parameters & params) {
   
-  std::cerr << "initiator default params()\n";
 
   // params() to be called if inspect() returns true
 
@@ -83,7 +82,6 @@ void InitiatorDefault::params(
     m1 = points[1-handedness::LEFT].size();
   }
 
-  std::cerr << "set totatl hands detected\n";
   
   if (m0 > PALMBASE_IDX) {
     if (
@@ -113,7 +111,6 @@ void InitiatorDefault::params(
     
   }
 
-  std::cerr << "setting idx\n";
 
   int idx = -1;
   switch(params.total_hands_detected()) {
@@ -133,7 +130,6 @@ void InitiatorDefault::params(
       break;
   }
 
-  std::cerr << "reseting cursor id\n";
   
   params.m_cursor_id = -1;
 

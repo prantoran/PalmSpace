@@ -8,9 +8,7 @@
 class TriggerTap: public Trigger {
     public:
 
-    int m_base_rel_depth, m_diff;
-
-    
+    double m_base_rel_depth, m_diff;
 
     TriggerTap();
     
@@ -18,7 +16,7 @@ class TriggerTap: public Trigger {
         const cv::Mat & input_image,
         const std::vector<std::vector<std::tuple<double, double, double>>> & points,
         Parameters & params);
-
+    void reset();
 };
 
 #endif

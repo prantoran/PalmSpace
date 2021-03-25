@@ -5,6 +5,7 @@ Anchor::Anchor() {
     m_cur_time_id = 0;
     m_past_selections_size = 15;
     m_past_selections = std::vector<std::pair<int, int>> (m_past_selections_size);
+    reset_last_visited_cell_time();
 }
 
 
@@ -110,8 +111,9 @@ void Anchor::setupSelection(
     
     if (selected_row_i != -1) {
         if (selected_row_i != m_selected_i_prv || selected_col_j != m_selected_j_prv) {
+            update_last_visited_cell_time(selected_row_i, selected_col_j);
             message = "Highlighted: ";
-            message += std::to_string((selected_col_j-1)*m_grid.m_divisions + selected_row_i);
+            message += std::to_string((selected_col_j-1)*m_grid.m_divisions + selected_row_i); // selected_[col,row]_[i,j] 1-indexed
             m_visited_cells ++;
         }
     } 
@@ -271,8 +273,8 @@ void Anchor::draw_cells(cv::Mat & src, const Grid & grid) {
 
 
 void Anchor::adjust_selection_prior_trigger() {
-    m_selected_i = m_past_selections[(m_cur_time_id+3)%m_past_selections_size].first;
-    m_selected_j = m_past_selections[(m_cur_time_id+3)%m_past_selections_size].second;
+    m_selected_i = m_past_selections[(m_cur_time_id-2+m_past_selections_size)%m_past_selections_size].first;
+    m_selected_j = m_past_selections[(m_cur_time_id-2+m_past_selections_size)%m_past_selections_size].second;
 }
 
 
@@ -293,3 +295,24 @@ void Anchor::setup_background(cv::Mat & _background, std::string _imagePath, int
     cv::resize(_background, _background, cv::Size(_width, _height));
 }
 
+
+void Anchor::update_last_visited_cell_time(int _row_i, int _col_j) {
+    m_last_time_visited[_row_i][_col_j] = std::chrono::steady_clock::now();
+}
+
+
+void Anchor::reset_last_visited_cell_time() {
+    const auto curtime = std::chrono::steady_clock::now();
+    
+    for (int i = 0; i < 11; i ++) {
+        for (int j = 0; j < 11; j ++) {
+            m_last_time_visited[i][j] = curtime;
+        }
+    }
+}
+
+
+std::chrono::time_point<std::chrono::steady_clock> Anchor::get_last_visited_cell_time(int _row_i, int _col_j) {
+    // _row_i, _col_j 0-indexed, from trial target
+    return m_last_time_visited[_row_i][_col_j];
+}

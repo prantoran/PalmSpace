@@ -30,8 +30,3 @@ TRIGGER::state Trigger::status() {
     return cur_state;
 }
 
-
-void Trigger::reset_status() {
-    m_cnt = 0;
-    cur_state = TRIGGER::OPEN;
-}

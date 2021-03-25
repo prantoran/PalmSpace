@@ -283,30 +283,31 @@ void MediaPipeMultiHandGPU::debug(
 
   if (!m_practice_mode) {
     timer.setInterval([&]() {
-      if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
-        if (trial && trial->started()) {
-          study1->update_event(
-            trial->m_target_id,
-            trial->m_target_sequence[trial->m_target_id],
-            trial->m_time_taken[trial->m_target_id].count() * 1000, // converting to millisec
-            trial->m_dist_traveled_px[trial->m_target_id],
-            trial->m_attempts[trial->m_target_id],
-            trial->m_visited_cells[trial->m_target_id],
-            trial->m_dist_travelled_palms[0][trial->m_target_id],
-            trial->m_dist_travelled_palms[1][trial->m_target_id],
-            params.lefthand_landmarks_str(),
-            params.righthand_landmarks_str()
-          );
-        }
-        
+      // if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
+      if (trial && trial->started()) {
+        study1->update_event(
+          trial->m_target_id,
+          trial->m_target_sequence[trial->m_target_id],
+          trial->m_time_taken_ms[trial->m_target_id], // converting to millisec
+          trial->m_dist_traveled_px[trial->m_target_id],
+          trial->m_targets_last_visited_time_ms[trial->m_target_id],
+          trial->m_attempts[trial->m_target_id],
+          trial->m_visited_cells[trial->m_target_id],
+          trial->m_dist_travelled_palms[0][trial->m_target_id],
+          trial->m_dist_travelled_palms[1][trial->m_target_id],
+          params.lefthand_landmarks_str(),
+          params.righthand_landmarks_str()
+        );
       }
+        
+      // }
     }, 50);
   }
 
 
   while (!isDone && m_grab_frames) {
 
-    std::cerr << "m_practice_mode:" << m_practice_mode << "\n";
+
     if (trial && trial->done()) {
       break;
     }
@@ -323,10 +324,7 @@ void MediaPipeMultiHandGPU::debug(
     camera->rgb(camera_frame);
 
 
-    if (anchor->m_type == choices::anchor::PADLARGE || 
-        anchor->m_type == choices::anchor::HANDTOSCREEN) {
-      camera_frame.copyTo(m_depth_map);
-    }
+    camera_frame.copyTo(m_depth_map);
 
     if (camera_frame.empty()) {
       std::cout << "camera frame empty\n"; 
@@ -598,26 +596,18 @@ void MediaPipeMultiHandGPU::debug(
     params.m_is_cursor_over_trial_button = false;
   
     if (trial->started()) {
+      // updating data for periodically saving events using timer
       trial->update_cur_target_distance_traveled(cursor_x, cursor_y);
       trial->update_left_palm_distance(leftpalm_x, leftpalm_y);
       trial->update_right_palm_distance(rightpalm_x, rightpalm_y);
       trial->update_cur_target_time();
+      trial->m_visited_cells[trial->m_target_id] = anchor->m_visited_cells;
 
+      const std::pair<int, int> & p = trial->current_target();
+      trial->update_target_last_visited_time(
+        anchor->get_last_visited_cell_time(p.first+1, p.second+1)
+      );
       
-      if (!m_practice_mode) {
-        study1->update_event(
-          trial->m_target_id,
-          trial->m_target_sequence[trial->m_target_id],
-          trial->m_time_taken[trial->m_target_id].count() * 1000, // converting to millisec
-          trial->m_dist_traveled_px[trial->m_target_id],
-          trial->m_attempts[trial->m_target_id],
-          trial->m_visited_cells[trial->m_target_id],
-          trial->m_dist_travelled_palms[0][trial->m_target_id],
-          trial->m_dist_travelled_palms[1][trial->m_target_id],
-          params.lefthand_landmarks_str(),
-          params.righthand_landmarks_str()
-        );
-      }
     } else {
       params.m_is_cursor_over_trial_button =
         trial->is_cursor_over_trial_button(cursor_x, cursor_y);
@@ -627,22 +617,22 @@ void MediaPipeMultiHandGPU::debug(
       camera_frame, 
       interface_scaling_factor,
       cursor_x, cursor_y, params); 
-
-    params.m_is_cursor_over_trial_button =
-      trial->is_cursor_over_trial_button(cursor_x, cursor_y);
     
     if (show_display || anchor->m_static_display) {
 
       trigger->update(camera_frame, sm_points, params);
 
       switch (trigger->status()) {
-        
+        case TRIGGER::ONHOLD:
+          break;
+        case TRIGGER::OPEN:
+          break;
         case TRIGGER::PRESSED:
 
           anchor->adjust_selection_prior_trigger();
 
           anchor->lock_selection();
-        
+          break;
         case TRIGGER::RELEASED:
 
           if (!trial || trial->started()) {
@@ -653,54 +643,66 @@ void MediaPipeMultiHandGPU::debug(
             }
           }
 
-          if (trial) {
-            if (params.m_is_cursor_over_trial_button) {
-              trial->process_button_clicked();
+          if (params.m_is_cursor_over_trial_button) {
+            trial->process_button_clicked();
+            anchor->reset_selection();
+            anchor->reset_marked_cell();
+            anchor->unlock_selection();
+            anchor->m_visited_cells = 0;
+          } else {
+            
+            if (anchor->m_grid.is_inside_cv(cursor_x, cursor_y)) {
+              trial->increment_attempts();
+            } else {
+              std::cout << "cursor not inside grid\n";
+            }
+
+            if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
+              trial->update_cur_target_time();
+              
+              trial->m_visited_cells[trial->m_target_id] = anchor->m_visited_cells;
+              anchor->m_visited_cells = 0;
+
+              if (!m_practice_mode) {
+                // not in practice mode, save data
+
+                const int target_id = trial->m_target_id;
+
+                study1->save(
+                  trial->m_target_id,
+                  trial->m_target_sequence[target_id],
+                  trial->m_time_taken_ms[target_id], // converting to millisec
+                  trial->m_dist_traveled_px[target_id],
+                  trial->m_targets_last_visited_time_ms[target_id],
+                  trial->m_attempts[target_id],
+                  trial->m_visited_cells[target_id],
+                  trial->m_dist_travelled_palms[0][target_id],
+                  trial->m_dist_travelled_palms[1][target_id]
+                );
+
+                study1->increment_trial_counter();
+              }
+
+              trial->move_to_next_target(anchor->m_marked_i-1, anchor->m_marked_j-1);
+              
               anchor->reset_selection();
               anchor->reset_marked_cell();
-              anchor->unlock_selection();
-            } else {
-              
-              if (anchor->m_grid.is_inside_cv(cursor_x, cursor_y)) {
-                trial->increment_attempts();
-              } else {
-                std::cout << "cursor not inside grid\n";
-              }
 
-              if (trial->matched(anchor->m_selected_i-1, anchor->m_selected_j-1)) {
-                trial->update_cur_target_time();
-                
-                trial->m_visited_cells[trial->m_target_id] = anchor->m_visited_cells;
-                anchor->m_visited_cells = 0;
+              anchor->lock_selection();
 
-                if (!m_practice_mode) {
-                  study1->save(
-                    trial->m_target_id,
-                    trial->m_target_sequence[trial->m_target_id],
-                    trial->m_time_taken[trial->m_target_id].count() * 1000, // converting to millisec
-                    trial->m_dist_traveled_px[trial->m_target_id],
-                    trial->m_attempts[trial->m_target_id],
-                    trial->m_visited_cells[trial->m_target_id],
-                    trial->m_dist_travelled_palms[0][trial->m_target_id],
-                    trial->m_dist_travelled_palms[1][trial->m_target_id]
-                  );
-
-                  study1->increment_trial_counter();
-                }
-
-                trial->move_to_next_target(anchor->m_marked_i-1, anchor->m_marked_j-1);
-                
-                anchor->reset_selection();
-                anchor->reset_marked_cell();
-
-                anchor->lock_selection();
-              }
+              anchor->reset_last_visited_cell_time();
             }
           }
+          
+          trigger->reset();
+          std::cerr << "handler release switch\n";
+          break;
 
-          trigger->reset_status();
+
         default:
           anchor->unlock_selection();
+          trigger->reset();
+          std::cerr << "handler default switch\n";
           break;
       }
           
@@ -925,6 +927,9 @@ void MediaPipeMultiHandGPU::debug(
       }
 
       if (debug_mode == 1) {
+
+        trial->draw_debug(m_depth_map);
+
         if (!m_depth_map.empty()) {
           debug(m_depth_map, params.m_points, params);
         } else {
@@ -956,12 +961,12 @@ void MediaPipeMultiHandGPU::debug(
   if (trial) {
     std::cerr << "time taken:\n";
     for (int i =  0 ; i < trial->m_target_sequence_size; i ++) {
-      std::cerr << "target " << i << ": " << trial->m_time_taken[i].count() << "\n";
+      std::cerr << "target " << i << ": " << trial->m_time_taken_ms[i] << "\n";
     }
 
     m_primary_output = cv::Scalar(79,79,79);
     for (int i = 0; i < trial->m_target_sequence_size; i ++) {
-      std::string str = "target " + std::to_string(i) + ": " + std::to_string(trial->m_time_taken[i].count());
+      std::string str = "target " + std::to_string(i) + ": " + std::to_string(trial->m_time_taken_ms[i]);
       std::cerr << "str:" << str << "\n";
       cvui::text(
         m_primary_output,

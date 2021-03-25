@@ -57,6 +57,10 @@ class Anchor { // interface via abstract class
     double m_max_dim;
 
     bool m_calculate_done;
+
+    // records the last time the cursor changed from another cell to target cell 
+    std::chrono::time_point<std::chrono::steady_clock> m_last_time_visited[11][11];
+
     
     Anchor();
     virtual ~Anchor();
@@ -118,6 +122,10 @@ class Anchor { // interface via abstract class
         std::string _imagePath, 
         int _width, 
         int _height);
+    
+    void reset_last_visited_cell_time();
+    void update_last_visited_cell_time(int _row_i, int _col_j);
+    std::chrono::time_point<std::chrono::steady_clock> get_last_visited_cell_time(int _row_i, int _col_j);
 };
 
 
