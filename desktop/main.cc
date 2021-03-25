@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
   int choice_initiator = 1;
   int choice_divisions = 4;
   int choice_screensize = 4;
-  int choice_debug = 1;
+  int choice_debug = 0;
   int choice_visibility = 1;
   int choice_depth = 1;
   int choice_trial_start_btn_location = 4;
